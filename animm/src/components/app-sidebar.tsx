@@ -1,4 +1,4 @@
-import { Home, Frame, File, Settings } from "lucide-react"
+import { Home, Frame } from "lucide-react"
 import Link from 'next/link'
 
 import {
@@ -20,20 +20,10 @@ const items = [
     icon: Home,
   },
   {
-    title: "Templates",
-    url: "/templates",
+    title: "Library",
+    url: "/library",
     icon: Frame,
-  },
-  {
-    title: "Assets",
-    url: "#",
-    icon: File,
-  },
-  {
-    title: "Settings",
-    url: "#",
-    icon: Settings,
-  },
+  }
 ]
 
 export function AppSidebar() {
@@ -41,7 +31,6 @@ export function AppSidebar() {
     <Sidebar collapsible="icon">
       <SidebarContent>
         <SidebarGroup>
-          <SidebarGroupLabel>Application</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
               {items.map((item) => (

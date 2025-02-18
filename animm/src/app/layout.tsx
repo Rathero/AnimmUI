@@ -1,5 +1,4 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { SidebarInset, SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar"
 import { AppSidebar } from "@/components/app-sidebar"
@@ -18,10 +17,15 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body>
-      <SidebarProvider>
+      <SidebarProvider className="transition-[width] duration-800 ease-in-out-sn"
+        style={{
+          "--sidebar-width": "13rem",
+          "--sidebar-width-mobile": "20rem",
+        }}
+      >
         <AppSidebar />
         <SidebarInset>
-        <header className="flex h-16 shrink-0 items-center gap-2 transition-[width,height] ease-linear group-has-[[data-collapsible=icon]]/sidebar-wrapper:h-12">
+        <header className="flex h-16 shrink-0 items-center gap-2 ease-linear">
           <div className="flex items-center gap-2 px-4">
             <SidebarTrigger className="-ml-1" />
           </div>

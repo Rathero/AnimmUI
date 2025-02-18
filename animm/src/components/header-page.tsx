@@ -12,13 +12,6 @@ export function HeaderPage(props:any) {
                 {props.desc}
             </p>
           </div>
-          {props.button != null ? (
-            <div className="h-full flex flex-row gap-2 justify-center">
-                <Button disabled>
-                    {props.button} <Plus />
-                </Button>
-            </div>
-            ):(<></>)}
         </div>
     );
 }
