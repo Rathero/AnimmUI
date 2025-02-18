@@ -38,7 +38,8 @@ export default async function Collection({ params }: { params: { id: string } })
           type: "Template",
           extra: "22/03/25",
           img: "https://ui.shadcn.com/placeholder.svg"
-        }
+        },
+        
       ]
     },
     {
