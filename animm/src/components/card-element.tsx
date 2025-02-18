@@ -1,8 +1,9 @@
 import Image from "next/image"
 import { Folder, MoreVertical } from "lucide-react"
 import { Button } from "@/components/ui/button"
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from "@/components/ui/dropdown-menu"
 import { Card, CardContent, CardHeader } from "@/components/ui/card"
+import { DropdownMenuGroup } from "@radix-ui/react-dropdown-menu"
 
 interface CardProps {
   img: string
@@ -40,9 +41,12 @@ export default function CardElement(props: CardProps) {
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
-              <DropdownMenuItem>Edit</DropdownMenuItem>
-              <DropdownMenuItem>Duplicate</DropdownMenuItem>
-              <DropdownMenuItem>Delete</DropdownMenuItem>
+              <DropdownMenuGroup>
+                <DropdownMenuItem>Edit</DropdownMenuItem>
+                <DropdownMenuItem>Duplicate</DropdownMenuItem>
+              </DropdownMenuGroup>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem className="focus:!text-red-600 focus:!bg-red-100">Delete</DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
         </div>
