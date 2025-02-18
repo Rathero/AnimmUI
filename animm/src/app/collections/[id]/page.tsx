@@ -108,7 +108,10 @@ export default async function Collection({ params }: { params: { id: string } })
         <div className="w-full grid grid-cols-1 2xl:grid-cols-4  xl:grid-cols-4 lg:grid-cols-3 sm:grid-cols-2 gap-4 p-4">
         {collections[col].templates.map((template) => (
           <CardElement key={template.id}
-            temp={template}
+            img={template.img}
+            title={template.title}
+            type={template.type}
+            extra={template.extra}
           />
         ))}
         </div>

@@ -3,7 +3,6 @@
 import Link from "next/link";
 import { usePathname } from 'next/navigation'
 import { HeaderPage } from "@/components/header-page";
-import CardElement from "@/components/card-element";
 import CollectionElement from "@/components/collection-element";
 
 
@@ -38,10 +37,12 @@ export default function Library() {
         />
         <div className="w-full grid grid-cols-1 lg:grid-cols-2 gap-4 p-4">
         {collections.map((collection) => (
-          <Link href={pathname + "/collection/" + collection.id}
+          <Link href={pathname + "/" + collection.id}
           key={collection.id}>
             <CollectionElement 
-              col={collection}
+              img={collection.img}
+              title={collection.title}
+              desc={collection.desc}
             />
           </Link>    
         ))}

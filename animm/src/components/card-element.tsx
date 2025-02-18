@@ -4,12 +4,19 @@ import { Button } from "@/components/ui/button"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import { Card, CardContent, CardHeader } from "@/components/ui/card"
 
-export default function CardElement(props: any) {
+interface CardProps {
+  img: string
+  title: string
+  type: string
+  extra: string
+}
+
+export default function CardElement(props: CardProps) {
   return (
     <Card className="overflow-hidden transition-shadow hover:shadow-lg hover:shadow-slate-500/10">
       <CardHeader className="p-0">
         <div className="relative w-full h-44 md:h-36">
-          <Image src={props.temp.img} alt="Template cover" layout="fill" objectFit="cover" />
+          <Image src={props.img} alt="Template cover" layout="fill" objectFit="cover" />
         </div>
       </CardHeader>
       <CardContent className="p-4">
@@ -21,8 +28,8 @@ export default function CardElement(props: any) {
               </div>
             </div>
             <div>
-              <h3 className="text-md font-medium tracking-normal line-clamp-1">{props.temp.title}</h3>
-              <p className="text-sm text-muted-foreground line-clamp-1">{props.temp.type} · {props.temp.extra}</p>
+              <h3 className="text-md font-medium tracking-normal line-clamp-1">{props.title}</h3>
+              <p className="text-sm text-muted-foreground line-clamp-1">{props.type} · {props.extra}</p>
             </div>
           </div>
           <DropdownMenu>
