@@ -1,0 +1,47 @@
+[
+    {
+      "id": 1,
+      "name": "FHD Landscape - 1920x1080",
+      "width": 1920,
+      "height": 1080
+    },
+    {
+      "id": 2,
+      "name": "FHD Portrait - 1080x1920",
+      "width": 1080,
+      "height": 1920
+    },
+    {
+      "id": 3,
+      "name": "Ultrawide - 3440x1440",
+      "width": 3440,
+      "height": 1440
+    },
+    {
+      "id": 4,
+      "name": "Square - 1080x1080",
+      "width": 1080,
+      "height": 1080
+    },
+    {
+      "id": 5,
+      "name": "Digital Menu - 2560x1080",
+      "width": 2560,
+      "height": 1080
+    },
+    {
+      "id": 6,
+      "name": "Panoramic - 4320x1080",
+      "width": 4320,
+      "height": 1080
+    },
+    {
+      "id": 7,
+      "name": "Vertical Banner - 1080x3840",
+      "width": 1080,
+      "height": 3840
+    }
+]
+
+  
+  
