@@ -1,0 +1,134 @@
+[
+  {
+    "id": 0,
+    "nm": "Product",
+    "text": [
+      {
+        "name": "Titulo",
+        "v": "title",
+        "path": [],
+        "default": "CHAMBERLAIN COFFEE WHOLE BEAN"
+      },
+      {
+        "name": "Descripción",
+        "v": "description",
+        "path": [],
+        "default": "A smooth, bold whole bean coffee blend for those who crave quality in every cup, crafted with premium beans for an exceptional taste."
+      }
+    ],
+    "inputs": [
+      {
+        "name": "Text Animation",
+        "v": "textAnim",
+        "type": 0,
+        "positionInStateMachine": 0,
+        "dropdownValues": [
+          {
+            "value": "1",
+            "label": "Animation 1"
+          },
+          {
+            "value": "2",
+            "label": "Animation 2"
+          },
+          {
+            "value": "3",
+            "label": "Animation 3"
+          },
+          {
+            "value": "4",
+            "label": "Animation 4"
+          },
+          {
+            "value": "5",
+            "label": "Animation 5"
+          },
+          {
+            "value": "6",
+            "label": "Animation 6"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": 1,
+    "nm": "Campaign",
+    "text": [
+      {
+        "name": "Cuenta",
+        "v": "Text",
+        "path": ["AnimationBase/LogoStart", "AnimationBase/LogoEnd"],
+        "default": "@SurgeCo"
+      }
+    ]
+  },
+  {
+    "id": 2,
+    "nm": "Video",
+    "text": [
+      {
+        "name": "Colección",
+        "v": "title01",
+        "path": ["Module_01", "Module_02", "Module_03"],
+        "default": "ZARA SKI"
+      },
+      {
+        "name": "Drop",
+        "v": "title02",
+        "path": ["Module_01", "Module_02"],
+        "default": "DROP2"
+      },
+      {
+        "name": "Descripción",
+        "v": "description",
+        "path": ["Module_01"],
+        "default": "Prendas de alto rendimiento y après-ski diseñadas para cubrir todo lo necesario para una escapada a la montaña."
+      },
+      {
+        "name": "Fecha",
+        "v": "date",
+        "path": ["Module_02"],
+        "default": "25/02/25"
+      },
+      {
+        "name": "Producto",
+        "v": "product",
+        "path": ["Module_04"],
+        "default": "CAZADORA CUELLO CONTRASTE"
+      }
+    ],
+    "video": ["/video/WL_Video.mp4","/video/Zara_Ski_Horizontal.mp4"],
+    "inputs": [
+      {
+        "name": "Cambiar Módulo",
+        "v": "Module",
+        "type": 0,
+        "positionInStateMachine": 0,
+        "dropdownValues": [
+          {
+            "value": "1",
+            "label": "Campaña"
+          },
+          {
+            "value": "2",
+            "label": "Fecha lanzamiento"
+          },
+          {
+            "value": "3",
+            "label": "Carousel de productos"
+          },
+          {
+            "value": "4",
+            "label": "Producto destacado"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": 3,
+    "nm": "Totem",
+    "text": []
+  }
+]

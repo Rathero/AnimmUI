@@ -17,7 +17,7 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body>
-      <SidebarProvider className="transition-[width] duration-800 ease-in-out-sn"
+      <SidebarProvider
         style={{
           "--sidebar-width": "13rem",
           "--sidebar-width-mobile": "20rem",
@@ -30,7 +30,7 @@ export default function RootLayout({
             <SidebarTrigger className="-ml-1" />
           </div>
         </header>
-        <div className="flex flex-1 flex-col gap-4 p-4 pt-0">
+        <div className="h-[calc(100vh-64px)] w-full p-4 pt-0 relative">
           {children}
         </div>
         </SidebarInset>
