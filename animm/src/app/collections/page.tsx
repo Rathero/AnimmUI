@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname } from 'next/navigation'
 import { HeaderPage } from "@/components/header-page";
-import CollectionElement from "@/components/collection-element";
+import CollectionCard from "@/components/collection-card";
 
 
 export default function Library() {
@@ -39,7 +39,7 @@ export default function Library() {
         {collections.map((collection) => (
           <Link href={pathname + "/" + collection.id}
           key={collection.id}>
-            <CollectionElement 
+            <CollectionCard
               img={collection.img}
               title={collection.title}
               desc={collection.desc}

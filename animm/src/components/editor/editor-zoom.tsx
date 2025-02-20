@@ -1,7 +1,7 @@
 import { Plus, Minus } from "lucide-react";
 import { Button } from "../ui/button";
 
-export function EditorZoom(props:any) {
+export function EditorZoom(props: { zoomOut: () => void; resetTransform: () => void; zoomIn: () => void; }) {
 
     return (
         <div className="absolute right-0 bottom-0 z-50 p-4">

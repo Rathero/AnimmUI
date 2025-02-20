@@ -8,7 +8,7 @@ interface CollectionProps {
   desc: string
 }
 
-export default function CollectionElement(props:CollectionProps) {
+export default function CollectionCard(props:CollectionProps) {
 
   return (
     <Card className="flex flex-row w-full h-36 overflow-hidden transition-shadow hover:shadow-md hover:shadow-slate-500/10 cursor-pointer">

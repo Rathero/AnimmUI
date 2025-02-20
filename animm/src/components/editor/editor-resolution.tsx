@@ -11,7 +11,8 @@ import {
   } from "@/components/ui/select"
 
 
-export function EditorResolution(props:any) {
+export function EditorResolution(props: { resolution: ((value: string) => void) | undefined; }) {
+
 
     const ScreensDef = Screens.map((screen: any) => {
         return {
@@ -23,7 +24,7 @@ export function EditorResolution(props:any) {
     });
     return (
         <div className="absolute left-0 top-0 z-50 p-4 ">
-            <Select onValueChange={props.resolution}>
+            <Select onValueChange={props.resolution} >
                 <SelectTrigger className="min-w-[150px] me-2 transition-shadow hover:shadow-lg hover:shadow-slate-500/10">
                     <SelectValue placeholder="Select Screen"/>
                 </SelectTrigger>

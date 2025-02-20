@@ -1,5 +1,5 @@
 import { HeaderPage } from "@/components/header-page";
-import CardElement from "@/components/card-element";
+import TemplateElement from "@/components/template-card";
 
 export default async function Collection({ params }: { params: { id: string } }) {
   const { id } = await params
@@ -106,9 +106,10 @@ export default async function Collection({ params }: { params: { id: string } })
         title={collections[col].colTitle}
         extra={collections[col].colDesc}
         />
-        <div className="w-full grid grid-cols-1 2xl:grid-cols-4  xl:grid-cols-4 lg:grid-cols-3 sm:grid-cols-2 gap-4 p-4">
+        <div className="w-full grid grid-cols-1 2xl:grid-cols-5  xl:grid-cols-4 lg:grid-cols-3 sm:grid-cols-2 gap-4 p-4">
         {collections[col].templates.map((template) => (
-          <CardElement key={template.id}
+          <TemplateElement key={template.id}
+            id={template.id}
             img={template.img}
             title={template.title}
             type={template.type}
