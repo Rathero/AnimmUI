@@ -2,6 +2,7 @@ import { HeaderPage } from "@/components/header-page";
 import TemplateElement from "@/components/template-card";
 
 import { ApiCollection } from "../../../types/collections";
+import { collectionsService } from "@/app/services/CollectionsService";
 
 export default async function CollectionPage({
   params,
@@ -10,11 +11,8 @@ export default async function CollectionPage({
 }) {
   const { id } = await params;
 
-  const data = await fetch(
-    "https://animmapiv2.azurewebsites.net/collections/" + id
-  );
-  const collection: ApiCollection = await data.json();
-
+  const collection = await collectionsService.get(id);
+  if(!collection) return <></>
   return (
     <div className="h-full flex flex-col gap-4">
       <HeaderPage

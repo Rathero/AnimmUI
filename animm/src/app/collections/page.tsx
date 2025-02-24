@@ -1,15 +1,11 @@
 import Link from "next/link";
-import { usePathname } from "next/navigation";
 import { HeaderPage } from "@/components/header-page";
 import CollectionCard from "@/components/collection-card";
-import { ApiCollections } from "../../types/collections";
+import { collectionsService } from "../services/CollectionsService";
 
 export default async function CollectionsPage() {
-  const data = await fetch(
-    "https://animmapiv2.azurewebsites.net/collections/all"
-  );
-  const collections: ApiCollections = await data.json();
-
+  const collections = await collectionsService.getAll();
+  if(!collections) return <></>;
   return (
     <div className="h-full flex flex-col gap-4">
       <HeaderPage
