@@ -1,39 +1,42 @@
-"use client";
+'use client';
 
-import Image from "next/image";
-import { useEffect, useState } from "react";
-import { useRive, Fit, Layout } from "@rive-app/react-canvas";
-import { Textarea } from "@/components/ui/textarea";
-import { Button } from "@/components/ui/button";
+import Image from 'next/image';
+import { useEffect, useState } from 'react';
+import { useRive, Fit, Layout } from '@rive-app/react-canvas';
+import { Textarea } from '@/components/ui/textarea';
+import { Button } from '@/components/ui/button';
 
 import {
   Popover,
   PopoverContent,
   PopoverTrigger,
-} from "@/components/ui/popover";
+} from '@/components/ui/popover';
 import {
   TransformWrapper,
   TransformComponent,
   useControls,
   useTransformComponent,
   useTransformEffect,
-} from "react-zoom-pan-pinch";
+} from 'react-zoom-pan-pinch';
 
-import { EditorZoom } from "@/components/editor/editor-zoom";
-import { EditorPlay } from "@/components/editor/editor-play";
-import { EditorResolution } from "@/components/editor/editor-resolution";
+import { EditorZoom } from '@/components/editor/editor-zoom';
+import { EditorPlay } from '@/components/editor/editor-play';
+import { EditorResolution } from '@/components/editor/editor-resolution';
 
-import templatesJson from "@/data/Template.json";
+import templatesJson from '@/data/Template.json';
+import { templatesService } from '@/app/services/TemplatesService';
+import { ApiTemplate, Module, TemplateVariable } from '@/types/collections';
 
 export default function Editor() {
   const [templateData, setTemplateData] = useState<any>(
-    templatesJson.filter((template) => template.id === 0)[0]
+    templatesJson.filter(template => template.id === 0)[0]
   );
+  const [template, setTemplate] = useState<ApiTemplate | undefined>(undefined);
 
   const { rive, RiveComponent } = useRive({
-    src: "/test/WL_Product.riv",
-    artboard: "Template",
-    stateMachines: "SM",
+    src: '/test/WL_Product.riv',
+    artboard: 'Template',
+    stateMachines: 'SM',
     autoplay: true,
     layout: new Layout({
       fit: Fit.Layout,
@@ -44,7 +47,7 @@ export default function Editor() {
   const [playing, setPlaying] = useState(true);
 
   const playRive = () => {
-    console.log("in");
+    console.log('in');
 
     if (rive) {
       rive.play;
@@ -58,7 +61,7 @@ export default function Editor() {
       templateData.text
         .filter((texts: { v: any }) => texts.v === event.target.id)
         .map((text: any) => {
-          event.target.value === "" ? (event.target.value = " ") : "";
+          event.target.value === '' ? (event.target.value = ' ') : '';
           if (text.path.length > 0) {
             text.path.map((path: any) => {
               rive.setTextRunValueAtPath(text.v, event.target.value, path);
@@ -71,38 +74,41 @@ export default function Editor() {
       setTemplateData(templateData);
     }
   };
+  async function initializeTemplate() {
+    const template = await templatesService.get('1');
+    setTemplate(template);
+  }
 
   const changeresolution = (event: any) => {
-    const mainCan: any = document.querySelector("#MainCanvas");
+    const mainCan: any = document.querySelector('#MainCanvas');
     if (mainCan) {
-      const resolution = event.split("-");
+      const resolution = event.split('-');
       console.log(resolution);
-      mainCan.style.width = resolution[0] + "px";
-      mainCan.style.height = resolution[1] + "px";
+      mainCan.style.width = resolution[0] + 'px';
+      mainCan.style.height = resolution[1] + 'px';
     }
   };
 
   // EventListener to Deactivate Zoom Pan to be able to Resize
   const [isResizing, setIsResizing] = useState(false);
   useEffect(() => {
-    const mainCanvas = document.getElementById("MainCanvas");
+    const mainCanvas = document.getElementById('MainCanvas');
     if (!mainCanvas) return;
 
     const handleMouseEvent = (event: any) => {
-      if (event.target.classList.contains("resizeItem")) {
+      if (event.target.classList.contains('resizeItem')) {
         setIsResizing(true);
       } else {
         setIsResizing(false);
       }
     };
 
-    document.body.addEventListener("mousemove", handleMouseEvent);
-    mainCanvas.addEventListener("mousedown", handleMouseEvent);
+    document.body.addEventListener('mousemove', handleMouseEvent);
+    mainCanvas.addEventListener('mousedown', handleMouseEvent);
 
-    return () => {
-      mainCanvas.removeEventListener("mousedown", handleMouseEvent);
-      mainCanvas.removeEventListener("mousemove", handleMouseEvent);
-    };
+    initializeTemplate();
+    mainCanvas.removeEventListener('mousedown', handleMouseEvent);
+    mainCanvas.removeEventListener('mousemove', handleMouseEvent);
   }, []);
 
   return (
@@ -157,21 +163,25 @@ export default function Editor() {
 
         <aside className="w-60 px-4 ps-0 pt-0 transition-all">
           <div className="grid w-full gap-2.5">
-            {templateData.text.map((text: any) => (
-              <div className="grid w-full gap-1.5" key={text.v}>
-                <label
-                  className="text-sm text-sidebar-foreground"
-                  htmlFor={text.v}
-                >
-                  {text.name}
-                </label>
-                <Textarea
-                  id={text.v}
-                  defaultValue={text.default}
-                  onChange={changeText}
-                />
-              </div>
-            ))}
+            {template?.Result.modules.map((x: Module) =>
+              x.variables.map((y: TemplateVariable) => {
+                return (
+                  <div className="grid w-full gap-1.5" key={y.path}>
+                    <label
+                      className="text-sm text-sidebar-foreground"
+                      htmlFor={y.path}
+                    >
+                      {y.name}
+                    </label>
+                    <Textarea
+                      id={y.path}
+                      defaultValue={y.defaultValue}
+                      onChange={changeText}
+                    />
+                  </div>
+                );
+              })
+            )}
             <Popover>
               <PopoverTrigger asChild>
                 <div className="grid grid-cols-2 gap-1.5">
@@ -180,7 +190,7 @@ export default function Editor() {
                     height={100}
                     alt=""
                     className="cursor-pointer rounded-md border transition-opacity hover:opacity-75"
-                    src={"/img/Avatar.webp"}
+                    src={'/img/Avatar.webp'}
                   ></Image>
                 </div>
               </PopoverTrigger>
@@ -196,7 +206,7 @@ export default function Editor() {
                         height={100}
                         alt=""
                         className="cursor-pointer rounded-lg border transition-opacity hover:opacity-75 relative"
-                        src={"/img/Avatar.webp"}
+                        src={'/img/Avatar.webp'}
                       ></Image>
                     </div>
                   </div>

@@ -10,6 +10,8 @@ export interface TemplateVariable {
   section: string;
   name: string;
   possibleValues: TemplateVariableValue[];
+  defaultValue: string;
+  path: string;
 }
 
 export enum TemplateVariableTypeEnum {
@@ -27,7 +29,7 @@ export interface Module {
   moduleType: ModuleTypeEnum;
   file: string;
   variables: TemplateVariable[];
-  imageS: TemplateImage[];
+  images: TemplateImage[];
 }
 
 export enum ModuleTypeEnum {
