@@ -1,26 +1,40 @@
-import Image from "next/image"
-import { Folder, MoreVertical } from "lucide-react"
-import { Button } from "@/components/ui/button"
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from "@/components/ui/dropdown-menu"
-import { Card, CardContent, CardHeader } from "@/components/ui/card"
-import { DropdownMenuGroup } from "@radix-ui/react-dropdown-menu"
-import Link from "next/link"
+import Image from "next/image";
+import { Folder, MoreVertical } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+  DropdownMenuSeparator,
+} from "@/components/ui/dropdown-menu";
+import { Card, CardContent, CardHeader } from "@/components/ui/card";
+import { DropdownMenuGroup } from "@radix-ui/react-dropdown-menu";
+import Link from "next/link";
 
-interface CardProps {
-  id: string
-  img: string
-  title: string
-  type: string
-  extra: string
+import { Template } from "@/types/collections";
+
+interface TemplateCardProps {
+  template: Template;
 }
 
-export default function TemplateCard(props: CardProps) {
+export default function TemplateCard({ template }: TemplateCardProps) {
+  template.thumbnail === ""
+    ? (template.thumbnail = "/img/placeholder.svg")
+    : "";
+
   return (
     <Card className="overflow-hidden transition-shadow hover:shadow-lg hover:shadow-slate-500/10">
-      <Link href={"/editor/" + props.id} className="cursor-pointer">
+      <Link href={"/editor/" + template.id} className="cursor-pointer">
         <CardHeader className="p-0">
           <div className="relative w-full h-44 md:h-36">
-            <Image src={props.img} alt="Template cover" layout="fill" objectFit="cover" />
+            <Image
+              src={template.thumbnail}
+              alt="Template cover"
+              priority
+              fill
+              style={{ objectFit: "cover" }}
+            />
           </div>
         </CardHeader>
       </Link>
@@ -33,8 +47,12 @@ export default function TemplateCard(props: CardProps) {
               </div>
             </div>
             <div>
-              <h3 className="text-md font-medium tracking-normal line-clamp-1">{props.title}</h3>
-              <p className="text-sm text-muted-foreground line-clamp-1">{props.type} · {props.extra}</p>
+              <h3 className="text-md font-medium tracking-normal line-clamp-1">
+                {template.name}
+              </h3>
+              <p className="text-sm text-muted-foreground line-clamp-1">
+                {template.tags}
+              </p>
             </div>
           </div>
           <DropdownMenu>
@@ -46,17 +64,18 @@ export default function TemplateCard(props: CardProps) {
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
               <DropdownMenuGroup>
-                <Link href={"/editor/" + props.id}>
+                <Link href={"/editor/" + template.id}>
                   <DropdownMenuItem>Edit</DropdownMenuItem>
                 </Link>
               </DropdownMenuGroup>
               <DropdownMenuSeparator />
-                <DropdownMenuItem className="focus:!text-red-600 focus:!bg-red-100">Delete</DropdownMenuItem>
+              <DropdownMenuItem className="focus:!text-red-600 focus:!bg-red-100">
+                Delete
+              </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
         </div>
       </CardContent>
     </Card>
-
-  )
+  );
 }

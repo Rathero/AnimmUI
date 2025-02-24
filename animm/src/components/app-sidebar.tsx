@@ -1,9 +1,9 @@
-"use client"
+"use client";
 
-import { Home, Frame, GalleryHorizontalEnd, ActivityIcon } from "lucide-react"
-import { NavUser } from "./sideBar/nav-user"
-import { TeamSwitcher } from "./sideBar/team-switcher"
-import Link from 'next/link'
+import { Home, Frame, GalleryHorizontalEnd, ActivityIcon } from "lucide-react";
+import { NavUser } from "./sideBar/nav-user";
+import { TeamSwitcher } from "./sideBar/team-switcher";
+import Link from "next/link";
 
 import {
   Sidebar,
@@ -17,7 +17,7 @@ import {
   SidebarMenuButton,
   SidebarRail,
   SidebarMenuItem,
-} from "@/components/ui/sidebar"
+} from "@/components/ui/sidebar";
 
 // Menu items.
 const items = [
@@ -30,13 +30,13 @@ const items = [
     title: "Collections",
     url: "/collections",
     icon: Frame,
-  }
-]
+  },
+];
 const user = {
   name: "Adrian Moran",
   email: "Adrian@animm.co",
   avatar: "/img/Avatar.webp",
-}
+};
 const teams = [
   {
     name: "Animm",
@@ -47,9 +47,8 @@ const teams = [
     name: "Zara",
     logo: ActivityIcon,
     plan: "Enterprise",
-  }
-]
-
+  },
+];
 
 export function AppSidebar() {
   return (
@@ -80,5 +79,5 @@ export function AppSidebar() {
       </SidebarFooter>
       <SidebarRail />
     </Sidebar>
-  )
+  );
 }

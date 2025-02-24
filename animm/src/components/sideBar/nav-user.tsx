@@ -1,6 +1,6 @@
-"use client"
+"use client";
 
-import Link from "next/link"
+import Link from "next/link";
 
 import {
   BadgeCheck,
@@ -9,13 +9,9 @@ import {
   CreditCard,
   LogOut,
   Sparkles,
-} from "lucide-react"
+} from "lucide-react";
 
-import {
-  Avatar,
-  AvatarFallback,
-  AvatarImage,
-} from "@/components/ui/avatar"
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -24,13 +20,13 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
+} from "@/components/ui/dropdown-menu";
 import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
   useSidebar,
-} from "@/components/ui/sidebar"
+} from "@/components/ui/sidebar";
 
 const optionsUser = [
   {
@@ -42,27 +38,27 @@ const optionsUser = [
     title: "Billing",
     url: "/collections",
     icon: CreditCard,
-  }
-]
+  },
+];
 
-export function NavUser({user}: {
+export function NavUser({
+  user,
+}: {
   user: {
-    name: string
-    email: string
-    avatar: string
-  }
+    name: string;
+    email: string;
+    avatar: string;
+  };
 }) {
-  const { isMobile } = useSidebar()
+  const { isMobile } = useSidebar();
 
   const NameSplit = user.name.split(" ");
-  const fallBackAvatar = NameSplit[0][0] + NameSplit[1][0]
-  
+  const fallBackAvatar = NameSplit[0][0] + NameSplit[1][0];
 
   return (
     <SidebarMenu>
       <SidebarMenuItem>
         <DropdownMenu>
-          
           <DropdownMenuTrigger asChild>
             <SidebarMenuButton
               size="lg"
@@ -70,7 +66,9 @@ export function NavUser({user}: {
             >
               <Avatar className="h-8 w-8 rounded-lg">
                 <AvatarImage src={user.avatar} alt={user.name} />
-                <AvatarFallback className="rounded-lg">{fallBackAvatar}</AvatarFallback>
+                <AvatarFallback className="rounded-lg">
+                  {fallBackAvatar}
+                </AvatarFallback>
               </Avatar>
               <div className="grid flex-1 text-left text-sm leading-tight">
                 <span className="truncate font-semibold">{user.name}</span>
@@ -90,7 +88,9 @@ export function NavUser({user}: {
               <div className="flex items-center gap-2 px-1 py-1.5 text-left text-sm">
                 <Avatar className="h-8 w-8 rounded-lg">
                   <AvatarImage src={user.avatar} alt={user.name} />
-                  <AvatarFallback className="rounded-lg">{fallBackAvatar}</AvatarFallback>
+                  <AvatarFallback className="rounded-lg">
+                    {fallBackAvatar}
+                  </AvatarFallback>
                 </Avatar>
                 <div className="grid flex-1 text-left text-sm leading-tight">
                   <span className="truncate font-semibold">{user.name}</span>
@@ -118,10 +118,9 @@ export function NavUser({user}: {
               <LogOut />
               Log out
             </DropdownMenuItem>
-
           </DropdownMenuContent>
         </DropdownMenu>
       </SidebarMenuItem>
     </SidebarMenu>
-  )
+  );
 }
