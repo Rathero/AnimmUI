@@ -1,7 +1,12 @@
-import { Module, ModuleTypeEnum, Template, TemplateImage, TemplateVariable } from "./collections";
+import {
+  Module,
+  ModuleTypeEnum,
+  Template,
+  TemplateImage,
+  TemplateVariable,
+} from './collections';
 
-
-export interface GeneratedAnimation{
+export interface GeneratedAnimation {
   baseTemplateId: number;
   baseTemplate: Template;
   name: string;
@@ -11,31 +16,31 @@ export interface GeneratedAnimation{
   modules: GeneratedModule[];
 }
 
-export interface GeneratedModule{
+export interface GeneratedModule {
   moduleType: ModuleTypeEnum;
   baseModuleId: number;
   baseModule: Module;
-  file:string;
+  file: string;
   variables: GeneratedTemplateVariable[];
   images: GeneratedTemplateImage[];
 }
 
-export interface GeneratedTemplateImage{
+export interface GeneratedTemplateImage {
   tepmlateImageId: number;
   templateImage: TemplateImage;
   image: string;
 }
 
-export interface GeneratedTemplateVariable{
+export interface GeneratedTemplateVariable {
   tepmlateVariableId: number;
   templateVariable: TemplateVariable;
   value: string;
 }
 
-export enum GeneraetdAnimationStatusEnum{
+export enum GeneraetdAnimationStatusEnum {
   NoStatus,
   ToReview,
   Reviewed,
   Approved,
-  OnHold
+  OnHold,
 }

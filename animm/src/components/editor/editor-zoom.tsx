@@ -1,8 +1,8 @@
-import { Plus, Minus } from "lucide-react";
-import { Button } from "../ui/button";
-import { useTransformEffect } from "react-zoom-pan-pinch";
-import { useState } from "react";
-import { ReactZoomPanPinchHandlers } from "react-zoom-pan-pinch";
+import { Plus, Minus } from 'lucide-react';
+import { Button } from '../ui/button';
+import { useTransformEffect } from 'react-zoom-pan-pinch';
+import { useState } from 'react';
+import { ReactZoomPanPinchHandlers } from 'react-zoom-pan-pinch';
 
 export function EditorZoom(props: ReactZoomPanPinchHandlers) {
   const step = 0.2;
@@ -26,10 +26,10 @@ export function EditorZoom(props: ReactZoomPanPinchHandlers) {
           variant="link"
           className="h-6 w-10"
           onClick={() => {
-            props.zoomToElement("MainCanvas");
+            props.zoomToElement('MainCanvas');
           }}
         >
-          {zoom + "%"}
+          {zoom + '%'}
         </Button>
         <Button
           variant="ghost"

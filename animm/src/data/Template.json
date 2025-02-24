@@ -98,7 +98,7 @@
         "default": "CAZADORA CUELLO CONTRASTE"
       }
     ],
-    "video": ["/video/WL_Video.mp4","/video/Zara_Ski_Horizontal.mp4"],
+    "video": ["/video/WL_Video.mp4", "/video/Zara_Ski_Horizontal.mp4"],
     "inputs": [
       {
         "name": "Cambiar Módulo",

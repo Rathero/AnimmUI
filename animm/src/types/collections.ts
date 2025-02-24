@@ -1,44 +1,45 @@
-import { BaseApiResponse } from "./baseApi";
+import { BaseApiResponse } from './baseApi';
 
-export interface TemplateVariableValue{
+export interface TemplateVariableValue {
   value: string;
   label: string;
 }
 
-export interface TemplateVariable{
+export interface TemplateVariable {
   type: TemplateVariableTypeEnum;
   section: string;
   name: string;
   possibleValues: TemplateVariableValue[];
 }
 
-export enum TemplateVariableTypeEnum{
+export enum TemplateVariableTypeEnum {
   Input,
   TextArea,
   Selector,
-  Boolean
+  Boolean,
 }
 
-export interface TemplateImage{
+export interface TemplateImage {
   image: string;
 }
 
-export interface Module{
+export interface Module {
   moduleType: ModuleTypeEnum;
   file: string;
   variables: TemplateVariable[];
   imageS: TemplateImage[];
 }
 
-export enum ModuleTypeEnum{
+export enum ModuleTypeEnum {
   Rive,
   Video,
   Image,
 }
 
-export interface Tag{
+export interface Tag {
   name: string;
 }
+export interface ApiTemplate extends BaseApiResponse<Template> {}
 
 export interface Template {
   id: number;
@@ -58,7 +59,5 @@ export interface Collection {
   templates: Template[];
 }
 
-export interface ApiCollections extends BaseApiResponse<Collection[]> {
-}
-export interface ApiCollection extends BaseApiResponse<Collection> {
-}
+export interface ApiCollections extends BaseApiResponse<Collection[]> {}
+export interface ApiCollection extends BaseApiResponse<Collection> {}
