@@ -34,9 +34,7 @@ import { templatesService } from '@/app/services/TemplatesService';
 import { ApiTemplate, Module, TemplateVariable } from '@/types/collections';
 import { Crop, ImageMinus, ImageUpscale } from 'lucide-react';
 
-export default async function Editor({ params }: { params: { id: string } }) {
-  const { id } = await params;
-
+export default function Editor() {
   const [templateData, setTemplateData] = useState<any>(
     templatesJson.filter(template => template.id === 0)[0]
   );
