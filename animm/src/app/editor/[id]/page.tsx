@@ -5,6 +5,12 @@ import { useEffect, useState } from 'react';
 import { useRive, Fit, Layout } from '@rive-app/react-canvas';
 import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from '@/components/ui/tooltip';
 
 import {
   Popover,
@@ -26,8 +32,11 @@ import { EditorResolution } from '@/components/editor/editor-resolution';
 import templatesJson from '@/data/Template.json';
 import { templatesService } from '@/app/services/TemplatesService';
 import { ApiTemplate, Module, TemplateVariable } from '@/types/collections';
+import { Crop, ImageMinus, ImageUpscale } from 'lucide-react';
 
-export default function Editor() {
+export default async function Editor({ params }: { params: { id: string } }) {
+  const { id } = await params;
+
   const [templateData, setTemplateData] = useState<any>(
     templatesJson.filter(template => template.id === 0)[0]
   );
@@ -194,30 +203,60 @@ export default function Editor() {
                   ></Image>
                 </div>
               </PopoverTrigger>
-              <PopoverContent side="left" align="start" className="w-60">
-                <div className="grid gap-4">
-                  <div className="grid gap-2">
-                    <div className="relative size-fit">
-                      <Button className="text-xs p-3 h-8 rounded-lg absolute top-1/2 left-1/2 transition-opacity opacity-0 hover:opacity-100 z-50">
-                        Crop
+              <PopoverContent side="left" align="start" className="w-48 p-2">
+                <div className="grid gap-1.5">
+                  <div className="relative size-fit">
+                    {/* add upload image functionality here */}
+                    <div className="absolute size-full grid items-center justify-center bg-background/25 transition-opacity opacity-0 hover:opacity-100 z-50 cursor-pointer">
+                      <Button className="text-xs p-3 h-8 rounded-lg">
+                        Upload Image
                       </Button>
-                      <Image
-                        width={300}
-                        height={100}
-                        alt=""
-                        className="cursor-pointer rounded-lg border transition-opacity hover:opacity-75 relative"
-                        src={'/img/Avatar.webp'}
-                      ></Image>
                     </div>
+                    <Image
+                      width={300}
+                      height={100}
+                      alt=""
+                      className="cursor-pointer rounded-lg border transition-opacity hover:opacity-75 relative blur-0 hover:blur-2xl"
+                      src={'/img/Avatar.webp'}
+                    ></Image>
                   </div>
-                  <div className="grid gap-1.5">
-                    <Button className="text-xs p-3 h-8 rounded-lg">Crop</Button>
-                    <Button className="text-xs p-3 h-8 rounded-lg">
-                      Remove Background
-                    </Button>
-                    <Button className="text-xs p-3 h-8 rounded-lg">
-                      Expand Image
-                    </Button>
+                  <div className="grid grid-cols-3 gap-1.5">
+                    <TooltipProvider>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <Button size="sm">
+                            <Crop />
+                          </Button>
+                        </TooltipTrigger>
+                        <TooltipContent>
+                          <p>Crop Image</p>
+                        </TooltipContent>
+                      </Tooltip>
+                    </TooltipProvider>
+                    <TooltipProvider>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <Button size="sm">
+                            <ImageMinus />
+                          </Button>
+                        </TooltipTrigger>
+                        <TooltipContent>
+                          <p>AI Remove Background</p>
+                        </TooltipContent>
+                      </Tooltip>
+                    </TooltipProvider>
+                    <TooltipProvider>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <Button size="sm">
+                            <ImageUpscale />
+                          </Button>
+                        </TooltipTrigger>
+                        <TooltipContent>
+                          <p>AI Extend Image</p>
+                        </TooltipContent>
+                      </Tooltip>
+                    </TooltipProvider>
                   </div>
                 </div>
               </PopoverContent>
