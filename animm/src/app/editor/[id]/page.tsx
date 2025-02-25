@@ -1,7 +1,7 @@
 'use client';
 
 import Image from 'next/image';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useRive, Fit, Layout } from '@rive-app/react-canvas';
 import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
@@ -18,6 +18,13 @@ import {
   useTransformComponent,
   useTransformEffect,
 } from 'react-zoom-pan-pinch';
+import 'react-image-crop/src/ReactCrop.scss';
+import ReactCrop, {
+  type Crop,
+  PixelCrop,
+  centerCrop,
+  makeAspectCrop,
+} from 'react-image-crop';
 
 import { EditorZoom } from '@/components/editor/editor-zoom';
 import { EditorPlay } from '@/components/editor/editor-play';
@@ -32,7 +39,16 @@ export default function Editor() {
     templatesJson.filter(template => template.id === 0)[0]
   );
   const [template, setTemplate] = useState<ApiTemplate | undefined>(undefined);
+  const [imgSrc, setImgSrc] = useState<string>('/img/Avatar.webp');
+  const [originalSrc, setOriginalSrc] = useState<string>('/img/Avatar.webp');
 
+  const [crop, setCrop] = useState<Crop | undefined>({
+    unit: '%', // Can be 'px' or '%'
+    x: 25,
+    y: 25,
+    width: 50,
+    height: 50,
+  });
   const { rive, RiveComponent } = useRive({
     src: '/test/WL_Product.riv',
     artboard: 'Template',
@@ -111,6 +127,94 @@ export default function Editor() {
     mainCanvas.removeEventListener('mousemove', handleMouseEvent);
   }, []);
 
+  function onSelectFile(e: React.ChangeEvent<HTMLInputElement>) {
+    if (e.target.files && e.target.files.length > 0) {
+      setCrop(undefined); // Makes crop preview update between images.
+      const reader = new FileReader();
+      reader.addEventListener('load', () => {
+        setImgSrc(reader.result?.toString() || '');
+        setOriginalSrc(reader.result?.toString() || '');
+      });
+      reader.readAsDataURL(e.target.files[0]);
+    }
+  }
+  function onImageLoad(e: React.SyntheticEvent<HTMLImageElement>) {
+    const { width, height } = e.currentTarget;
+    setCrop(centerAspectCrop(width, height, 16 / 9));
+  }
+  const imgRef = useRef<HTMLImageElement>(null);
+
+  async function canvasPreview() {
+    const image = imgRef.current;
+    if (!image || !crop) {
+      throw new Error('Crop canvas does not exist');
+    }
+
+    const scaleX = image.naturalWidth / image.width;
+    const scaleY = image.naturalHeight / image.height;
+
+    const offscreen = new OffscreenCanvas(
+      crop.width * scaleX,
+      crop.height * scaleY
+    );
+    const ctx = offscreen.getContext('2d');
+    if (!ctx) {
+      throw new Error('No 2d context');
+    }
+
+    const pixelRatio = window.devicePixelRatio;
+
+    ctx.scale(pixelRatio, pixelRatio);
+    ctx.imageSmoothingQuality = 'high';
+
+    const cropX = crop.x * scaleX;
+    const cropY = crop.y * scaleY;
+
+    const centerX = image.naturalWidth / 2;
+    const centerY = image.naturalHeight / 2;
+
+    ctx.save();
+
+    ctx.translate(-cropX, -cropY);
+    ctx.translate(centerX, centerY);
+    ctx.translate(-centerX, -centerY);
+    ctx.drawImage(
+      image,
+      0,
+      0,
+      image.naturalWidth,
+      image.naturalHeight,
+      0,
+      0,
+      image.naturalWidth,
+      image.naturalHeight
+    );
+    const blob = await offscreen.convertToBlob({
+      type: 'image/png',
+    });
+
+    setImgSrc(URL.createObjectURL(blob));
+  }
+
+  function centerAspectCrop(
+    mediaWidth: number,
+    mediaHeight: number,
+    aspect: number
+  ) {
+    return centerCrop(
+      makeAspectCrop(
+        {
+          unit: '%',
+          width: 90,
+        },
+        aspect,
+        mediaWidth,
+        mediaHeight
+      ),
+      mediaWidth,
+      mediaHeight
+    );
+  }
   return (
     <>
       <div className="absolute flex top-0 bottom-0 right-0 left-0 overflow-hidden">
@@ -190,7 +294,7 @@ export default function Editor() {
                     height={100}
                     alt=""
                     className="cursor-pointer rounded-md border transition-opacity hover:opacity-75"
-                    src={'/img/Avatar.webp'}
+                    src={imgSrc}
                   ></Image>
                 </div>
               </PopoverTrigger>
@@ -198,20 +302,46 @@ export default function Editor() {
                 <div className="grid gap-4">
                   <div className="grid gap-2">
                     <div className="relative size-fit">
-                      <Button className="text-xs p-3 h-8 rounded-lg absolute top-1/2 left-1/2 transition-opacity opacity-0 hover:opacity-100 z-50">
-                        Crop
-                      </Button>
                       <Image
                         width={300}
                         height={100}
                         alt=""
                         className="cursor-pointer rounded-lg border transition-opacity hover:opacity-75 relative"
-                        src={'/img/Avatar.webp'}
+                        src={originalSrc}
+                        onLoad={onImageLoad}
                       ></Image>
+                      <input
+                        type="file"
+                        accept="image/*"
+                        onChange={onSelectFile}
+                      />
+                      <ReactCrop
+                        crop={crop}
+                        onChange={c => {
+                          console.log(c);
+                          setCrop(c);
+                        }}
+                      >
+                        <Image
+                          ref={imgRef}
+                          width={300}
+                          height={100}
+                          alt=""
+                          className="cursor-pointer rounded-lg border transition-opacity hover:opacity-75 relative"
+                          src={originalSrc}
+                        ></Image>
+                      </ReactCrop>
                     </div>
                   </div>
                   <div className="grid gap-1.5">
-                    <Button className="text-xs p-3 h-8 rounded-lg">Crop</Button>
+                    <Button
+                      className="text-xs p-3 h-8 rounded-lg"
+                      onClick={() => {
+                        canvasPreview();
+                      }}
+                    >
+                      Crop
+                    </Button>
                     <Button className="text-xs p-3 h-8 rounded-lg">
                       Remove Background
                     </Button>
