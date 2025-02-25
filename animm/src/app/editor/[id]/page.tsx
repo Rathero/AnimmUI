@@ -2,6 +2,7 @@
 
 import Image from 'next/image';
 import { useEffect, useState } from 'react';
+import { useParams } from 'next/navigation';
 import { useRive, Fit, Layout } from '@rive-app/react-canvas';
 import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
@@ -29,15 +30,14 @@ import { EditorZoom } from '@/components/editor/editor-zoom';
 import { EditorPlay } from '@/components/editor/editor-play';
 import { EditorResolution } from '@/components/editor/editor-resolution';
 
-import templatesJson from '@/data/Template.json';
 import { templatesService } from '@/app/services/TemplatesService';
 import { ApiTemplate, Module, TemplateVariable } from '@/types/collections';
 import { Crop, ImageMinus, ImageUpscale } from 'lucide-react';
 
 export default function Editor() {
-  const [templateData, setTemplateData] = useState<any>(
-    templatesJson.filter(template => template.id === 0)[0]
-  );
+  const params = useParams<{ id: string }>();
+
+  const [templateData, setTemplateData] = useState<any>();
   const [template, setTemplate] = useState<ApiTemplate | undefined>(undefined);
 
   const { rive, RiveComponent } = useRive({
@@ -82,7 +82,7 @@ export default function Editor() {
     }
   };
   async function initializeTemplate() {
-    const template = await templatesService.get('1');
+    const template = await templatesService.get(params.id);
     setTemplate(template);
   }
 
