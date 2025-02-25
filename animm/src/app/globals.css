@@ -124,3 +124,14 @@ body {
   background-size: 20px 20px !important;
   background-position: -19px -19px !important;
 }
+
+
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+}

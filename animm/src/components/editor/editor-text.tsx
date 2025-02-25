@@ -24,7 +24,7 @@ export function EditorText(props: {
   return (
     <div className="grid w-full gap-1.5">
       <label
-        className="text-sm text-sidebar-foreground"
+        className="text-sm text-muted-foreground"
         htmlFor={props.variable.path}
       >
         {props.variable.name}

@@ -4,7 +4,6 @@ import Image from 'next/image';
 import { useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
 import { useRive, Fit, Layout } from '@rive-app/react-canvas';
-import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
 import {
   Tooltip,
@@ -18,6 +17,14 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from '@/components/ui/popover';
+import { SidebarGroup, SidebarGroupLabel } from '@/components/ui/sidebar';
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from '@radix-ui/react-collapsible';
+import { Separator } from '@/components/ui/separator';
+
 import {
   TransformWrapper,
   TransformComponent,
@@ -38,7 +45,7 @@ import {
   TemplateImage,
   TemplateVariable,
 } from '@/types/collections';
-import { Crop, ImageMinus, ImageUpscale } from 'lucide-react';
+import { ChevronDown, Crop, ImageMinus, ImageUpscale } from 'lucide-react';
 
 export default function Editor() {
   const params = useParams<{ id: string }>();
@@ -181,38 +188,44 @@ export default function Editor() {
           </div>
         </div>
 
-        <aside className="w-60 px-4 ps-0 pt-0 transition-all">
-          <div className="grid w-full gap-2.5">
-            {template?.Result.modules.map((x: Module, index) => {
-              return (
-                <div key={x.file}>
-                  <h3>Module {index}</h3>
-
+        <aside className="w-64 px-4 ps-0 pt-0 transition-all">
+          {template?.Result.modules.map((x: Module, index) => {
+            return (
+              <Collapsible defaultOpen className="group/collapsible space-y-2">
+                <CollapsibleTrigger className="w-full">
+                  <div className="rounded-md border ps-4 pe-2 py-2 text-sm bg-sidebar flex flex-row items-center">
+                    Module {index}
+                    <ChevronDown className="ml-auto h-4 transition-transform group-data-[state=open]/collapsible:rotate-180" />
+                  </div>
+                </CollapsibleTrigger>
+                <CollapsibleContent className="space-y-6 py-2">
                   {x.variables.length > 0 && (
-                    <div>
-                      <h3>Variables</h3>
-                      {x.variables.map((y: TemplateVariable) => {
-                        return (
-                          <EditorText
-                            variable={y}
-                            moduleId={index}
-                            moduleType={x.moduleType}
-                            changeText={changeText}
-                          />
-                        );
-                      })}
+                    <div className="space-y-2">
+                      <p className="text-sm">Text</p>
+                      <div className="ps-3 space-y-2">
+                        {x.variables.map((y: TemplateVariable) => {
+                          return (
+                            <EditorText
+                              variable={y}
+                              moduleId={index}
+                              moduleType={x.moduleType}
+                              changeText={changeText}
+                            />
+                          );
+                        })}
+                      </div>
                     </div>
                   )}
 
                   {x.images.length > 0 && (
-                    <div>
-                      <h3>Images</h3>
-
-                      {x.images.map((y: TemplateImage, index) => {
-                        return (
-                          <Popover key={index}>
-                            <PopoverTrigger asChild>
-                              <div className="grid grid-cols-2 gap-1.5">
+                    <div className="space-y-2">
+                      <Separator className="my-4" />
+                      <p className="text-sm">Images</p>
+                      <div className="grid grid-cols-2 gap-2">
+                        {x.images.map((y: TemplateImage, index) => {
+                          return (
+                            <Popover key={'image' + index}>
+                              <PopoverTrigger asChild>
                                 <Image
                                   width={100}
                                   height={100}
@@ -221,80 +234,92 @@ export default function Editor() {
                                   loader={() => y.image}
                                   src={y.image}
                                 ></Image>
-                              </div>
-                            </PopoverTrigger>
-                            <PopoverContent
-                              side="left"
-                              align="start"
-                              className="w-48 p-2"
-                            >
-                              <div className="grid gap-1.5">
-                                <div className="relative size-fit">
-                                  {/* add upload image functionality here */}
-                                  <div className="absolute size-full grid items-center justify-center bg-background/25 transition-opacity opacity-0 hover:opacity-100 z-50 cursor-pointer">
-                                    <Button className="text-xs p-3 h-8 rounded-lg">
-                                      Upload Image
-                                    </Button>
+                              </PopoverTrigger>
+                              <PopoverContent
+                                side="left"
+                                align="start"
+                                className="w-48 p-2"
+                              >
+                                <div className="grid gap-1.5">
+                                  <div className="relative size-fit">
+                                    {/* add upload image functionality here */}
+                                    <div className="absolute size-full grid items-center justify-center bg-background/25 transition-opacity opacity-0 hover:opacity-100 z-50 cursor-pointer">
+                                      <Button
+                                        variant={'secondary'}
+                                        className="text-xs p-3 h-8 rounded-lg"
+                                      >
+                                        Upload Image
+                                      </Button>
+                                    </div>
+                                    <Image
+                                      width={200}
+                                      height={200}
+                                      alt=""
+                                      className="cursor-pointer rounded-lg border transition-opacity hover:opacity-75 relative blur-0 hover:blur-2xl"
+                                      loader={() => y.image}
+                                      src={y.image}
+                                    ></Image>
                                   </div>
-                                  <Image
-                                    width={200}
-                                    height={200}
-                                    alt=""
-                                    className="cursor-pointer rounded-lg border transition-opacity hover:opacity-75 relative blur-0 hover:blur-2xl"
-                                    loader={() => y.image}
-                                    src={y.image}
-                                  ></Image>
-                                </div>
 
-                                <div className="grid grid-cols-3 gap-1.5">
-                                  <TooltipProvider>
-                                    <Tooltip>
-                                      <TooltipTrigger asChild>
-                                        <Button size="sm">
-                                          <Crop />
-                                        </Button>
-                                      </TooltipTrigger>
-                                      <TooltipContent>
-                                        <p>Crop Image</p>
-                                      </TooltipContent>
-                                    </Tooltip>
-                                  </TooltipProvider>
-                                  <TooltipProvider>
-                                    <Tooltip>
-                                      <TooltipTrigger asChild>
-                                        <Button size="sm">
-                                          <ImageMinus />
-                                        </Button>
-                                      </TooltipTrigger>
-                                      <TooltipContent>
-                                        <p>AI Remove Background</p>
-                                      </TooltipContent>
-                                    </Tooltip>
-                                  </TooltipProvider>
-                                  <TooltipProvider>
-                                    <Tooltip>
-                                      <TooltipTrigger asChild>
-                                        <Button size="sm">
-                                          <ImageUpscale />
-                                        </Button>
-                                      </TooltipTrigger>
-                                      <TooltipContent>
-                                        <p>AI Extend Image</p>
-                                      </TooltipContent>
-                                    </Tooltip>
-                                  </TooltipProvider>
+                                  <div className="grid grid-cols-3 gap-1.5">
+                                    <TooltipProvider>
+                                      <Tooltip>
+                                        <TooltipTrigger asChild>
+                                          <Button
+                                            size="sm"
+                                            variant={'secondary'}
+                                          >
+                                            <Crop />
+                                          </Button>
+                                        </TooltipTrigger>
+                                        <TooltipContent>
+                                          <p>Crop Image</p>
+                                        </TooltipContent>
+                                      </Tooltip>
+                                    </TooltipProvider>
+                                    <TooltipProvider>
+                                      <Tooltip>
+                                        <TooltipTrigger asChild>
+                                          <Button
+                                            size="sm"
+                                            variant={'secondary'}
+                                          >
+                                            <ImageMinus />
+                                          </Button>
+                                        </TooltipTrigger>
+                                        <TooltipContent>
+                                          <p>AI Remove Background</p>
+                                        </TooltipContent>
+                                      </Tooltip>
+                                    </TooltipProvider>
+                                    <TooltipProvider>
+                                      <Tooltip>
+                                        <TooltipTrigger asChild>
+                                          <Button
+                                            size="sm"
+                                            variant={'secondary'}
+                                          >
+                                            <ImageUpscale />
+                                          </Button>
+                                        </TooltipTrigger>
+                                        <TooltipContent>
+                                          <p>AI Extend Image</p>
+                                        </TooltipContent>
+                                      </Tooltip>
+                                    </TooltipProvider>
+                                  </div>
                                 </div>
-                              </div>
-                            </PopoverContent>
-                          </Popover>
-                        );
-                      })}
+                              </PopoverContent>
+                            </Popover>
+                          );
+                        })}
+                      </div>
                     </div>
                   )}
-                </div>
-              );
-            })}
-          </div>
+                </CollapsibleContent>
+              </Collapsible>
+            );
+          })}
         </aside>
       </div>
     </>
