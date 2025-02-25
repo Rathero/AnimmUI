@@ -29,9 +29,15 @@ import {
 import { EditorZoom } from '@/components/editor/editor-zoom';
 import { EditorPlay } from '@/components/editor/editor-play';
 import { EditorResolution } from '@/components/editor/editor-resolution';
+import { EditorText } from '@/components/editor/editor-text';
 
 import { templatesService } from '@/app/services/TemplatesService';
-import { ApiTemplate, Module, TemplateVariable } from '@/types/collections';
+import {
+  ApiTemplate,
+  Module,
+  TemplateImage,
+  TemplateVariable,
+} from '@/types/collections';
 import { Crop, ImageMinus, ImageUpscale } from 'lucide-react';
 
 export default function Editor() {
@@ -52,10 +58,8 @@ export default function Editor() {
   });
 
   const [playing, setPlaying] = useState(true);
-
   const playRive = () => {
     console.log('in');
-
     if (rive) {
       rive.play;
       playing ? rive.pause() : rive.play();
@@ -63,22 +67,31 @@ export default function Editor() {
     }
   };
 
-  const changeText = (event: any) => {
-    if (rive) {
-      templateData.text
-        .filter((texts: { v: any }) => texts.v === event.target.id)
-        .map((text: any) => {
-          event.target.value === '' ? (event.target.value = ' ') : '';
-          if (text.path.length > 0) {
-            text.path.map((path: any) => {
-              rive.setTextRunValueAtPath(text.v, event.target.value, path);
-            });
-          } else {
-            rive.setTextRunValue(text.v, event.target.value);
-          }
-          text.default = event.target.value;
-        });
-      setTemplateData(templateData);
+  const changeText = (event: any, moduleId: number, moduleType: number) => {
+    if (moduleType === 0) {
+      if (rive) {
+        template?.Result.modules[moduleId].variables
+          .filter(
+            (variables: { path: any }) => variables.path === event.target.id
+          )
+          .map((variable: any) => {
+            event.target.value === '' ? (event.target.value = ' ') : '';
+            // if (variable.path.length > 0) {
+            //   variable.path.map((path: any) => {
+            //     rive.setTextRunValueAtPath(
+            //       variable.path,
+            //       event.target.value,
+            //       path
+            //     );
+            //   });
+            // } else {
+            //   rive.setTextRunValue(variable.path, event.target.value);
+            // }
+            rive.setTextRunValue(variable.path, event.target.value);
+            variable.defaultValue = event.target.value;
+          });
+        setTemplate(template);
+      }
     }
   };
   async function initializeTemplate() {
@@ -170,95 +183,117 @@ export default function Editor() {
 
         <aside className="w-60 px-4 ps-0 pt-0 transition-all">
           <div className="grid w-full gap-2.5">
-            {template?.Result.modules.map((x: Module) =>
-              x.variables.map((y: TemplateVariable) => {
-                return (
-                  <div className="grid w-full gap-1.5" key={y.path}>
-                    <label
-                      className="text-sm text-sidebar-foreground"
-                      htmlFor={y.path}
-                    >
-                      {y.name}
-                    </label>
-                    <Textarea
-                      id={y.path}
-                      defaultValue={y.defaultValue}
-                      onChange={changeText}
-                    />
-                  </div>
-                );
-              })
-            )}
-            <Popover>
-              <PopoverTrigger asChild>
-                <div className="grid grid-cols-2 gap-1.5">
-                  <Image
-                    width={100}
-                    height={100}
-                    alt=""
-                    className="cursor-pointer rounded-md border transition-opacity hover:opacity-75"
-                    src={'/img/Avatar.webp'}
-                  ></Image>
-                </div>
-              </PopoverTrigger>
-              <PopoverContent side="left" align="start" className="w-48 p-2">
-                <div className="grid gap-1.5">
-                  <div className="relative size-fit">
-                    {/* add upload image functionality here */}
-                    <div className="absolute size-full grid items-center justify-center bg-background/25 transition-opacity opacity-0 hover:opacity-100 z-50 cursor-pointer">
-                      <Button className="text-xs p-3 h-8 rounded-lg">
-                        Upload Image
-                      </Button>
+            {template?.Result.modules.map((x: Module, index) => {
+              return (
+                <div key={x.file}>
+                  <h3>Module {index}</h3>
+
+                  {x.variables.length > 0 && (
+                    <div>
+                      <h3>Variables</h3>
+                      {x.variables.map((y: TemplateVariable) => {
+                        return (
+                          <EditorText
+                            variable={y}
+                            moduleId={index}
+                            moduleType={x.moduleType}
+                            changeText={changeText}
+                          />
+                        );
+                      })}
                     </div>
-                    <Image
-                      width={300}
-                      height={100}
-                      alt=""
-                      className="cursor-pointer rounded-lg border transition-opacity hover:opacity-75 relative blur-0 hover:blur-2xl"
-                      src={'/img/Avatar.webp'}
-                    ></Image>
-                  </div>
-                  <div className="grid grid-cols-3 gap-1.5">
-                    <TooltipProvider>
-                      <Tooltip>
-                        <TooltipTrigger asChild>
-                          <Button size="sm">
-                            <Crop />
-                          </Button>
-                        </TooltipTrigger>
-                        <TooltipContent>
-                          <p>Crop Image</p>
-                        </TooltipContent>
-                      </Tooltip>
-                    </TooltipProvider>
-                    <TooltipProvider>
-                      <Tooltip>
-                        <TooltipTrigger asChild>
-                          <Button size="sm">
-                            <ImageMinus />
-                          </Button>
-                        </TooltipTrigger>
-                        <TooltipContent>
-                          <p>AI Remove Background</p>
-                        </TooltipContent>
-                      </Tooltip>
-                    </TooltipProvider>
-                    <TooltipProvider>
-                      <Tooltip>
-                        <TooltipTrigger asChild>
-                          <Button size="sm">
-                            <ImageUpscale />
-                          </Button>
-                        </TooltipTrigger>
-                        <TooltipContent>
-                          <p>AI Extend Image</p>
-                        </TooltipContent>
-                      </Tooltip>
-                    </TooltipProvider>
-                  </div>
+                  )}
+
+                  {x.images.length > 0 && (
+                    <div>
+                      <h3>Images</h3>
+
+                      {x.images.map((y: TemplateImage, index) => {
+                        return (
+                          <Popover key={index}>
+                            <PopoverTrigger asChild>
+                              <div className="grid grid-cols-2 gap-1.5">
+                                <Image
+                                  width={100}
+                                  height={100}
+                                  alt=""
+                                  className="cursor-pointer rounded-md border transition-opacity hover:opacity-75"
+                                  loader={() => y.image}
+                                  src={y.image}
+                                ></Image>
+                              </div>
+                            </PopoverTrigger>
+                            <PopoverContent
+                              side="left"
+                              align="start"
+                              className="w-48 p-2"
+                            >
+                              <div className="grid gap-1.5">
+                                <div className="relative size-fit">
+                                  {/* add upload image functionality here */}
+                                  <div className="absolute size-full grid items-center justify-center bg-background/25 transition-opacity opacity-0 hover:opacity-100 z-50 cursor-pointer">
+                                    <Button className="text-xs p-3 h-8 rounded-lg">
+                                      Upload Image
+                                    </Button>
+                                  </div>
+                                  <Image
+                                    width={200}
+                                    height={200}
+                                    alt=""
+                                    className="cursor-pointer rounded-lg border transition-opacity hover:opacity-75 relative blur-0 hover:blur-2xl"
+                                    loader={() => y.image}
+                                    src={y.image}
+                                  ></Image>
+                                </div>
+
+                                <div className="grid grid-cols-3 gap-1.5">
+                                  <TooltipProvider>
+                                    <Tooltip>
+                                      <TooltipTrigger asChild>
+                                        <Button size="sm">
+                                          <Crop />
+                                        </Button>
+                                      </TooltipTrigger>
+                                      <TooltipContent>
+                                        <p>Crop Image</p>
+                                      </TooltipContent>
+                                    </Tooltip>
+                                  </TooltipProvider>
+                                  <TooltipProvider>
+                                    <Tooltip>
+                                      <TooltipTrigger asChild>
+                                        <Button size="sm">
+                                          <ImageMinus />
+                                        </Button>
+                                      </TooltipTrigger>
+                                      <TooltipContent>
+                                        <p>AI Remove Background</p>
+                                      </TooltipContent>
+                                    </Tooltip>
+                                  </TooltipProvider>
+                                  <TooltipProvider>
+                                    <Tooltip>
+                                      <TooltipTrigger asChild>
+                                        <Button size="sm">
+                                          <ImageUpscale />
+                                        </Button>
+                                      </TooltipTrigger>
+                                      <TooltipContent>
+                                        <p>AI Extend Image</p>
+                                      </TooltipContent>
+                                    </Tooltip>
+                                  </TooltipProvider>
+                                </div>
+                              </div>
+                            </PopoverContent>
+                          </Popover>
+                        );
+                      })}
+                    </div>
+                  )}
                 </div>
-              </PopoverContent>
-            </Popover>
+              );
+            })}
           </div>
         </aside>
       </div>
