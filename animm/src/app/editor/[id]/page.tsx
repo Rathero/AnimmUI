@@ -75,8 +75,8 @@ export default function Editor() {
 
   const changeText = (text: string, variableToModify: TemplateVariable) => {
     if (rive) {
-      //event.target.value === '' ? (event.target.value = ' ') : '';
-      rive.setTextRunValue(variableToModify.path, text);
+      text = text === '' ? ' ' : text;
+      rive.setTextRunValue(variableToModify.value, text);
       variableToModify.defaultValue = text;
       setTemplate(template);
     }

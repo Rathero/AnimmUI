@@ -11,6 +11,11 @@ export interface TemplateVariable {
   name: string;
   possibleValues: TemplateVariableValue[];
   defaultValue: string;
+  paths: TemplateVariablePath[];
+  value: string;
+}
+
+export interface TemplateVariablePath {
   path: string;
 }
 
