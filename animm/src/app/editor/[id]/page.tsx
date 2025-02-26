@@ -2,7 +2,13 @@
 
 import { useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
-import { useRive, Fit, Layout } from '@rive-app/react-canvas';
+import {
+  useRive,
+  Fit,
+  Layout,
+  FileAsset,
+  decodeImage,
+} from '@rive-app/react-canvas';
 import {
   Collapsible,
   CollapsibleContent,
@@ -28,6 +34,7 @@ export default function Editor() {
   const [templateData, setTemplateData] = useState<any>();
   const [template, setTemplate] = useState<ApiTemplate | undefined>(undefined);
 
+  const [assets, setAssets] = useState<Array<FileAsset>>([]);
   const { rive, RiveComponent } = useRive({
     src: '/test/WL_Product.riv',
     artboard: 'Template',
@@ -37,8 +44,25 @@ export default function Editor() {
       fit: Fit.Layout,
       layoutScaleFactor: 1,
     }),
+    assetLoader: (asset, bytes) => {
+      if (asset.cdnUuid.length > 0 && asset.isImage) {
+        assets.push(asset);
+        setAssets(assets);
+      }
+      return false;
+    },
   });
 
+  const changeImage = async (url: string, i: number) => {
+    if (assets.length > 0) {
+      fetch(url).then(async res => {
+        const image = await decodeImage(
+          new Uint8Array(await res.arrayBuffer())
+        );
+        (assets[i] as any).setRenderImage(image);
+      });
+    }
+  };
   const [playing, setPlaying] = useState(true);
   const playRive = () => {
     console.log('in');
@@ -180,7 +204,10 @@ export default function Editor() {
                     </div>
                   )}
 
-                  <EditorImages images={x.images} />
+                  <EditorImages
+                    images={x.images}
+                    changeImageParent={changeImage}
+                  />
                 </CollapsibleContent>
               </Collapsible>
             );

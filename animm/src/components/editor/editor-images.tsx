@@ -29,7 +29,13 @@ import { useEffect, useRef, useState } from 'react';
 import ReactCrop, { type Crop } from 'react-image-crop';
 import 'react-image-crop/src/ReactCrop.scss';
 
-export default function EditorImages({ images }: { images: TemplateImage[] }) {
+export default function EditorImages({
+  images,
+  changeImageParent,
+}: {
+  images: TemplateImage[];
+  changeImageParent: (url: string, i: number) => void;
+}) {
   const [imgSrc, setImgSrc] = useState<string[]>([]);
   const [originalSrc, setOriginalSrc] = useState<string[]>([]);
   const hiddenFileInput = useRef<HTMLInputElement>(null);
@@ -61,8 +67,9 @@ export default function EditorImages({ images }: { images: TemplateImage[] }) {
         newImgSrc[index] = reader.result?.toString() || '';
         setImgSrc(newImgSrc);
         const newOriginalSrc = [...originalSrc];
-        newOriginalSrc[index] = reader.result?.toString() || '';
+        newOriginalSrc[index] = newImgSrc[index];
         setOriginalSrc(newOriginalSrc);
+        changeImageParent(newImgSrc[index], index);
       });
       reader.readAsDataURL(e.target.files[0]);
     }
@@ -119,6 +126,7 @@ export default function EditorImages({ images }: { images: TemplateImage[] }) {
     const newImgSrc = [...imgSrc];
     newImgSrc[index] = URL.createObjectURL(blob);
     setImgSrc(newImgSrc);
+    changeImageParent(newImgSrc[index], index);
   }
   return (
     <>
