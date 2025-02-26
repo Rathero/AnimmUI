@@ -171,45 +171,52 @@ export default function Editor() {
         <aside className="w-64 px-4 ps-0 pt-0 transition-all">
           {template?.Result.modules.map((x: Module, index) => {
             return (
-              <Collapsible defaultOpen className="group/collapsible space-y-2">
-                <CollapsibleTrigger className="w-full">
-                  <div className="rounded-md border ps-4 pe-2 py-2 text-sm bg-sidebar flex flex-row items-center">
-                    Module {index}
-                    <ChevronDown className="ml-auto h-4 transition-transform group-data-[state=open]/collapsible:rotate-180" />
-                  </div>
-                </CollapsibleTrigger>
-                <CollapsibleContent className="space-y-6 py-2">
-                  {x.variables.length > 0 && (
-                    <div className="space-y-2">
-                      <div className="ps-3 space-y-2">
-                        {x.variables.map((y: TemplateVariable) => {
-                          return (
-                            <>
-                              {y.type === 1 && (
-                                <EditorText
-                                  variable={y}
-                                  changeText={changeText}
-                                />
-                              )}
-                              {y.type === 2 && (
-                                <EditorSelect
-                                  variable={y}
-                                  changeInput={changeText}
-                                />
-                              )}
-                            </>
-                          );
-                        })}
-                      </div>
+              <div key={'div1' + index}>
+                <Collapsible
+                  defaultOpen
+                  className="group/collapsible space-y-2"
+                >
+                  <CollapsibleTrigger className="w-full">
+                    <div className="rounded-md border ps-4 pe-2 py-2 text-sm bg-sidebar flex flex-row items-center">
+                      Module {index}
+                      <ChevronDown className="ml-auto h-4 transition-transform group-data-[state=open]/collapsible:rotate-180" />
                     </div>
-                  )}
+                  </CollapsibleTrigger>
+                  <CollapsibleContent className="space-y-6 py-2">
+                    {x.variables.length > 0 && (
+                      <div className="space-y-2">
+                        <div className="ps-3 space-y-2">
+                          {x.variables.map(
+                            (y: TemplateVariable, index2: number) => {
+                              return (
+                                <div key={'div2' + index2}>
+                                  {y.type === 1 && (
+                                    <EditorText
+                                      variable={y}
+                                      changeText={changeText}
+                                    />
+                                  )}
+                                  {y.type === 2 && (
+                                    <EditorSelect
+                                      variable={y}
+                                      changeInput={changeText}
+                                    />
+                                  )}
+                                </div>
+                              );
+                            }
+                          )}
+                        </div>
+                      </div>
+                    )}
 
-                  <EditorImages
-                    images={x.images}
-                    changeImageParent={changeImage}
-                  />
-                </CollapsibleContent>
-              </Collapsible>
+                    <EditorImages
+                      images={x.images}
+                      changeImageParent={changeImage}
+                    />
+                  </CollapsibleContent>
+                </Collapsible>
+              </div>
             );
           })}
         </aside>

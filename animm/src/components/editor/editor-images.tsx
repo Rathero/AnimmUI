@@ -28,7 +28,6 @@ import { ImageMinus, ImageUpscale } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 import ReactCrop, { type Crop } from 'react-image-crop';
 import 'react-image-crop/src/ReactCrop.scss';
-
 export default function EditorImages({
   images,
   changeImageParent,
@@ -74,6 +73,7 @@ export default function EditorImages({
       reader.readAsDataURL(e.target.files[0]);
     }
   }
+
   async function cropImage(index: number) {
     const image = imgRef.current;
     if (!image || !crop) {
@@ -128,6 +128,7 @@ export default function EditorImages({
     setImgSrc(newImgSrc);
     changeImageParent(newImgSrc[index], index);
   }
+
   return (
     <>
       {imgSrc.length > 0 && (
@@ -189,8 +190,8 @@ export default function EditorImages({
                         <Dialog>
                           <TooltipProvider>
                             <Tooltip>
-                              <DialogTrigger>
-                                <TooltipTrigger asChild>
+                              <TooltipTrigger asChild>
+                                <DialogTrigger asChild>
                                   <Button
                                     size="sm"
                                     variant={'secondary'}
@@ -198,9 +199,8 @@ export default function EditorImages({
                                   >
                                     Crop
                                   </Button>
-                                </TooltipTrigger>
-                              </DialogTrigger>
-
+                                </DialogTrigger>
+                              </TooltipTrigger>
                               <TooltipContent>
                                 <p>Crop Image</p>
                               </TooltipContent>
