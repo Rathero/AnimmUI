@@ -1,49 +1,15 @@
 'use client';
 
-import Image from 'next/image';
 import { useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
 import { useRive, Fit, Layout } from '@rive-app/react-canvas';
-import { Button } from '@/components/ui/button';
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from '@/components/ui/tooltip';
-
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from '@/components/ui/popover';
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from '@/components/ui/dialog';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-
-import { SidebarGroup, SidebarGroupLabel } from '@/components/ui/sidebar';
 import {
   Collapsible,
   CollapsibleContent,
   CollapsibleTrigger,
 } from '@radix-ui/react-collapsible';
-import { Separator } from '@/components/ui/separator';
 
-import {
-  TransformWrapper,
-  TransformComponent,
-  useControls,
-  useTransformComponent,
-  useTransformEffect,
-} from 'react-zoom-pan-pinch';
+import { TransformWrapper, TransformComponent } from 'react-zoom-pan-pinch';
 
 import { EditorZoom } from '@/components/editor/editor-zoom';
 import { EditorPlay } from '@/components/editor/editor-play';
@@ -52,13 +18,9 @@ import { EditorText } from '@/components/editor/editor-text';
 import { EditorSelect } from '@/components/editor/editor-select';
 
 import { templatesService } from '@/app/services/TemplatesService';
-import {
-  ApiTemplate,
-  Module,
-  TemplateImage,
-  TemplateVariable,
-} from '@/types/collections';
+import { ApiTemplate, Module, TemplateVariable } from '@/types/collections';
 import { ChevronDown, Crop, ImageMinus, ImageUpscale } from 'lucide-react';
+import EditorImages from '@/components/editor/editor-images';
 
 export default function Editor() {
   const params = useParams<{ id: string }>();
@@ -195,7 +157,6 @@ export default function Editor() {
                 <CollapsibleContent className="space-y-6 py-2">
                   {x.variables.length > 0 && (
                     <div className="space-y-2">
-                      {/* <p className="text-sm">Text</p> */}
                       <div className="ps-3 space-y-2">
                         {x.variables.map((y: TemplateVariable) => {
                           return (
@@ -209,7 +170,6 @@ export default function Editor() {
                               {y.type === 2 && (
                                 <EditorSelect
                                   variable={y}
-                                  // Change for new function for inputs
                                   changeInput={changeText}
                                 />
                               )}
@@ -220,125 +180,7 @@ export default function Editor() {
                     </div>
                   )}
 
-                  {x.images.length > 0 && (
-                    <div className="space-y-2">
-                      <Separator className="my-4" />
-                      <p className="text-sm">Images</p>
-                      <div className="grid grid-cols-2 gap-2 ps-2">
-                        {x.images.map((y: TemplateImage, index) => {
-                          return (
-                            <Popover key={'image' + index}>
-                              <PopoverTrigger asChild>
-                                <Image
-                                  width={100}
-                                  height={100}
-                                  alt=""
-                                  className="cursor-pointer rounded-md border transition-opacity hover:opacity-75"
-                                  loader={() => y.image}
-                                  src={y.image}
-                                ></Image>
-                              </PopoverTrigger>
-                              <PopoverContent
-                                side="left"
-                                align="start"
-                                className="w-48 p-2"
-                              >
-                                <div className="grid gap-1.5">
-                                  <div className="relative size-fit">
-                                    {/* add upload image functionality here */}
-                                    <div className="absolute size-full grid items-center justify-center bg-background/25 transition-opacity opacity-0 hover:opacity-100 z-50 cursor-pointer">
-                                      <Button
-                                        variant={'secondary'}
-                                        className="text-xs p-3 h-8 rounded-lg"
-                                      >
-                                        Upload Image
-                                      </Button>
-                                    </div>
-                                    <Image
-                                      width={200}
-                                      height={200}
-                                      alt=""
-                                      className="cursor-pointer rounded-lg border transition-opacity hover:opacity-75 relative blur-0 hover:blur-2xl"
-                                      loader={() => y.image}
-                                      src={y.image}
-                                    ></Image>
-                                  </div>
-
-                                  <div className="grid grid-cols-3 gap-1.5">
-                                    <Dialog>
-                                      <TooltipProvider>
-                                        <Tooltip>
-                                          <DialogTrigger>
-                                            <TooltipTrigger asChild>
-                                              <Button
-                                                size="sm"
-                                                variant={'secondary'}
-                                                className="w-full"
-                                              >
-                                                <Crop />
-                                              </Button>
-                                            </TooltipTrigger>
-                                          </DialogTrigger>
-
-                                          <TooltipContent>
-                                            <p>Crop Image</p>
-                                          </TooltipContent>
-                                        </Tooltip>
-                                      </TooltipProvider>
-
-                                      <DialogContent className="sm:max-w-[425px]">
-                                        <DialogHeader>
-                                          <DialogTitle>Crop Image</DialogTitle>
-                                        </DialogHeader>
-                                        <div className="grid gap-4 py-4">
-                                          {/* Crop Aqui */}
-                                        </div>
-                                        <DialogFooter>
-                                          <Button type="submit">
-                                            Save changes
-                                          </Button>
-                                        </DialogFooter>
-                                      </DialogContent>
-                                    </Dialog>
-                                    <TooltipProvider>
-                                      <Tooltip>
-                                        <TooltipTrigger asChild>
-                                          <Button
-                                            size="sm"
-                                            variant={'secondary'}
-                                          >
-                                            <ImageMinus />
-                                          </Button>
-                                        </TooltipTrigger>
-                                        <TooltipContent>
-                                          <p>AI Remove Background</p>
-                                        </TooltipContent>
-                                      </Tooltip>
-                                    </TooltipProvider>
-                                    <TooltipProvider>
-                                      <Tooltip>
-                                        <TooltipTrigger asChild>
-                                          <Button
-                                            size="sm"
-                                            variant={'secondary'}
-                                          >
-                                            <ImageUpscale />
-                                          </Button>
-                                        </TooltipTrigger>
-                                        <TooltipContent>
-                                          <p>AI Extend Image</p>
-                                        </TooltipContent>
-                                      </Tooltip>
-                                    </TooltipProvider>
-                                  </div>
-                                </div>
-                              </PopoverContent>
-                            </Popover>
-                          );
-                        })}
-                      </div>
-                    </div>
-                  )}
+                  <EditorImages images={x.images} />
                 </CollapsibleContent>
               </Collapsible>
             );
