@@ -1,38 +1,40 @@
 'use client';
 
-import Image from 'next/image';
 import { useEffect, useState } from 'react';
-import { useRive, Fit, Layout } from '@rive-app/react-canvas';
-import { Textarea } from '@/components/ui/textarea';
-import { Button } from '@/components/ui/button';
+import { useParams } from 'next/navigation';
+import {
+  useRive,
+  Fit,
+  Layout,
+  FileAsset,
+  decodeImage,
+} from '@rive-app/react-canvas';
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from '@radix-ui/react-collapsible';
 
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from '@/components/ui/popover';
-import {
-  TransformWrapper,
-  TransformComponent,
-  useControls,
-  useTransformComponent,
-  useTransformEffect,
-} from 'react-zoom-pan-pinch';
+import { TransformWrapper, TransformComponent } from 'react-zoom-pan-pinch';
 
 import { EditorZoom } from '@/components/editor/editor-zoom';
 import { EditorPlay } from '@/components/editor/editor-play';
 import { EditorResolution } from '@/components/editor/editor-resolution';
+import { EditorText } from '@/components/editor/editor-text';
+import { EditorSelect } from '@/components/editor/editor-select';
 
-import templatesJson from '@/data/Template.json';
 import { templatesService } from '@/app/services/TemplatesService';
 import { ApiTemplate, Module, TemplateVariable } from '@/types/collections';
+import { ChevronDown, Crop, ImageMinus, ImageUpscale } from 'lucide-react';
+import EditorImages from '@/components/editor/editor-images';
 
 export default function Editor() {
-  const [templateData, setTemplateData] = useState<any>(
-    templatesJson.filter(template => template.id === 0)[0]
-  );
+  const params = useParams<{ id: string }>();
+
+  const [templateData, setTemplateData] = useState<any>();
   const [template, setTemplate] = useState<ApiTemplate | undefined>(undefined);
 
+  const [assets, setAssets] = useState<Array<FileAsset>>([]);
   const { rive, RiveComponent } = useRive({
     src: '/test/WL_Product.riv',
     artboard: 'Template',
@@ -42,13 +44,28 @@ export default function Editor() {
       fit: Fit.Layout,
       layoutScaleFactor: 1,
     }),
+    assetLoader: (asset, bytes) => {
+      if (asset.cdnUuid.length > 0 && asset.isImage) {
+        assets.push(asset);
+        setAssets(assets);
+      }
+      return false;
+    },
   });
 
+  const changeImage = async (url: string, i: number) => {
+    if (assets.length > 0) {
+      fetch(url).then(async res => {
+        const image = await decodeImage(
+          new Uint8Array(await res.arrayBuffer())
+        );
+        (assets[i] as any).setRenderImage(image);
+      });
+    }
+  };
   const [playing, setPlaying] = useState(true);
-
   const playRive = () => {
     console.log('in');
-
     if (rive) {
       rive.play;
       playing ? rive.pause() : rive.play();
@@ -56,26 +73,16 @@ export default function Editor() {
     }
   };
 
-  const changeText = (event: any) => {
+  const changeText = (text: string, variableToModify: TemplateVariable) => {
     if (rive) {
-      templateData.text
-        .filter((texts: { v: any }) => texts.v === event.target.id)
-        .map((text: any) => {
-          event.target.value === '' ? (event.target.value = ' ') : '';
-          if (text.path.length > 0) {
-            text.path.map((path: any) => {
-              rive.setTextRunValueAtPath(text.v, event.target.value, path);
-            });
-          } else {
-            rive.setTextRunValue(text.v, event.target.value);
-          }
-          text.default = event.target.value;
-        });
-      setTemplateData(templateData);
+      //event.target.value === '' ? (event.target.value = ' ') : '';
+      rive.setTextRunValue(variableToModify.path, text);
+      variableToModify.defaultValue = text;
+      setTemplate(template);
     }
   };
   async function initializeTemplate() {
-    const template = await templatesService.get('1');
+    const template = await templatesService.get(params.id);
     setTemplate(template);
   }
 
@@ -161,68 +168,50 @@ export default function Editor() {
           </div>
         </div>
 
-        <aside className="w-60 px-4 ps-0 pt-0 transition-all">
-          <div className="grid w-full gap-2.5">
-            {template?.Result.modules.map((x: Module) =>
-              x.variables.map((y: TemplateVariable) => {
-                return (
-                  <div className="grid w-full gap-1.5" key={y.path}>
-                    <label
-                      className="text-sm text-sidebar-foreground"
-                      htmlFor={y.path}
-                    >
-                      {y.name}
-                    </label>
-                    <Textarea
-                      id={y.path}
-                      defaultValue={y.defaultValue}
-                      onChange={changeText}
-                    />
+        <aside className="w-64 px-4 ps-0 pt-0 transition-all">
+          {template?.Result.modules.map((x: Module, index) => {
+            return (
+              <Collapsible defaultOpen className="group/collapsible space-y-2">
+                <CollapsibleTrigger className="w-full">
+                  <div className="rounded-md border ps-4 pe-2 py-2 text-sm bg-sidebar flex flex-row items-center">
+                    Module {index}
+                    <ChevronDown className="ml-auto h-4 transition-transform group-data-[state=open]/collapsible:rotate-180" />
                   </div>
-                );
-              })
-            )}
-            <Popover>
-              <PopoverTrigger asChild>
-                <div className="grid grid-cols-2 gap-1.5">
-                  <Image
-                    width={100}
-                    height={100}
-                    alt=""
-                    className="cursor-pointer rounded-md border transition-opacity hover:opacity-75"
-                    src={'/img/Avatar.webp'}
-                  ></Image>
-                </div>
-              </PopoverTrigger>
-              <PopoverContent side="left" align="start" className="w-60">
-                <div className="grid gap-4">
-                  <div className="grid gap-2">
-                    <div className="relative size-fit">
-                      <Button className="text-xs p-3 h-8 rounded-lg absolute top-1/2 left-1/2 transition-opacity opacity-0 hover:opacity-100 z-50">
-                        Crop
-                      </Button>
-                      <Image
-                        width={300}
-                        height={100}
-                        alt=""
-                        className="cursor-pointer rounded-lg border transition-opacity hover:opacity-75 relative"
-                        src={'/img/Avatar.webp'}
-                      ></Image>
+                </CollapsibleTrigger>
+                <CollapsibleContent className="space-y-6 py-2">
+                  {x.variables.length > 0 && (
+                    <div className="space-y-2">
+                      <div className="ps-3 space-y-2">
+                        {x.variables.map((y: TemplateVariable) => {
+                          return (
+                            <>
+                              {y.type === 1 && (
+                                <EditorText
+                                  variable={y}
+                                  changeText={changeText}
+                                />
+                              )}
+                              {y.type === 2 && (
+                                <EditorSelect
+                                  variable={y}
+                                  changeInput={changeText}
+                                />
+                              )}
+                            </>
+                          );
+                        })}
+                      </div>
                     </div>
-                  </div>
-                  <div className="grid gap-1.5">
-                    <Button className="text-xs p-3 h-8 rounded-lg">Crop</Button>
-                    <Button className="text-xs p-3 h-8 rounded-lg">
-                      Remove Background
-                    </Button>
-                    <Button className="text-xs p-3 h-8 rounded-lg">
-                      Expand Image
-                    </Button>
-                  </div>
-                </div>
-              </PopoverContent>
-            </Popover>
-          </div>
+                  )}
+
+                  <EditorImages
+                    images={x.images}
+                    changeImageParent={changeImage}
+                  />
+                </CollapsibleContent>
+              </Collapsible>
+            );
+          })}
         </aside>
       </div>
     </>
