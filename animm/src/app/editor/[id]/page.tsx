@@ -74,31 +74,12 @@ export default function Editor() {
     }
   };
 
-  const changeText = (event: any, moduleId: number, moduleType: number) => {
-    if (moduleType === 0) {
-      if (rive) {
-        template?.Result.modules[moduleId].variables
-          .filter(
-            (variables: { path: any }) => variables.path === event.target.id
-          )
-          .map((variable: any) => {
-            event.target.value === '' ? (event.target.value = ' ') : '';
-            // if (variable.path.length > 0) {
-            //   variable.path.map((path: any) => {
-            //     rive.setTextRunValueAtPath(
-            //       variable.path,
-            //       event.target.value,
-            //       path
-            //     );
-            //   });
-            // } else {
-            //   rive.setTextRunValue(variable.path, event.target.value);
-            // }
-            rive.setTextRunValue(variable.path, event.target.value);
-            variable.defaultValue = event.target.value;
-          });
-        setTemplate(template);
-      }
+  const changeText = (text: string, variableToModify: TemplateVariable) => {
+    if (rive) {
+      //event.target.value === '' ? (event.target.value = ' ') : '';
+      rive.setTextRunValue(variableToModify.path, text);
+      variableToModify.defaultValue = text;
+      setTemplate(template);
     }
   };
   async function initializeTemplate() {
@@ -205,12 +186,7 @@ export default function Editor() {
                       <div className="ps-3 space-y-2">
                         {x.variables.map((y: TemplateVariable) => {
                           return (
-                            <EditorText
-                              variable={y}
-                              moduleId={index}
-                              moduleType={x.moduleType}
-                              changeText={changeText}
-                            />
+                            <EditorText variable={y} changeText={changeText} />
                           );
                         })}
                       </div>

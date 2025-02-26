@@ -1,25 +1,9 @@
-import {
-  ReactElement,
-  JSXElementConstructor,
-  ReactNode,
-  ReactPortal,
-  ChangeEvent,
-} from 'react';
 import { Textarea } from '../ui/textarea';
+import { TemplateVariable } from '@/types/collections';
 
 export function EditorText(props: {
-  variable: {
-    path: string | undefined;
-    name: string | undefined;
-    defaultValue: string | number | readonly string[] | undefined;
-  };
-  changeText: (
-    arg0: ChangeEvent<HTMLTextAreaElement>,
-    arg1: number,
-    arg2: number
-  ) => void;
-  moduleId: number;
-  moduleType: number;
+  variable: TemplateVariable;
+  changeText: (arg0: string, arg1: TemplateVariable) => void;
 }) {
   return (
     <div className="grid w-full gap-1.5">
@@ -32,7 +16,7 @@ export function EditorText(props: {
       <Textarea
         id={props.variable.path}
         defaultValue={props.variable.defaultValue}
-        onChange={e => props.changeText(e, props.moduleId, props.moduleType)}
+        onChange={e => props.changeText(e.target.value, props.variable)}
       />
     </div>
   );
