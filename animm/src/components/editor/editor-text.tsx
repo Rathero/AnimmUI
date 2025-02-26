@@ -1,5 +1,6 @@
 import { Textarea } from '../ui/textarea';
 import { TemplateVariable } from '@/types/collections';
+import { Label } from '@/components/ui/label';
 
 export function EditorText(props: {
   variable: TemplateVariable;
@@ -7,12 +8,12 @@ export function EditorText(props: {
 }) {
   return (
     <div className="grid w-full gap-1.5">
-      <label
+      <Label
         className="text-sm text-muted-foreground"
         htmlFor={props.variable.path}
       >
         {props.variable.name}
-      </label>
+      </Label>
       <Textarea
         id={props.variable.path}
         defaultValue={props.variable.defaultValue}

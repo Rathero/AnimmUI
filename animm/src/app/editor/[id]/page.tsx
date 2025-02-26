@@ -17,6 +17,18 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from '@/components/ui/popover';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+
 import { SidebarGroup, SidebarGroupLabel } from '@/components/ui/sidebar';
 import {
   Collapsible,
@@ -37,6 +49,7 @@ import { EditorZoom } from '@/components/editor/editor-zoom';
 import { EditorPlay } from '@/components/editor/editor-play';
 import { EditorResolution } from '@/components/editor/editor-resolution';
 import { EditorText } from '@/components/editor/editor-text';
+import { EditorSelect } from '@/components/editor/editor-select';
 
 import { templatesService } from '@/app/services/TemplatesService';
 import {
@@ -182,11 +195,25 @@ export default function Editor() {
                 <CollapsibleContent className="space-y-6 py-2">
                   {x.variables.length > 0 && (
                     <div className="space-y-2">
-                      <p className="text-sm">Text</p>
+                      {/* <p className="text-sm">Text</p> */}
                       <div className="ps-3 space-y-2">
                         {x.variables.map((y: TemplateVariable) => {
                           return (
-                            <EditorText variable={y} changeText={changeText} />
+                            <>
+                              {y.type === 1 && (
+                                <EditorText
+                                  variable={y}
+                                  changeText={changeText}
+                                />
+                              )}
+                              {y.type === 2 && (
+                                <EditorSelect
+                                  variable={y}
+                                  // Change for new function for inputs
+                                  changeInput={changeText}
+                                />
+                              )}
+                            </>
                           );
                         })}
                       </div>
@@ -197,7 +224,7 @@ export default function Editor() {
                     <div className="space-y-2">
                       <Separator className="my-4" />
                       <p className="text-sm">Images</p>
-                      <div className="grid grid-cols-2 gap-2">
+                      <div className="grid grid-cols-2 gap-2 ps-2">
                         {x.images.map((y: TemplateImage, index) => {
                           return (
                             <Popover key={'image' + index}>
@@ -238,21 +265,41 @@ export default function Editor() {
                                   </div>
 
                                   <div className="grid grid-cols-3 gap-1.5">
-                                    <TooltipProvider>
-                                      <Tooltip>
-                                        <TooltipTrigger asChild>
-                                          <Button
-                                            size="sm"
-                                            variant={'secondary'}
-                                          >
-                                            <Crop />
+                                    <Dialog>
+                                      <TooltipProvider>
+                                        <Tooltip>
+                                          <DialogTrigger>
+                                            <TooltipTrigger asChild>
+                                              <Button
+                                                size="sm"
+                                                variant={'secondary'}
+                                                className="w-full"
+                                              >
+                                                <Crop />
+                                              </Button>
+                                            </TooltipTrigger>
+                                          </DialogTrigger>
+
+                                          <TooltipContent>
+                                            <p>Crop Image</p>
+                                          </TooltipContent>
+                                        </Tooltip>
+                                      </TooltipProvider>
+
+                                      <DialogContent className="sm:max-w-[425px]">
+                                        <DialogHeader>
+                                          <DialogTitle>Crop Image</DialogTitle>
+                                        </DialogHeader>
+                                        <div className="grid gap-4 py-4">
+                                          {/* Crop Aqui */}
+                                        </div>
+                                        <DialogFooter>
+                                          <Button type="submit">
+                                            Save changes
                                           </Button>
-                                        </TooltipTrigger>
-                                        <TooltipContent>
-                                          <p>Crop Image</p>
-                                        </TooltipContent>
-                                      </Tooltip>
-                                    </TooltipProvider>
+                                        </DialogFooter>
+                                      </DialogContent>
+                                    </Dialog>
                                     <TooltipProvider>
                                       <Tooltip>
                                         <TooltipTrigger asChild>
