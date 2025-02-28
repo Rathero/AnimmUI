@@ -44,72 +44,18 @@ const Components = [
 
 interface DraggableDivProps {
   id: number;
-  index: number;
-  moveDiv: (fromIndex: number, toIndex: number) => void;
   isSelected: boolean;
-  onSelect: () => void;
-  layout: 'horizontal' | 'vertical';
+  onSelect: (id: number | null) => void;
   nestedLayout: 'horizontal' | 'vertical';
-  toggleNestedLayout: () => void;
-  addNestedDiv: () => void;
   removeNestedDiv: (nestedId: number) => void;
   nestedDivs: number[];
 }
 
-// const DraggableDiv2 = ({
-//   id,
-//   moveDiv,
-//   isSelected,
-//   onSelect,
-//   layout,
-//   nestedLayout,
-//   toggleNestedLayout,
-//   addNestedDiv,
-//   removeNestedDiv,
-//   nestedDivs,
-// }: DraggableDivProps) => {
-//   return (
-//     <div
-//       className={`flex flex-auto border
-//         ${layout === 'row' ? 'w-60' : 'h-60'}
-//         ${nestedLayout === 'row' ? 'flex-row' : 'flex-col'}
-//         ${isSelected ? 'border-2 border-blue-500 z-40 ' : ''}`}
-//       onClick={e => {
-//         e.stopPropagation();
-//         onSelect();
-//       }}
-//     >
-//       {nestedDivs.map(nestedId => (
-//         <div key={nestedId} className="relative bg-gray-300 size-full">
-//           <div className="absolute top-0 left-0 p-2">
-//             Div {id} - Nested {nestedId}
-//           </div>
-//           <div className="absolute top-0 right-0 p-2">
-//             <Button
-//               variant="destructive"
-//               size="icon"
-//               className="opacity-0 transition-opacity hover:opacity-100"
-//               onClick={() => removeNestedDiv(nestedId)}
-//             >
-//               <Trash />
-//             </Button>
-//           </div>
-//           {/* Content here */}
-//           <RiveComp src="/Test/WL_Totem.riv" />
-//         </div>
-//       ))}
-//     </div>
-//   );
-// };
 const DraggableDiv = ({
   id,
-  moveDiv,
   isSelected,
   onSelect,
-  layout,
   nestedLayout,
-  toggleNestedLayout,
-  addNestedDiv,
   removeNestedDiv,
   nestedDivs,
 }: DraggableDivProps) => {
@@ -120,7 +66,7 @@ const DraggableDiv = ({
               ${isSelected ? ' border-blue-500 z-40 ' : ''}`}
         onClick={e => {
           e.stopPropagation();
-          onSelect();
+          onSelect(id);
         }}
       >
         <ResizablePanelGroup key={id} direction={nestedLayout}>
@@ -241,7 +187,12 @@ export default function Editor() {
     <>
       <div className="absolute flex top-0 bottom-0 right-0 left-0 overflow-hidden">
         <div className="w-full h-full overflow-hidden p-4 pt-0">
-          <div className="w-full h-full relative rounded-lg border bg-sidebar bg-editor">
+          <div
+            className="w-full h-full relative rounded-lg border bg-sidebar bg-editor"
+            onClick={e => {
+              setSelectedId(null);
+            }}
+          >
             <TransformWrapper
               disabled={isResizing}
               disablePadding={true}
@@ -287,9 +238,7 @@ export default function Editor() {
                               key={index}
                               id={index}
                               isSelected={selectedId === index}
-                              onSelect={() => setSelectedId(index)}
-                              addNestedDiv={addNestedDiv}
-                              layout={mainLayout}
+                              onSelect={setSelectedId}
                               nestedLayout={nestedLayouts[index] || 'vertical'}
                               removeNestedDiv={removeNestedDiv}
                               nestedDivs={nestedDivs[id] || []}
