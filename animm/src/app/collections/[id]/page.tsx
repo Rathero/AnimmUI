@@ -18,7 +18,7 @@ export default async function CollectionPage({
         title={collection.Result.name}
         desc={collection.Result.description}
       />
-      <div className="w-full grid grid-cols-1 2xl:grid-cols-5 xl:grid-cols-4 lg:grid-cols-3 sm:grid-cols-2 gap-4 p-4">
+      <div className="w-full grid grid-cols-1 3xl:grid-cols-6 2xl:grid-cols-5 xl:grid-cols-4 lg:grid-cols-3 sm:grid-cols-2 gap-4 p-4">
         {collection.Result.templates.map(template => (
           <TemplateElement key={template.id} template={template} />
         ))}

@@ -5,8 +5,8 @@
 body {
   font-family: Arial, Helvetica, sans-serif;
 }
-@theme{
-  --ease-in-out-sn: cubic-bezier(0.350, 0.000, 0.165, 1.000);; 
+@theme {
+  --ease-in-out-sn: cubic-bezier(0.35, 0, 0.165, 1);
 }
 @layer base {
   :root {
@@ -109,23 +109,23 @@ body {
     --sidebar-border: 240 3.7% 15.9%;
     --sidebar-ring: 217.2 91.2% 59.8%;
   }
-  
 }
-#MainCanvas{
+#MainCanvas {
   padding: 0;
   min-height: 125px;
   min-width: 325px;
   resize: both;
-  overflow:hidden;
+  overflow: hidden;
 }
 
 .bg-editor {
-  background-image: radial-gradient(rgba(0, 0, 0, 0.1) 1.2px, transparent 0) !important;
+  background-image: radial-gradient(
+    rgba(0, 0, 0, 0.1) 1.2px,
+    transparent 0
+  ) !important;
   background-size: 20px 20px !important;
   background-position: -19px -19px !important;
 }
-
-
 
 @layer base {
   * {
