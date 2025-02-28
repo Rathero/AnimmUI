@@ -10,12 +10,12 @@ export function EditorText(props: {
     <div className="grid w-full gap-1.5">
       <Label
         className="text-sm text-muted-foreground"
-        htmlFor={props.variable.path}
+        htmlFor={props.variable.value}
       >
         {props.variable.name}
       </Label>
       <Textarea
-        id={props.variable.path}
+        id={props.variable.value}
         defaultValue={props.variable.defaultValue}
         onChange={e => props.changeText(e.target.value, props.variable)}
       />
