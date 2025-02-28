@@ -12,22 +12,26 @@ import {
 import { TemplateVariable } from '@/types/collections';
 import { Label } from '@/components/ui/label';
 
-export function EditorSelect(props: {
+export function EditorSelect({
+  variable,
+  changeInput,
+}: {
   variable: TemplateVariable;
   changeInput: (arg0: string, arg1: TemplateVariable) => void;
 }) {
   return (
     <div className="grid w-full gap-1.5">
-      <Label className="text-sm text-muted-foreground">
-        {props.variable.name}
-      </Label>
-      <Select onValueChange={e => props.changeInput(e, props.variable)}>
+      <Label className="text-sm text-muted-foreground">{variable.name}</Label>
+      <Select
+        onValueChange={e => changeInput(e, variable)}
+        defaultValue={variable.defaultValue}
+      >
         <SelectTrigger className="w-full !text-left">
-          <SelectValue placeholder={props.variable.defaultValue} />
+          <SelectValue placeholder={variable.defaultValue} />
         </SelectTrigger>
         <SelectContent>
           <SelectGroup>
-            {props.variable.possibleValues.map(v => (
+            {variable.possibleValues.map(v => (
               <SelectItem value={v.value} key={v.value}>
                 {v.label}
               </SelectItem>

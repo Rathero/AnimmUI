@@ -1,9 +1,15 @@
-import { useRive, Fit, Layout } from '@rive-app/react-canvas';
+import { useRive, Fit, Layout, FileAsset } from '@rive-app/react-canvas';
+import { Dispatch, SetStateAction, useState } from 'react';
 
-export function RiveComp(props: any) {
-  const src: string = props.src;
-
-  const { rive, RiveComponent } = useRive({
+export default function RiveComp({
+  src,
+  setAssetsParent,
+}: {
+  src: string;
+  setAssetsParent: Dispatch<SetStateAction<FileAsset[]>>;
+}) {
+  const [assets, setAssets] = useState<Array<FileAsset>>([]);
+  const { RiveComponent } = useRive({
     src: src,
     artboard: 'Template',
     stateMachines: 'SM',
@@ -12,6 +18,14 @@ export function RiveComp(props: any) {
       fit: Fit.Layout,
       layoutScaleFactor: 1,
     }),
+    assetLoader: (asset, bytes) => {
+      if (asset.isImage) {
+        assets.push(asset);
+        setAssets(assets);
+        setAssetsParent(assets);
+      }
+      return false;
+    },
   });
 
   return <RiveComponent />;
