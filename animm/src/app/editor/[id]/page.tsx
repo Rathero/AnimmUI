@@ -2,13 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
-import {
-  useRive,
-  Fit,
-  Layout,
-  FileAsset,
-  decodeImage,
-} from '@rive-app/react-canvas';
+import { FileAsset, decodeImage, RiveState } from '@rive-app/react-canvas';
 import {
   Collapsible,
   CollapsibleContent,
@@ -27,32 +21,15 @@ import { templatesService } from '@/app/services/TemplatesService';
 import { ApiTemplate, Module, TemplateVariable } from '@/types/collections';
 import { ChevronDown, Crop, ImageMinus, ImageUpscale } from 'lucide-react';
 import EditorImages from '@/components/editor/editor-images';
+import RiveComp from '@/components/editor/rive-component';
 
 export default function Editor() {
   const params = useParams<{ id: string }>();
 
-  const [templateData, setTemplateData] = useState<any>();
   const [template, setTemplate] = useState<ApiTemplate | undefined>(undefined);
 
   const [assets, setAssets] = useState<Array<FileAsset>>([]);
-  const { rive, RiveComponent } = useRive({
-    src: '/test/WL_Product.riv',
-    artboard: 'Template',
-    stateMachines: 'SM',
-    autoplay: true,
-    layout: new Layout({
-      fit: Fit.Layout,
-      layoutScaleFactor: 1,
-    }),
-    assetLoader: (asset, bytes) => {
-      if (asset.cdnUuid.length > 0 && asset.isImage) {
-        assets.push(asset);
-        setAssets(assets);
-      }
-      return false;
-    },
-  });
-
+  const [rivesStates] = useState<RiveState[]>([]);
   const changeImage = async (url: string, i: number) => {
     if (assets.length > 0) {
       fetch(url).then(async res => {
@@ -65,18 +42,25 @@ export default function Editor() {
   };
   const [playing, setPlaying] = useState(true);
   const playRive = () => {
-    console.log('in');
-    if (rive) {
-      rive.play;
-      playing ? rive.pause() : rive.play();
+    if (rivesStates) {
+      rivesStates.forEach(riveState => {
+        if (riveState.rive) {
+          riveState.rive.play;
+          playing ? riveState.rive.pause() : riveState.rive.play();
+        }
+      });
       setPlaying(!playing);
     }
   };
 
   const changeText = (text: string, variableToModify: TemplateVariable) => {
-    if (rive) {
-      text = text === '' ? ' ' : text;
-      rive.setTextRunValue(variableToModify.value, text);
+    if (rivesStates) {
+      rivesStates.forEach(riveState => {
+        if (riveState.rive) {
+          text = text === '' ? ' ' : text;
+          riveState.rive.setTextRunValue(variableToModify.value, text);
+        }
+      });
       variableToModify.defaultValue = text;
       setTemplate(template);
     }
@@ -158,7 +142,14 @@ export default function Editor() {
                       className="h-[1920px] w-[1080px] resizeItem flex rounded-lg border bg-white shadow-md shadow-slate-500/10"
                     >
                       <div className="size-full">
-                        <RiveComponent />
+                        {template &&
+                          template.Result.modules.length > 0 &&
+                          template.Result.modules[0].file && (
+                            <RiveComp
+                              src={template.Result.modules[0].file}
+                              setAssetsParent={setAssets}
+                            />
+                          )}
                       </div>
                     </div>
                   </TransformComponent>

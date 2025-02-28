@@ -51,10 +51,12 @@ export default function EditorImages({
   useEffect(() => {
     setImgSrc([]);
     setOriginalSrc([]);
+    let imgSrcs: string[] = [];
     images.forEach(x => {
-      setImgSrc([...imgSrc, x.image]);
-      setOriginalSrc([...originalSrc, x.image]);
+      imgSrcs.push(x.image);
     });
+    setImgSrc(imgSrcs);
+    setOriginalSrc(imgSrcs);
   }, [images]);
 
   function onSelectFile(e: React.ChangeEvent<HTMLInputElement>, index: number) {
