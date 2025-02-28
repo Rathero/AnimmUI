@@ -24,7 +24,7 @@ import {
 } from '@/components/ui/dialog';
 import { Separator } from '@/components/ui/separator';
 
-import { ImageMinus, ImageUpscale } from 'lucide-react';
+import { CropIcon, ImageMinus, ImageUpscale } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 import ReactCrop, { type Crop } from 'react-image-crop';
 import 'react-image-crop/src/ReactCrop.scss';
@@ -37,16 +37,15 @@ export default function EditorImages({
 }) {
   const [imgSrc, setImgSrc] = useState<string[]>([]);
   const [originalSrc, setOriginalSrc] = useState<string[]>([]);
+  const [isCropOpen, setIsCropOpen] = useState<boolean>(false);
   const hiddenFileInput = useRef<HTMLInputElement>(null);
   const imgRef = useRef<HTMLImageElement>(null);
 
-  const [crop, setCrop] = useState<Crop | undefined>({
-    unit: '%', // Can be 'px' or '%'
-    x: 25,
-    y: 25,
-    width: 50,
-    height: 50,
-  });
+  const [crop, setCrop] = useState<Crop | undefined>();
+
+  useEffect(() => {
+    setCrop(undefined);
+  }, [isCropOpen]);
 
   useEffect(() => {
     setImgSrc([]);
@@ -191,26 +190,25 @@ export default function EditorImages({
                         ></Image>
                       </div>
                       <div className="grid grid-cols-3 gap-1.5">
-                        <Dialog>
-                          <TooltipProvider>
-                            <Tooltip>
-                              <TooltipTrigger asChild>
-                                <DialogTrigger asChild>
-                                  <Button
-                                    size="sm"
-                                    variant={'secondary'}
-                                    className="w-full"
-                                  >
-                                    Crop
-                                  </Button>
-                                </DialogTrigger>
-                              </TooltipTrigger>
-                              <TooltipContent>
-                                <p>Crop Image</p>
-                              </TooltipContent>
-                            </Tooltip>
-                          </TooltipProvider>
+                        <TooltipProvider>
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <Button
+                                size="sm"
+                                variant="secondary"
+                                className="w-full"
+                                onClick={() => setIsCropOpen(true)}
+                              >
+                                <CropIcon />
+                              </Button>
+                            </TooltipTrigger>
+                            <TooltipContent>
+                              <p>Crop Image</p>
+                            </TooltipContent>
+                          </Tooltip>
+                        </TooltipProvider>
 
+                        <Dialog open={isCropOpen} onOpenChange={setIsCropOpen}>
                           <DialogContent className="sm:max-w-[425px]">
                             <DialogHeader>
                               <DialogTitle>Crop Image</DialogTitle>
@@ -221,13 +219,14 @@ export default function EditorImages({
                                 onChange={c => {
                                   setCrop(c);
                                 }}
+                                minHeight={100}
                               >
                                 <Image
                                   ref={imgRef}
-                                  width={300}
-                                  height={100}
+                                  width={500}
+                                  height={500}
                                   alt=""
-                                  className="cursor-pointer rounded-lg border transition-opacity hover:opacity-75 relative"
+                                  className="cursor-pointer rounded-lg border transition-opacity hover:opacity-75 aspect-auto relative"
                                   src={originalSrc[index]}
                                 ></Image>
                               </ReactCrop>
@@ -243,10 +242,11 @@ export default function EditorImages({
                             </DialogFooter>
                           </DialogContent>
                         </Dialog>
+
                         <TooltipProvider>
                           <Tooltip>
                             <TooltipTrigger asChild>
-                              <Button size="sm" variant={'secondary'}>
+                              <Button disabled size="sm" variant="secondary">
                                 <ImageMinus />
                               </Button>
                             </TooltipTrigger>
@@ -258,7 +258,7 @@ export default function EditorImages({
                         <TooltipProvider>
                           <Tooltip>
                             <TooltipTrigger asChild>
-                              <Button size="sm" variant={'secondary'}>
+                              <Button disabled size="sm" variant="secondary">
                                 <ImageUpscale />
                               </Button>
                             </TooltipTrigger>
