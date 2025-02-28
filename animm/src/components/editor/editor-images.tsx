@@ -146,7 +146,7 @@ export default function EditorImages({
                       width={100}
                       height={100}
                       alt=""
-                      className="cursor-pointer rounded-md border transition-opacity hover:opacity-75"
+                      className="cursor-pointer rounded-md border transition-opacity hover:opacity-75 aspect-square object-cover"
                       loader={() => y}
                       src={y}
                     ></Image>
@@ -157,8 +157,14 @@ export default function EditorImages({
                     className="w-48 p-2"
                   >
                     <div className="grid gap-1.5">
-                      <div className="relative size-fit">
-                        <div className="absolute size-full grid items-center justify-center bg-background/25 transition-opacity opacity-0 hover:opacity-100 z-50 cursor-pointer">
+                      <div className="relative size-fit rounded-lg border overflow-hidden bg-sidebar">
+                        <div
+                          className="absolute size-full grid items-center justify-center bg-background/25 transition-opacity opacity-0 hover:opacity-100 z-50 cursor-pointer"
+                          onClick={() => {
+                            if (hiddenFileInput.current != null)
+                              hiddenFileInput.current.click();
+                          }}
+                        >
                           <input
                             ref={hiddenFileInput}
                             type="file"
@@ -171,10 +177,6 @@ export default function EditorImages({
                           <Button
                             variant={'secondary'}
                             className="text-xs p-3 h-8 rounded-lg"
-                            onClick={() => {
-                              if (hiddenFileInput.current != null)
-                                hiddenFileInput.current.click();
-                            }}
                           >
                             Upload Image
                           </Button>
@@ -183,7 +185,7 @@ export default function EditorImages({
                           width={200}
                           height={200}
                           alt=""
-                          className="cursor-pointer rounded-lg border transition-opacity hover:opacity-75 relative blur-0 hover:blur-2xl"
+                          className="cursor-pointer transition-opacity hover:opacity-75 aspect-square object-contain"
                           loader={() => imgSrc[index]}
                           src={imgSrc[index]}
                         ></Image>
