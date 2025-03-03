@@ -88,7 +88,7 @@ const DraggableDiv = ({
                   </Button>
                 </div>
                 {/* Content here */}
-                <RiveComp src={Components[2][0]} ab={Components[2][1]} />
+                {/* <RiveComp src={Components[2][0]} ab={Components[2][1]} /> */}
               </ResizablePanel>
             </>
           ))}

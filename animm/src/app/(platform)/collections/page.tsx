@@ -1,7 +1,7 @@
 import Link from 'next/link';
 import { HeaderPage } from '@/components/header-page';
 import CollectionCard from '@/components/collection-card';
-import { collectionsService } from '../services/CollectionsService';
+import { collectionsService } from '../../services/CollectionsService';
 
 export default async function CollectionsPage() {
   const collections = await collectionsService.getAll();

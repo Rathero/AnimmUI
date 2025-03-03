@@ -1,15 +1,15 @@
-import type { Metadata } from "next";
-import "./globals.css";
+import type { Metadata } from 'next';
+import './../globals.css';
 import {
   SidebarInset,
   SidebarProvider,
   SidebarTrigger,
-} from "@/components/ui/sidebar";
-import { AppSidebar } from "@/components/app-sidebar";
+} from '@/components/ui/sidebar';
+import { AppSidebar } from '@/components/app-sidebar';
 
 export const metadata: Metadata = {
-  title: "Animm.",
-  description: "Animations at scale",
+  title: 'Animm.',
+  description: 'Animations at scale',
 };
 
 export default function RootLayout({
@@ -22,8 +22,8 @@ export default function RootLayout({
       <body>
         <SidebarProvider
           style={{
-            "--sidebar-width": "13rem",
-            "--sidebar-width-mobile": "20rem",
+            '--sidebar-width': '13rem',
+            '--sidebar-width-mobile': '20rem',
           }}
         >
           <AppSidebar />
