@@ -7,6 +7,8 @@ import {
 } from '@/components/ui/sidebar';
 import { AppSidebar } from '@/components/app-sidebar';
 
+import { Toaster } from '@/components/ui/sonner';
+
 export const metadata: Metadata = {
   title: 'Animm.',
   description: 'Animations at scale',
@@ -38,6 +40,7 @@ export default function RootLayout({
             </div>
           </SidebarInset>
         </SidebarProvider>
+        <Toaster position="top-right" />
       </body>
     </html>
   );
