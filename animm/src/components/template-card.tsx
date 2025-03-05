@@ -1,31 +1,31 @@
-import Image from "next/image";
-import { Folder, MoreVertical } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import Image from 'next/image';
+import { Folder, MoreVertical } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
   DropdownMenuSeparator,
-} from "@/components/ui/dropdown-menu";
-import { Card, CardContent, CardHeader } from "@/components/ui/card";
-import { DropdownMenuGroup } from "@radix-ui/react-dropdown-menu";
-import Link from "next/link";
+} from '@/components/ui/dropdown-menu';
+import { Card, CardContent, CardHeader } from '@/components/ui/card';
+import { DropdownMenuGroup } from '@radix-ui/react-dropdown-menu';
+import Link from 'next/link';
 
-import { Template } from "@/types/collections";
+import { Template } from '@/types/collections';
 
 interface TemplateCardProps {
   template: Template;
 }
 
 export default function TemplateCard({ template }: TemplateCardProps) {
-  template.thumbnail === ""
-    ? (template.thumbnail = "/img/placeholder.svg")
-    : "";
+  template.thumbnail === ''
+    ? (template.thumbnail = '/img/placeholder.svg')
+    : '';
 
   return (
     <Card className="overflow-hidden transition-shadow hover:shadow-lg hover:shadow-slate-500/10">
-      <Link href={"/editor/" + template.id} className="cursor-pointer">
+      <Link href={'/editor/' + template.id} className="cursor-pointer">
         <CardHeader className="p-0">
           <div className="relative w-full h-44 md:h-36">
             <Image
@@ -33,7 +33,7 @@ export default function TemplateCard({ template }: TemplateCardProps) {
               alt="Template cover"
               priority
               fill
-              style={{ objectFit: "cover" }}
+              style={{ objectFit: 'cover' }}
             />
           </div>
         </CardHeader>
@@ -64,7 +64,7 @@ export default function TemplateCard({ template }: TemplateCardProps) {
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
               <DropdownMenuGroup>
-                <Link href={"/editor/" + template.id}>
+                <Link href={'/editor/' + template.id}>
                   <DropdownMenuItem>Edit</DropdownMenuItem>
                 </Link>
               </DropdownMenuGroup>
