@@ -35,7 +35,7 @@ export default function Editor() {
 
   const [assets, setAssets] = useState<Array<FileAsset>>([]);
   const { rive, RiveComponent } = useRive({
-    src: '/test/WL_Product.riv',
+    src: '/Test/WL_Product.riv',
     artboard: 'Template',
     stateMachines: 'SM',
     autoplay: true,
