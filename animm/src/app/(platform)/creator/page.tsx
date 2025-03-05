@@ -12,7 +12,6 @@ import { DndContext } from '@dnd-kit/core';
 
 import { Button } from '@/components/ui/button';
 import { Trash } from 'lucide-react';
-import { RiveComp } from '@/components/editor/rive-component';
 import {
   ResizableHandle,
   ResizablePanel,

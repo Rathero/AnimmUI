@@ -21,13 +21,13 @@ import { EditorPlay } from '@/components/editor/editor-play';
 import { EditorResolution } from '@/components/editor/editor-resolution';
 import { EditorText } from '@/components/editor/editor-text';
 import { EditorSelect } from '@/components/editor/editor-select';
-import EditorUrl from '@/components/editor/editor-Url';
 
 import { templatesService } from '@/app/services/TemplatesService';
 import { ApiTemplate, Module, TemplateVariable } from '@/types/collections';
 import { ChevronDown } from 'lucide-react';
 import EditorImages from '@/components/editor/editor-images';
 import RiveComp from '@/components/editor/rive-component';
+import EditorUrl from '@/components/editor/editor-url';
 
 export default function Editor() {
   const params = useParams<{ id: string }>();
