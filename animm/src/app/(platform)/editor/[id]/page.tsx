@@ -2,7 +2,12 @@
 
 import { useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
-import { FileAsset, decodeImage, RiveState } from '@rive-app/react-canvas';
+import {
+  FileAsset,
+  decodeImage,
+  RiveState,
+  Rive,
+} from '@rive-app/react-canvas';
 import {
   Collapsible,
   CollapsibleContent,
@@ -30,7 +35,7 @@ export default function Editor() {
   const [template, setTemplate] = useState<ApiTemplate | undefined>(undefined);
 
   const [assets, setAssets] = useState<Array<FileAsset>>([]);
-  const [rivesStates] = useState<RiveState[]>([]);
+  const [rivesStates, setRiveStates] = useState<Rive[]>([]);
   const changeImage = async (url: string, i: number) => {
     if (assets.length > 0) {
       fetch(url).then(async res => {
@@ -45,9 +50,9 @@ export default function Editor() {
   const playRive = () => {
     if (rivesStates) {
       rivesStates.forEach(riveState => {
-        if (riveState.rive) {
-          riveState.rive.play;
-          playing ? riveState.rive.pause() : riveState.rive.play();
+        if (riveState) {
+          riveState.play;
+          playing ? riveState.pause() : riveState.play();
         }
       });
       setPlaying(!playing);
@@ -57,9 +62,17 @@ export default function Editor() {
   const changeText = (text: string, variableToModify: TemplateVariable) => {
     if (rivesStates) {
       rivesStates.forEach(riveState => {
-        if (riveState.rive) {
+        if (riveState) {
           text = text === '' ? ' ' : text;
-          riveState.rive.setTextRunValue(variableToModify.value, text);
+          if (variableToModify.paths.length > 0) {
+            variableToModify.paths.map((path: any) => {
+              riveState!.setTextRunValueAtPath(
+                variableToModify.value,
+                text,
+                path
+              );
+            });
+          } else riveState.setTextRunValue(variableToModify.value, text);
         }
       });
       variableToModify.defaultValue = text;
@@ -149,6 +162,7 @@ export default function Editor() {
                             <RiveComp
                               src={template.Result.modules[0].file}
                               setAssetsParent={setAssets}
+                              setRiveStatesParent={setRiveStates}
                             />
                           )}
                       </div>
