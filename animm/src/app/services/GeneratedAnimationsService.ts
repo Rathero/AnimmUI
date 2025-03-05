@@ -1,4 +1,3 @@
-import { ApiCollection, ApiCollections } from '@/types/collections';
 import { GeneratedAnimation } from '@/types/generatedAnimations';
 
 export const genera = {

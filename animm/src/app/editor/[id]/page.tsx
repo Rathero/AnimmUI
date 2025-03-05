@@ -25,13 +25,12 @@ import { EditorSelect } from '@/components/editor/editor-select';
 
 import { templatesService } from '@/app/services/TemplatesService';
 import { ApiTemplate, Module, TemplateVariable } from '@/types/collections';
-import { ChevronDown, Crop, ImageMinus, ImageUpscale } from 'lucide-react';
+import { ChevronDown } from 'lucide-react';
 import EditorImages from '@/components/editor/editor-images';
 
 export default function Editor() {
   const params = useParams<{ id: string }>();
 
-  const [templateData, setTemplateData] = useState<any>();
   const [template, setTemplate] = useState<ApiTemplate | undefined>(undefined);
 
   const [assets, setAssets] = useState<Array<FileAsset>>([]);
@@ -44,7 +43,7 @@ export default function Editor() {
       fit: Fit.Layout,
       layoutScaleFactor: 1,
     }),
-    assetLoader: (asset, bytes) => {
+    assetLoader: asset => {
       if (asset.cdnUuid.length > 0 && asset.isImage) {
         assets.push(asset);
         setAssets(assets);
