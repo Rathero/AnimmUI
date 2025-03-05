@@ -1,4 +1,4 @@
-import Screens from "../../data/Screens.json";
+import Screens from '../../data/Screens.json';
 
 import {
   Select,
@@ -8,14 +8,14 @@ import {
   SelectLabel,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select";
+} from '@/components/ui/select';
 
 export function EditorResolution(props: {
   resolution: ((value: string) => void) | undefined;
 }) {
   const ScreensDef = Screens.map((screen: any) => {
     return {
-      value: "" + screen.id,
+      value: '' + screen.id,
       label: screen.name,
       width: screen.width,
       height: screen.height,
@@ -30,9 +30,9 @@ export function EditorResolution(props: {
         <SelectContent>
           <SelectGroup>
             <SelectLabel className="px-3">Default</SelectLabel>
-            {ScreensDef.map((screen) => (
+            {ScreensDef.map(screen => (
               <SelectItem
-                value={screen.width + "-" + screen.height}
+                value={screen.width + '-' + screen.height}
                 key={screen.value}
               >
                 {screen.label}

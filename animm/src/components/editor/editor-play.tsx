@@ -1,6 +1,5 @@
-import { Play, Pause } from "lucide-react";
-import { Button } from "../ui/button";
-import { Dispatch, SetStateAction } from "react";
+import { Play, Pause } from 'lucide-react';
+import { Button } from '../ui/button';
 
 export function EditorPlay(props: { playRive: () => void; playing: boolean }) {
   return (
@@ -17,7 +16,7 @@ export function EditorPlay(props: { playRive: () => void; playing: boolean }) {
             <Play className="fill-white border-" />
           )}
         </div>
-        <p className="w-16">{props.playing ? "Pause" : "Play"}</p>
+        <p className="w-16">{props.playing ? 'Pause' : 'Play'}</p>
       </Button>
     </div>
   );

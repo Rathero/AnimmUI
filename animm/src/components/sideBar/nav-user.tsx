@@ -1,17 +1,10 @@
-"use client";
+'use client';
 
-import Link from "next/link";
+import Link from 'next/link';
 
-import {
-  BadgeCheck,
-  Bell,
-  ChevronsUpDown,
-  CreditCard,
-  LogOut,
-  Sparkles,
-} from "lucide-react";
+import { BadgeCheck, ChevronsUpDown, CreditCard, LogOut } from 'lucide-react';
 
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -20,23 +13,23 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+} from '@/components/ui/dropdown-menu';
 import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
   useSidebar,
-} from "@/components/ui/sidebar";
+} from '@/components/ui/sidebar';
 
 const optionsUser = [
   {
-    title: "Account",
-    url: "/",
+    title: 'Account',
+    url: '/',
     icon: BadgeCheck,
   },
   {
-    title: "Billing",
-    url: "/collections",
+    title: 'Billing',
+    url: '/collections',
     icon: CreditCard,
   },
 ];
@@ -52,7 +45,7 @@ export function NavUser({
 }) {
   const { isMobile } = useSidebar();
 
-  const NameSplit = user.name.split(" ");
+  const NameSplit = user.name.split(' ');
   const fallBackAvatar = NameSplit[0][0] + NameSplit[1][0];
 
   return (
@@ -80,7 +73,7 @@ export function NavUser({
 
           <DropdownMenuContent
             className="w-[--radix-dropdown-menu-trigger-width] min-w-56 rounded-lg"
-            side={isMobile ? "bottom" : "right"}
+            side={isMobile ? 'bottom' : 'right'}
             align="end"
             sideOffset={4}
           >
@@ -102,7 +95,7 @@ export function NavUser({
             <DropdownMenuSeparator />
 
             <DropdownMenuGroup>
-              {optionsUser.map((option) => (
+              {optionsUser.map(option => (
                 <Link href={option.url} key={option.title}>
                   <DropdownMenuItem>
                     <option.icon />

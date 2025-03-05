@@ -1,52 +1,51 @@
-"use client";
+'use client';
 
-import { Home, Frame, GalleryHorizontalEnd, ActivityIcon } from "lucide-react";
-import { NavUser } from "./sideBar/nav-user";
-import { TeamSwitcher } from "./sideBar/team-switcher";
-import Link from "next/link";
+import { Home, Frame, GalleryHorizontalEnd, ActivityIcon } from 'lucide-react';
+import { NavUser } from './sideBar/nav-user';
+import { TeamSwitcher } from './sideBar/team-switcher';
+import Link from 'next/link';
 
 import {
   Sidebar,
   SidebarContent,
   SidebarGroup,
   SidebarGroupContent,
-  SidebarGroupLabel,
   SidebarFooter,
   SidebarHeader,
   SidebarMenu,
   SidebarMenuButton,
   SidebarRail,
   SidebarMenuItem,
-} from "@/components/ui/sidebar";
+} from '@/components/ui/sidebar';
 
 // Menu items.
 const items = [
   {
-    title: "Home",
-    url: "/",
+    title: 'Home',
+    url: '/',
     icon: Home,
   },
   {
-    title: "Collections",
-    url: "/collections",
+    title: 'Collections',
+    url: '/collections',
     icon: Frame,
   },
 ];
 const user = {
-  name: "Adrian Moran",
-  email: "Adrian@animm.co",
-  avatar: "/img/Avatar.webp",
+  name: 'Adrian Moran',
+  email: 'Adrian@animm.co',
+  avatar: '/img/Avatar.webp',
 };
 const teams = [
   {
-    name: "Animm",
+    name: 'Animm',
     logo: GalleryHorizontalEnd,
-    plan: "Enterprise",
+    plan: 'Enterprise',
   },
   {
-    name: "Zara",
+    name: 'Zara',
     logo: ActivityIcon,
-    plan: "Enterprise",
+    plan: 'Enterprise',
   },
 ];
 
@@ -60,7 +59,7 @@ export function AppSidebar() {
         <SidebarGroup>
           <SidebarGroupContent>
             <SidebarMenu>
-              {items.map((item) => (
+              {items.map(item => (
                 <SidebarMenuItem key={item.title}>
                   <SidebarMenuButton asChild>
                     <Link href={item.url}>

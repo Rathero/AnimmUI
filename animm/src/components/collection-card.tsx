@@ -1,16 +1,16 @@
-import Image from "next/image";
-import { GalleryVertical } from "lucide-react";
-import { Card, CardContent, CardHeader } from "@/components/ui/card";
-import { Collection } from "@/types/collections";
+import Image from 'next/image';
+import { GalleryVertical } from 'lucide-react';
+import { Card, CardContent, CardHeader } from '@/components/ui/card';
+import { Collection } from '@/types/collections';
 
 interface CollectionCardProps {
   collection: Collection;
 }
 
 export default function CollectionCard({ collection }: CollectionCardProps) {
-  collection.thumbnail === ""
-    ? (collection.thumbnail = "/img/placeholder.svg")
-    : "";
+  collection.thumbnail === ''
+    ? (collection.thumbnail = '/img/placeholder.svg')
+    : '';
 
   return (
     <Card className="flex flex-row w-full h-36 overflow-hidden transition-shadow hover:shadow-md hover:shadow-slate-500/10 cursor-pointer">
@@ -21,7 +21,7 @@ export default function CollectionCard({ collection }: CollectionCardProps) {
             alt="Collection cover"
             priority
             fill
-            style={{ objectFit: "cover" }}
+            style={{ objectFit: 'cover' }}
           />
         </div>
       </CardHeader>

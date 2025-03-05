@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import './../globals.css';
+import './globals.css';
 import {
   SidebarInset,
   SidebarProvider,
@@ -22,12 +23,7 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <body>
-        <SidebarProvider
-          style={{
-            '--sidebar-width': '13rem',
-            '--sidebar-width-mobile': '20rem',
-          }}
-        >
+        <SidebarProvider>
           <AppSidebar />
           <SidebarInset>
             <header className="flex h-16 shrink-0 items-center gap-2 ease-linear">

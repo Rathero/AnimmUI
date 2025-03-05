@@ -73,6 +73,7 @@ export default function TemplateCard({ template }: TemplateCardProps) {
               <h3 className="text-md font-medium tracking-normal line-clamp-1">
                 {template.name}
               </h3>
+              <p className="text-sm text-muted-foreground line-clamp-1"></p>
             </div>
           </div>
           <DropdownMenu>
