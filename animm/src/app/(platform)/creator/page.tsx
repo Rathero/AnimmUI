@@ -144,10 +144,13 @@ export default function Editor() {
   }, []);
 
   const [divs, setDivs] = useState<DivForCreator[]>([
-    { id: 0, direction: 'horizontal', nestedDivs: [], selected: false },
+    { id: 0, direction: 'vertical', nestedDivs: [], selected: false },
   ]);
   const [selectedId, setSelectedId] = useState<number>(0);
   const [totalDivs, setTotalDivs] = useState<number>(0);
+  const [mainDirection, setMainDirection] = useState<'horizontal' | 'vertical'>(
+    'horizontal'
+  );
 
   const addDiv = () => {
     setDivs(prevDivs => [
@@ -165,6 +168,9 @@ export default function Editor() {
     if (div) {
       divs.forEach(x => {
         x.selected = x.id == div.id;
+        x.nestedDivs.forEach(y => {
+          y.selected = x.id == div.id;
+        });
       });
       parent.nestedDivs.forEach(x => {
         x.selected = x.id == div.id;
@@ -186,7 +192,6 @@ export default function Editor() {
     }
   };
   const addNestedDiv = () => {
-    console.log('selectedId', selectedId);
     if (selectedId !== null) {
       const copyDivs = divs;
       setDivs([]);
@@ -232,6 +237,23 @@ export default function Editor() {
         }));
       }
     }
+  };
+
+  const setNestedLayoutDirection = (direction: 'horizontal' | 'vertical') => {
+    const copyDivs = divs;
+    setDivs([]);
+    copyDivs.forEach(x => {
+      if (x.id == selectedId) {
+        x.direction = direction;
+      } else {
+        x.nestedDivs.forEach(y => {
+          if (y.id == selectedId) {
+            y.direction = direction;
+          }
+        });
+      }
+    });
+    setDivs(copyDivs);
   };
 
   const toggleNestedLayout = () => {
@@ -287,7 +309,7 @@ export default function Editor() {
                     >
                       <ResizablePanelGroup
                         key={divs ? divs[0].id : '0'}
-                        direction={divs[0].direction}
+                        direction={mainDirection}
                         className="size-full"
                       >
                         {divs &&
@@ -333,10 +355,9 @@ export default function Editor() {
                   Layout Direction
                 </Label>
                 <Select
-                  onValueChange={
-                    e => {}
-                    //setMainLayout(e as 'horizontal' | 'vertical')
-                  }
+                  onValueChange={e => {
+                    setMainDirection(e as 'horizontal' | 'vertical');
+                  }}
                 >
                   <SelectTrigger className="w-full text-left">
                     <SelectValue placeholder="Horizontal" />
@@ -364,13 +385,9 @@ export default function Editor() {
                     Layout Direction
                   </Label>
                   <Select
-                    onValueChange={
-                      e => {}
-                      /*setNestedLayouts(prev => ({
-                        ...prev,
-                        [selectedId]: e as 'horizontal' | 'vertical',
-                      }))*/
-                    }
+                    onValueChange={e => {
+                      setNestedLayoutDirection(e as 'horizontal' | 'vertical');
+                    }}
                   >
                     <SelectTrigger className="w-full text-left">
                       <SelectValue placeholder="Vertical" />
