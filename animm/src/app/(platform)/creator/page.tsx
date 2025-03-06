@@ -8,7 +8,6 @@ import { EditorZoom } from '@/components/editor/editor-zoom';
 import { EditorResolution } from '@/components/editor/editor-resolution';
 
 import React from 'react';
-import { DndContext } from '@dnd-kit/core';
 
 import { Button } from '@/components/ui/button';
 import { Trash } from 'lucide-react';
@@ -23,7 +22,6 @@ import {
   SelectContent,
   SelectGroup,
   SelectItem,
-  SelectLabel,
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
@@ -43,17 +41,25 @@ const Components = [
 
 interface DraggableDivProps {
   id: number;
-  isSelected: boolean;
-  onSelect: (id: number | null) => void;
+  div: DivForCreator;
+  onSelectParent: (x: DivForCreator) => void;
+  onSelectNested: (x: DivForCreator) => void;
   nestedLayout: 'horizontal' | 'vertical';
   removeNestedDiv: (nestedId: number) => void;
-  nestedDivs: number[];
+  nestedDivs: DivForCreator[];
 }
 
+interface DivForCreator {
+  id: number;
+  direction: 'horizontal' | 'vertical';
+  nestedDivs: DivForCreator[];
+  selected: boolean;
+}
 const DraggableDiv = ({
   id,
-  isSelected,
-  onSelect,
+  div,
+  onSelectParent,
+  onSelectNested,
   nestedLayout,
   removeNestedDiv,
   nestedDivs,
@@ -61,27 +67,35 @@ const DraggableDiv = ({
   return (
     <>
       <ResizablePanel
-        className={`border-2
-              ${isSelected ? ' border-blue-500 z-40 ' : ''}`}
+        className={`border-2${div.selected ? ' border-blue-500 z-40 ' : ''}`}
         onClick={e => {
           e.stopPropagation();
-          onSelect(id);
+          onSelectParent(div);
         }}
       >
         <ResizablePanelGroup key={id} direction={nestedLayout}>
-          {nestedDivs.map((nestedId, index) => (
+          {nestedDivs.map((nestedDiv, index) => (
             <>
               {index !== 0 && <ResizableHandle withHandle />}
-              <ResizablePanel key={index} className="relative border">
+              <ResizablePanel
+                key={index}
+                className={`relative border ${
+                  nestedDiv.selected ? ' border-blue-500 z-40 ' : ''
+                }`}
+                onClick={e => {
+                  e.stopPropagation();
+                  onSelectNested(nestedDiv);
+                }}
+              >
                 <div className="absolute top-0 left-0 p-2">
-                  Div {id} - Nested {nestedId}
+                  Div {id} - Nested {index}
                 </div>
                 <div className="absolute top-0 right-0 p-2">
                   <Button
                     variant="destructive"
                     size="icon"
                     className="opacity-0 transition-opacity hover:opacity-100"
-                    onClick={() => removeNestedDiv(nestedId)}
+                    onClick={() => removeNestedDiv(index)}
                   >
                     <Trash />
                   </Button>
@@ -129,55 +143,106 @@ export default function Editor() {
     mainCanvas.removeEventListener('mousemove', handleMouseEvent);
   }, []);
 
-  const [divs, setDivs] = useState<number[]>([]);
-  const [nestedDivs, setNestedDivs] = useState<Record<number, number[]>>({});
-  const [selectedId, setSelectedId] = useState<number | null>(null);
-  const [mainLayout, setMainLayout] = useState<'horizontal' | 'vertical'>(
-    'horizontal'
-  );
-  const [nestedLayouts, setNestedLayouts] = useState<
-    Record<number, 'horizontal' | 'vertical'>
-  >({});
+  const [divs, setDivs] = useState<DivForCreator[]>([
+    { id: 0, direction: 'horizontal', nestedDivs: [], selected: false },
+  ]);
+  const [selectedId, setSelectedId] = useState<number>(0);
+  const [totalDivs, setTotalDivs] = useState<number>(0);
 
   const addDiv = () => {
-    const newId = divs.length;
-    setDivs(prevDivs => [...prevDivs, newId]);
-    setNestedDivs(prev => ({ ...prev, [newId]: [0] }));
+    setDivs(prevDivs => [
+      ...prevDivs,
+      {
+        id: totalDivs + 1,
+        direction: 'vertical',
+        nestedDivs: [],
+        selected: false,
+      },
+    ]);
+    setTotalDivs(totalDivs + 1);
+  };
+  const setSelectedNestedDiv = (div: DivForCreator, parent: DivForCreator) => {
+    if (div) {
+      divs.forEach(x => {
+        x.selected = x.id == div.id;
+      });
+      parent.nestedDivs.forEach(x => {
+        x.selected = x.id == div.id;
+      });
+      setDivs(divs);
+      setSelectedId(div.id);
+    }
+  };
+  const setSelectedDiv = (div: DivForCreator) => {
+    if (div) {
+      divs.forEach(x => {
+        x.selected = x.id == div.id;
+        x.nestedDivs.forEach(y => {
+          y.selected = x.id == div.id;
+        });
+      });
+      setDivs(divs);
+      setSelectedId(div.id);
+    }
   };
   const addNestedDiv = () => {
+    console.log('selectedId', selectedId);
     if (selectedId !== null) {
-      setNestedDivs(prev => ({
-        ...prev,
-        [selectedId]: [
-          ...(prev[selectedId] || []),
-          prev[selectedId]?.length || 0,
-        ],
-      }));
+      const copyDivs = divs;
+      setDivs([]);
+      copyDivs.forEach(x => {
+        if (x.id == selectedId) {
+          x.nestedDivs.push({
+            id: totalDivs + 1,
+            direction: 'vertical',
+            nestedDivs: [],
+            selected: false,
+          });
+        } else {
+          x.nestedDivs.forEach(y => {
+            if (y.id == selectedId) {
+              y.nestedDivs.push({
+                id: totalDivs + 1,
+                direction: 'vertical',
+                nestedDivs: [],
+                selected: false,
+              });
+            }
+          });
+        }
+      });
+      setDivs(copyDivs);
+      setTotalDivs(totalDivs + 1);
     }
   };
   const removeNestedDiv = (nestedId: number) => {
     if (selectedId !== null) {
-      setNestedDivs(prev => {
-        const updatedNestedDivs = prev[selectedId].filter(
-          id => id !== nestedId
-        );
-        const newState = { ...prev, [selectedId]: updatedNestedDivs };
-        if (updatedNestedDivs.length === 0) {
-          setDivs(prevDivs => prevDivs.filter(id => id !== selectedId));
-          setSelectedId(null);
-          delete newState[selectedId];
-        }
-        return newState;
-      });
+      let newDivs = divs;
+      const selectedDiv = divs[selectedId];
+      selectedDiv.nestedDivs = selectedDiv.nestedDivs.filter(
+        div => div.id !== nestedId
+      );
+      if (selectedDiv.nestedDivs.length === 0) {
+        newDivs = divs.filter(div => div.id !== selectedId);
+        setDivs(newDivs);
+      } else {
+        setDivs(prev => ({
+          ...prev,
+          [selectedId]: selectedDiv,
+        }));
+      }
     }
   };
 
   const toggleNestedLayout = () => {
     if (selectedId !== null) {
-      setNestedLayouts(prev => ({
+      const selectedDiv = divs[selectedId];
+      selectedDiv.direction =
+        selectedDiv.direction === 'horizontal' ? 'vertical' : 'horizontal';
+
+      setDivs(prev => ({
         ...prev,
-        [selectedId]:
-          prev[selectedId] === 'horizontal' ? 'vertical' : 'horizontal',
+        [selectedId]: selectedDiv,
       }));
     }
   };
@@ -186,12 +251,7 @@ export default function Editor() {
     <>
       <div className="absolute flex top-0 bottom-0 right-0 left-0 overflow-hidden">
         <div className="w-full h-full overflow-hidden p-4 pt-0">
-          <div
-            className="w-full h-full relative rounded-lg border bg-sidebar bg-editor"
-            onClick={e => {
-              setSelectedId(null);
-            }}
-          >
+          <div className="w-full h-full relative rounded-lg border bg-sidebar bg-editor">
             <TransformWrapper
               disabled={isResizing}
               disablePadding={true}
@@ -226,24 +286,32 @@ export default function Editor() {
                       className="h-[1920px] w-[1080px] resizeItem border bg-white shadow-md shadow-slate-500/1 "
                     >
                       <ResizablePanelGroup
-                        key={'panel'}
-                        direction={mainLayout}
+                        key={divs ? divs[0].id : '0'}
+                        direction={divs[0].direction}
                         className="size-full"
                       >
-                        {divs.map((id, index) => (
-                          <>
-                            {index !== 0 && <ResizableHandle withHandle />}
-                            <DraggableDiv
-                              key={index}
-                              id={index}
-                              isSelected={selectedId === index}
-                              onSelect={setSelectedId}
-                              nestedLayout={nestedLayouts[index] || 'vertical'}
-                              removeNestedDiv={removeNestedDiv}
-                              nestedDivs={nestedDivs[id] || []}
-                            />
-                          </>
-                        ))}
+                        {divs &&
+                          divs.map((div, index) => (
+                            <>
+                              {index !== 0 && <ResizableHandle withHandle />}
+                              <DraggableDiv
+                                key={index}
+                                id={index}
+                                div={div}
+                                onSelectParent={(x: DivForCreator) => {
+                                  setSelectedDiv(x);
+                                }}
+                                onSelectNested={(x: DivForCreator) => {
+                                  setSelectedNestedDiv(x, div);
+                                }}
+                                nestedLayout={
+                                  divs[index].direction || 'vertical'
+                                }
+                                removeNestedDiv={removeNestedDiv}
+                                nestedDivs={divs[index].nestedDivs || []}
+                              />
+                            </>
+                          ))}
                       </ResizablePanelGroup>
                     </div>
                   </TransformComponent>
@@ -265,8 +333,9 @@ export default function Editor() {
                   Layout Direction
                 </Label>
                 <Select
-                  onValueChange={e =>
-                    setMainLayout(e as 'horizontal' | 'vertical')
+                  onValueChange={
+                    e => {}
+                    //setMainLayout(e as 'horizontal' | 'vertical')
                   }
                 >
                   <SelectTrigger className="w-full text-left">
@@ -295,11 +364,12 @@ export default function Editor() {
                     Layout Direction
                   </Label>
                   <Select
-                    onValueChange={e =>
-                      setNestedLayouts(prev => ({
+                    onValueChange={
+                      e => {}
+                      /*setNestedLayouts(prev => ({
                         ...prev,
                         [selectedId]: e as 'horizontal' | 'vertical',
-                      }))
+                      }))*/
                     }
                   >
                     <SelectTrigger className="w-full text-left">
