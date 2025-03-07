@@ -1,6 +1,7 @@
 import { useRive, Fit, Layout, FileAsset, Rive } from '@rive-app/react-canvas';
 import Image from 'next/image';
 import { useEffect } from 'react';
+import { RiveLoadParameters } from '@rive-app/react-canvas';
 
 export default function Module({
   type,
@@ -21,6 +22,20 @@ export default function Module({
       layoutScaleFactor: 1,
     }),
   });
+  useEffect(() => {
+    if (rive && type === '0') {
+      rive.load({
+        src: src,
+        artboard: ab,
+        stateMachines: 'SM',
+        autoplay: true,
+      });
+      rive.layout = new Layout({
+        fit: Fit.Layout,
+        layoutScaleFactor: 1,
+      });
+    }
+  }, [src, ab, type]);
 
   return (
     <div className="size-full">
