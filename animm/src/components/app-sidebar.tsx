@@ -1,6 +1,13 @@
 'use client';
 
-import { Home, Frame, GalleryHorizontalEnd, ActivityIcon } from 'lucide-react';
+import {
+  Home,
+  Frame,
+  GalleryHorizontalEnd,
+  ActivityIcon,
+  Link2,
+  GalleryVertical,
+} from 'lucide-react';
 import { NavUser } from './sideBar/nav-user';
 import { TeamSwitcher } from './sideBar/team-switcher';
 import Link from 'next/link';
@@ -28,7 +35,12 @@ const items = [
   {
     title: 'Collections',
     url: '/collections',
-    icon: Frame,
+    icon: GalleryVertical,
+  },
+  {
+    title: 'URLs',
+    url: '/urls',
+    icon: Link2,
   },
 ];
 const user = {
