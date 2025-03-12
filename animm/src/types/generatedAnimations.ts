@@ -12,7 +12,7 @@ export interface GeneratedAnimation {
   name: string;
   image: string;
   folder: string;
-  status: GeneraetdAnimationStatusEnum;
+  status: GeneratedAnimationStatusEnum;
   modules: GeneratedModule[];
 }
 
@@ -37,7 +37,7 @@ export interface GeneratedTemplateVariable {
   value: string;
 }
 
-export enum GeneraetdAnimationStatusEnum {
+export enum GeneratedAnimationStatusEnum {
   NoStatus,
   ToReview,
   Reviewed,

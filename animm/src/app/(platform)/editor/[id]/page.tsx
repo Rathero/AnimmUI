@@ -56,15 +56,16 @@ export default function Editor() {
 
   async function changeText(text: string, variableToModify: TemplateVariable) {
     if (rivesStates) {
+      debugger;
       rivesStates.forEach(riveState => {
         if (riveState) {
           text = text === '' ? ' ' : text;
           if (variableToModify.paths.length > 0) {
-            variableToModify.paths.map((path: any) => {
+            variableToModify.paths.map(path => {
               riveState!.setTextRunValueAtPath(
                 variableToModify.value,
                 text,
-                path
+                path.path
               );
             });
           } else riveState.setTextRunValue(variableToModify.value, text);

@@ -100,14 +100,9 @@ export default function EditorImages({
     const cropX = crop.x * scaleX;
     const cropY = crop.y * scaleY;
 
-    const centerX = image.naturalWidth / 2;
-    const centerY = image.naturalHeight / 2;
-
     ctx.save();
 
     ctx.translate(-cropX, -cropY);
-    ctx.translate(centerX, centerY);
-    ctx.translate(-centerX, -centerY);
     ctx.drawImage(
       image,
       0,
@@ -219,6 +214,7 @@ export default function EditorImages({
                                   setCrop(c);
                                 }}
                                 minHeight={100}
+                                minWidth={100}
                               >
                                 <Image
                                   ref={imgRef}
