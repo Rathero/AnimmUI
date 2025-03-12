@@ -50,6 +50,17 @@ export default function EditorImages({
     setImgSrc([]);
     setOriginalSrc([]);
     let imgSrcs: string[] = [];
+    images = images.sort((x, y) => {
+      if (x.image > y.image) {
+        return 1;
+      }
+
+      if (x.image < y.image) {
+        return -1;
+      }
+
+      return 0;
+    });
     images.forEach(x => {
       imgSrcs.push(x.image);
     });
