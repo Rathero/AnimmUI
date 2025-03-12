@@ -29,7 +29,6 @@ import { Separator } from '@/components/ui/separator';
 import Module from '@/components/creator/module';
 import { Switch } from '@/components/ui/switch';
 
-const ItemType = 'DIV_ITEM';
 const Components = [
   ['1', '', '', 'Image'],
   ['2', '', '', 'Video'],
@@ -192,7 +191,7 @@ export default function Editor() {
     ]);
     setTotalDivs(totalDivs + 1);
   };
-  const setSelectedNestedDiv = (div: DivForCreator, parent: DivForCreator) => {
+  const setSelectedNestedDiv = (div: DivForCreator) => {
     setSelectedId(div.id);
     setSelectedType(2);
     setActiveModule(div.module.toString());
@@ -252,7 +251,7 @@ export default function Editor() {
 
   const setNestedLayoutDirection = (direction: 'horizontal' | 'vertical') => {
     const copyDivs = [...divs];
-    copyDivs.map((x, index) => {
+    copyDivs.map(x => {
       if (x.id == selectedId) {
         x.direction = direction;
       }
@@ -281,7 +280,6 @@ export default function Editor() {
                 resetTransform,
                 centerView,
                 zoomToElement,
-                ...rest
               }) => (
                 <>
                   <EditorResolution resolution={changeresolution} />
@@ -327,7 +325,7 @@ export default function Editor() {
                                   setSelectedDiv(x);
                                 }}
                                 onSelectNested={(x: DivForCreator) => {
-                                  setSelectedNestedDiv(x, div);
+                                  setSelectedNestedDiv(x);
                                 }}
                                 nestedLayout={divs[index].direction}
                                 removeNestedDiv={removeNestedDiv}
@@ -436,7 +434,7 @@ export default function Editor() {
                         <SelectGroup>
                           {Components.map((x, index) => {
                             return (
-                              <SelectItem value={index.toString()}>
+                              <SelectItem key={index} value={index.toString()}>
                                 {x[3]}
                               </SelectItem>
                             );

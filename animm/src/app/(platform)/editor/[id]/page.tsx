@@ -2,12 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
-import {
-  FileAsset,
-  decodeImage,
-  RiveState,
-  Rive,
-} from '@rive-app/react-canvas';
+import { FileAsset, decodeImage, Rive } from '@rive-app/react-canvas';
 import {
   Collapsible,
   CollapsibleContent,
@@ -47,7 +42,7 @@ export default function Editor() {
     }
   };
   const [playing, setPlaying] = useState(true);
-  const playRive = () => {
+  async function playRive() {
     if (rivesStates) {
       rivesStates.forEach(riveState => {
         if (riveState) {
@@ -57,9 +52,9 @@ export default function Editor() {
       });
       setPlaying(!playing);
     }
-  };
+  }
 
-  const changeText = (text: string, variableToModify: TemplateVariable) => {
+  async function changeText(text: string, variableToModify: TemplateVariable) {
     if (rivesStates) {
       rivesStates.forEach(riveState => {
         if (riveState) {
@@ -78,13 +73,13 @@ export default function Editor() {
       variableToModify.defaultValue = text;
       setTemplate(template);
     }
-  };
+  }
   async function initializeTemplate() {
     const template = await templatesService.get(params.id);
     setTemplate(template);
   }
 
-  const changeresolution = (event: any) => {
+  async function changeresolution(event: any) {
     const mainCan: any = document.querySelector('#MainCanvas');
     if (mainCan) {
       const resolution = event.split('-');
@@ -92,7 +87,7 @@ export default function Editor() {
       mainCan.style.width = resolution[0] + 'px';
       mainCan.style.height = resolution[1] + 'px';
     }
-  };
+  }
 
   // EventListener to Deactivate Zoom Pan to be able to Resize
   const [isResizing, setIsResizing] = useState(false);
@@ -137,7 +132,6 @@ export default function Editor() {
                 resetTransform,
                 centerView,
                 zoomToElement,
-                ...rest
               }) => (
                 <>
                   <EditorResolution resolution={changeresolution} />
