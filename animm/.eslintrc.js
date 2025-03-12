@@ -12,10 +12,6 @@ module.exports = {
     // TS
     'no-unused-vars': 'off',
     'no-useless-escape': 'off',
-    '@typescript-eslint/no-unused-vars': 'off',
-    '@typescript-eslint/no-empty-object-type': 'off',
-    '@typescript-eslint/no-unused-expressions': 'off',
-    '@typescript-eslint/no-explicit-any': 'off',
     'unused-imports/no-unused-imports': 'error',
     'unused-imports/no-unused-vars': [
       'error',
