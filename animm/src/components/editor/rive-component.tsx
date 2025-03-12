@@ -20,7 +20,7 @@ export default function RiveComp({
       fit: Fit.Layout,
       layoutScaleFactor: 1,
     }),
-    assetLoader: (asset, bytes) => {
+    assetLoader: asset => {
       if (asset.isImage) {
         assets.push(asset);
         setAssets(assets);

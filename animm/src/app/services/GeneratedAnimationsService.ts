@@ -18,7 +18,7 @@ export const genera = {
     return await response.json();
   },
   add: async (generatedAnimation: GeneratedAnimation) => {
-    const response = await fetch(process.env.API_URL + '/animations/', {
+    await fetch(process.env.API_URL + '/animations/', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',

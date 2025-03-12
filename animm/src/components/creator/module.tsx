@@ -1,7 +1,6 @@
-import { useRive, Fit, Layout, FileAsset, Rive } from '@rive-app/react-canvas';
+import { useRive, Fit, Layout } from '@rive-app/react-canvas';
 import Image from 'next/image';
 import { useEffect } from 'react';
-import { RiveLoadParameters } from '@rive-app/react-canvas';
 
 export default function Module({
   type,

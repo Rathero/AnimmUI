@@ -8,7 +8,7 @@ export function EditorZoom(props: ReactZoomPanPinchHandlers) {
   const step = 0.2;
   const [zoom, setZoom] = useState(1);
 
-  useTransformEffect(({ state, instance }) => {
+  useTransformEffect(({ state }) => {
     setZoom(Math.floor(state.scale * 100));
   });
 

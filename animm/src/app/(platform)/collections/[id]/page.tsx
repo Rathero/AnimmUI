@@ -2,7 +2,6 @@ import { HeaderPage } from '@/components/header-page';
 import TemplateElement from '@/components/template-card';
 
 import { collectionsService } from '@/app/services/CollectionsService';
-import { Metadata } from 'next';
 
 export default async function page({
   params,
