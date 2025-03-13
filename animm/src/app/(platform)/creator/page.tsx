@@ -26,8 +26,8 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Separator } from '@/components/ui/separator';
-import Module from '../../../../../creator/module';
 import { Switch } from '@/components/ui/switch';
+import Module from './module';
 
 const Components = [
   ['1', '', '', 'Image'],
