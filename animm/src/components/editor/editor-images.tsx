@@ -49,7 +49,7 @@ export default function EditorImages({
   useEffect(() => {
     setImgSrc([]);
     setOriginalSrc([]);
-    let imgSrcs: string[] = [];
+    const imgSrcs: string[] = [];
     images = images.sort((x, y) => {
       if (x.image > y.image) {
         return 1;

@@ -43,11 +43,6 @@ const items = [
     icon: Link2,
   },
 ];
-const user = {
-  name: 'Adrian Moran',
-  email: 'Adrian@animm.co',
-  avatar: '/img/Avatar.webp',
-};
 const teams = [
   {
     name: 'Animm',
@@ -86,7 +81,7 @@ export function AppSidebar() {
         </SidebarGroup>
       </SidebarContent>
       <SidebarFooter>
-        <NavUser user={user} />
+        <NavUser />
       </SidebarFooter>
       <SidebarRail />
     </Sidebar>

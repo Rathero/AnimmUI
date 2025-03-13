@@ -56,7 +56,6 @@ export default function Editor() {
 
   async function changeText(text: string, variableToModify: TemplateVariable) {
     if (rivesStates) {
-      debugger;
       rivesStates.forEach(riveState => {
         if (riveState) {
           text = text === '' ? ' ' : text;
