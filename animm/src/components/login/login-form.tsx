@@ -6,9 +6,9 @@ import { Label } from '@/components/ui/label';
 import Image from 'next/image';
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { loginService } from '@/app/services/LoginService';
 import Logo from './../../../public/img/LogoBlack.svg';
 import { platformStore } from '@/stores/platformStore';
+import useLoginService from '@/app/services/LoginService';
 
 export function LoginForm({
   className,
@@ -20,10 +20,11 @@ export function LoginForm({
   const router = useRouter();
 
   const { setAuthenticationResponse } = platformStore(state => state);
-  async function login() {
+  const { login } = useLoginService();
+  async function loginFunction() {
     setError('');
     try {
-      const response = await loginService.login(email, password);
+      const response = await login(email, password);
       if (response?.Result) {
         setAuthenticationResponse(response.Result);
         router.push('/');
@@ -77,7 +78,7 @@ export function LoginForm({
               required
             />
           </div>
-          <Button type="submit" className="w-full" onClick={login}>
+          <Button type="submit" className="w-full" onClick={loginFunction}>
             Login
           </Button>
         </div>

@@ -17,7 +17,6 @@ import { EditorResolution } from '@/components/editor/editor-resolution';
 import { EditorText } from '@/components/editor/editor-text';
 import { EditorSelect } from '@/components/editor/editor-select';
 
-import { templatesService } from '@/app/services/TemplatesService';
 import { ApiTemplate, Module, TemplateVariable } from '@/types/collections';
 import { ChevronDown } from 'lucide-react';
 import EditorImages from '@/components/editor/editor-images';
@@ -28,7 +27,8 @@ import {
   GeneratedAnimationStatusEnum,
   GeneratedModule,
 } from '@/types/generatedAnimations';
-import { generatedAnimationService } from '@/app/services/GeneratedAnimationsService';
+import useTemplatesService from '@/app/services/TemplatesService';
+import useGeneratedAnimationService from '@/app/services/GeneratedAnimationsService';
 
 export default function Editor() {
   const params = useParams<{ id: string }>();
@@ -101,11 +101,12 @@ export default function Editor() {
       setGeneratedAnimation(generatedAnimation);
     }
   }
+  const { get } = useTemplatesService();
   async function initializeTemplate() {
-    const template = await templatesService.get(params.id);
+    const template = await get(params.id);
     setTemplate(template);
     if (template) {
-      let newGeneratedAnimation: GeneratedAnimation = {
+      const newGeneratedAnimation: GeneratedAnimation = {
         baseTemplate: template.Result,
         baseTemplateId: template.Result.id,
         image: template.Result.thumbnail,
@@ -115,7 +116,7 @@ export default function Editor() {
         modules: [],
       };
       template.Result.modules.forEach(module => {
-        let newModuleToAdd: GeneratedModule = {
+        const newModuleToAdd: GeneratedModule = {
           baseModule: module,
           baseModuleId: module.id,
           file: module.file,
@@ -153,8 +154,12 @@ export default function Editor() {
     }
   }
 
-  async function generateUrlFunction() {
-    if (generatedAnimation) generatedAnimationService.add(generatedAnimation);
+  const { add } = useGeneratedAnimationService();
+  async function generateUrlFunction(name: string) {
+    if (generatedAnimation) {
+      generatedAnimation.name = name;
+      add(generatedAnimation);
+    }
   }
 
   // EventListener to Deactivate Zoom Pan to be able to Resize

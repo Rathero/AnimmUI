@@ -16,7 +16,7 @@ import { toast } from 'sonner';
 export default function EditorUrl({
   generateUrlFunction,
 }: {
-  generateUrlFunction: () => void;
+  generateUrlFunction: (name: string) => void;
 }) {
   return (
     <div className="py-4 border-t">
@@ -48,7 +48,7 @@ export default function EditorUrl({
           </div>
 
           <DialogFooter>
-            <Button type="submit" onClick={() => generateUrlFunction()}>
+            <Button type="submit" onClick={() => generateUrlFunction('')}>
               Save URL
             </Button>
           </DialogFooter>

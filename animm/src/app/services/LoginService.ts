@@ -1,11 +1,15 @@
+'use client';
 import { ApiAuthenticationResponse } from '@/types/authenticationResponse';
+import useFetchWithAuth from './fetchWithAuth';
 
-export const loginService = {
-  login: async (
+const useLoginService = () => {
+  const fetchWithAuth = useFetchWithAuth();
+
+  const login = async (
     email: string,
     password: string
   ): Promise<ApiAuthenticationResponse | undefined> => {
-    const response = await fetch(
+    const response = await fetchWithAuth(
       process.env.NEXT_PUBLIC_API_URL + '/authentication/login',
       {
         method: 'POST',
@@ -21,11 +25,11 @@ export const loginService = {
     if (!response.ok) {
       return undefined;
     }
-
     return await response.json();
-  },
-  logout: async (token: string): Promise<void> => {
-    const response = await fetch(
+  };
+
+  const logout = async (token: string): Promise<void> => {
+    const response = await fetchWithAuth(
       process.env.NEXT_PUBLIC_API_URL + '/authentication/logout',
       {
         method: 'POST',
@@ -38,7 +42,10 @@ export const loginService = {
     if (!response.ok) {
       return undefined;
     }
-
     return await response.json();
-  },
+  };
+
+  return { login, logout };
 };
+
+export default useLoginService;

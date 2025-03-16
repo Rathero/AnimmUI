@@ -18,7 +18,7 @@ export const useToken = () => {
   };
 
   const getRefreshTokenExpiryTimestamp = () =>
-    authenticationResponse!.expiry.getTime();
+    new Date(authenticationResponse!.expiry).getTime();
 
   const clearUserLoginResponse = () => setAuthenticationResponse(undefined);
 

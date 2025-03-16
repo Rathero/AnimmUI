@@ -1,10 +1,25 @@
+'use client';
 import Link from 'next/link';
 import { HeaderPage } from '@/components/header-page';
 import CollectionCard from '@/components/collection-card';
-import { collectionsService } from '../../services/CollectionsService';
+import { ApiCollections } from '@/types/collections';
+import { useEffect, useState } from 'react';
+import useCollectionsService from '@/app/services/CollectionsService';
 
-export default async function CollectionsPage() {
-  const collections = await collectionsService.getAll();
+export default function CollectionsPage() {
+  const [collections, setCollections] = useState<ApiCollections | undefined>(
+    undefined
+  );
+  const { getAll } = useCollectionsService();
+
+  const fetchCollections = async () => {
+    const coll = await getAll();
+    setCollections(coll);
+  };
+  useEffect(() => {
+    fetchCollections();
+  }, []);
+
   if (!collections) return <></>;
   return (
     <div className="h-full flex flex-col gap-4">
