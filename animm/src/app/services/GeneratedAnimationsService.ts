@@ -1,6 +1,6 @@
 import { GeneratedAnimation } from '@/types/generatedAnimations';
 
-export const genera = {
+export const generatedAnimationService = {
   get: async (id: string): Promise<GeneratedAnimation | undefined> => {
     const response = await fetch(
       process.env.API_URL + '/users/animations/' + id

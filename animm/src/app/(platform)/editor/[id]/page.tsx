@@ -23,22 +23,39 @@ import { ChevronDown } from 'lucide-react';
 import EditorImages from '@/components/editor/editor-images';
 import RiveComp from '@/components/editor/rive-component';
 import EditorUrl from '@/components/editor/editor-url';
+import {
+  GeneratedAnimation,
+  GeneratedAnimationStatusEnum,
+  GeneratedModule,
+} from '@/types/generatedAnimations';
+import { generatedAnimationService } from '@/app/services/GeneratedAnimationsService';
 
 export default function Editor() {
   const params = useParams<{ id: string }>();
 
   const [template, setTemplate] = useState<ApiTemplate | undefined>(undefined);
+  const [generatedAnimation, setGeneratedAnimation] = useState<
+    GeneratedAnimation | undefined
+  >(undefined);
 
   const [assets, setAssets] = useState<Array<FileAsset>>([]);
   const [rivesStates, setRiveStates] = useState<Rive[]>([]);
   const changeImage = async (url: string, i: number) => {
+    let stringImage = '';
     if (assets.length > 0) {
       fetch(url).then(async res => {
-        const image = await decodeImage(
-          new Uint8Array(await res.arrayBuffer())
-        );
+        const array = new Uint8Array(await res.arrayBuffer());
+        stringImage = new TextDecoder().decode(array);
+        const image = await decodeImage(array);
         (assets[i] as any).setRenderImage(image);
       });
+    }
+
+    if (generatedAnimation) {
+      generatedAnimation.modules.forEach(x => {
+        if (x.images[i]) x.images[i].image = stringImage;
+      });
+      setGeneratedAnimation(generatedAnimation);
     }
   };
   const [playing, setPlaying] = useState(true);
@@ -73,10 +90,57 @@ export default function Editor() {
       variableToModify.defaultValue = text;
       setTemplate(template);
     }
+    if (generatedAnimation) {
+      generatedAnimation.modules.forEach(x => {
+        x.variables.forEach(y => {
+          if (y.templateVariable.id == variableToModify.id) {
+            y.value = text;
+          }
+        });
+      });
+      setGeneratedAnimation(generatedAnimation);
+    }
   }
   async function initializeTemplate() {
     const template = await templatesService.get(params.id);
     setTemplate(template);
+    if (template) {
+      let newGeneratedAnimation: GeneratedAnimation = {
+        baseTemplate: template.Result,
+        baseTemplateId: template.Result.id,
+        image: template.Result.thumbnail,
+        name: '',
+        folder: '',
+        status: GeneratedAnimationStatusEnum.NoStatus,
+        modules: [],
+      };
+      template.Result.modules.forEach(module => {
+        let newModuleToAdd: GeneratedModule = {
+          baseModule: module,
+          baseModuleId: module.id,
+          file: module.file,
+          images: [],
+          variables: [],
+          moduleType: module.moduleType,
+        };
+        module.images.forEach(image => {
+          newModuleToAdd.images.push({
+            image: '',
+            templateImage: image,
+            tepmlateImageId: image.id,
+          });
+        });
+        module.variables.forEach(variable => {
+          newModuleToAdd.variables.push({
+            value: '',
+            templateVariable: variable,
+            tepmlateVariableId: variable.id,
+          });
+        });
+        newGeneratedAnimation.modules.push(newModuleToAdd);
+      });
+      setGeneratedAnimation(newGeneratedAnimation);
+    }
   }
 
   async function changeresolution(event: any) {
@@ -87,6 +151,10 @@ export default function Editor() {
       mainCan.style.width = resolution[0] + 'px';
       mainCan.style.height = resolution[1] + 'px';
     }
+  }
+
+  async function generateUrlFunction() {
+    if (generatedAnimation) generatedAnimationService.add(generatedAnimation);
   }
 
   // EventListener to Deactivate Zoom Pan to be able to Resize
@@ -221,7 +289,7 @@ export default function Editor() {
               );
             })}
           </div>
-          <EditorUrl />
+          <EditorUrl generateUrlFunction={generateUrlFunction} />
         </aside>
       </div>
     </>
