@@ -46,16 +46,16 @@ export default function Editor() {
       fetch(url).then(async res => {
         const array = new Uint8Array(await res.arrayBuffer());
         stringImage = new TextDecoder().decode(array);
+        if (generatedAnimation) {
+          generatedAnimation.modules.forEach(x => {
+            debugger;
+            if (x.images[i]) x.images[i].image = stringImage;
+          });
+          setGeneratedAnimation(generatedAnimation);
+        }
         const image = await decodeImage(array);
         (assets[i] as any).setRenderImage(image);
       });
-    }
-
-    if (generatedAnimation) {
-      generatedAnimation.modules.forEach(x => {
-        if (x.images[i]) x.images[i].image = stringImage;
-      });
-      setGeneratedAnimation(generatedAnimation);
     }
   };
   const [playing, setPlaying] = useState(true);
@@ -156,6 +156,7 @@ export default function Editor() {
 
   const { add } = useGeneratedAnimationService();
   async function generateUrlFunction(name: string) {
+    debugger;
     if (generatedAnimation) {
       generatedAnimation.name = name;
       add(generatedAnimation);

@@ -7,7 +7,7 @@ const useGeneratedAnimationService = () => {
 
   const get = async (id: string): Promise<GeneratedAnimation | undefined> => {
     const response = await fetchWithAuth(
-      process.env.API_URL + '/users/animations/' + id
+      process.env.NEXT_PUBLIC_API_URL + '/users/animations/' + id
     );
     if (!response.ok) {
       return undefined;
@@ -17,7 +17,7 @@ const useGeneratedAnimationService = () => {
 
   const getAll = async (): Promise<GeneratedAnimation[]> => {
     const response = await fetchWithAuth(
-      process.env.API_URL + '/users/animations/'
+      process.env.NEXT_PUBLIC_API_URL + '/users/animations/'
     );
     if (!response.ok) {
       return [];
@@ -26,13 +26,16 @@ const useGeneratedAnimationService = () => {
   };
 
   const add = async (generatedAnimation: GeneratedAnimation) => {
-    await fetchWithAuth(process.env.API_URL + '/users/animations/', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(generatedAnimation),
-    });
+    await fetchWithAuth(
+      process.env.NEXT_PUBLIC_API_URL + '/users/animations/',
+      {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(generatedAnimation),
+      }
+    );
   };
 
   return { get, getAll, add };
