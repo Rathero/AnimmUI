@@ -48,7 +48,6 @@ export default function Editor() {
         stringImage = new TextDecoder().decode(array);
         if (generatedAnimation) {
           generatedAnimation.modules.forEach(x => {
-            debugger;
             if (x.images[i]) x.images[i].image = stringImage;
           });
           setGeneratedAnimation(generatedAnimation);
@@ -156,7 +155,6 @@ export default function Editor() {
 
   const { add } = useGeneratedAnimationService();
   async function generateUrlFunction(name: string) {
-    debugger;
     if (generatedAnimation) {
       generatedAnimation.name = name;
       add(generatedAnimation);

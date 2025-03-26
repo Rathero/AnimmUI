@@ -1,8 +1,12 @@
+'use client';
 import { HeaderPage } from '@/components/header-page';
 import { Url, columns } from './url-columns';
 import { DataTable } from '@/components/table/data-table';
+import { useEffect, useState } from 'react';
+import useGeneratedAnimationService from '@/app/services/GeneratedAnimationsService';
+import { GeneratedAnimation } from '@/types/generatedAnimations';
 
-async function getData(): Promise<Url[]> {
+function getData(): Url[] {
   return [
     {
       id: '1',
@@ -207,8 +211,20 @@ async function getData(): Promise<Url[]> {
   ];
 }
 
-export default async function UrlsPage() {
-  const data = await getData();
+export default function UrlsPage() {
+  const data = getData();
+  const [generatedAnimations, setGeneratedAnimations] = useState<
+    GeneratedAnimation[]
+  >([]);
+
+  const { getAll } = useGeneratedAnimationService();
+  const fetch = async () => {
+    const animations = await getAll();
+    setGeneratedAnimations(animations);
+  };
+  useEffect(() => {
+    fetch();
+  }, []);
   return (
     <div className="h-full flex flex-col gap-4">
       <HeaderPage title="Urls" desc="You can find your generated Urls" />
