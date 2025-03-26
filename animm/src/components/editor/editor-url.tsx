@@ -13,7 +13,11 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { toast } from 'sonner';
 
-export default function EditorUrl() {
+export default function EditorUrl({
+  generateUrlFunction,
+}: {
+  generateUrlFunction: (name: string) => void;
+}) {
   return (
     <div className="py-4 border-t">
       <Dialog>
@@ -44,10 +48,7 @@ export default function EditorUrl() {
           </div>
 
           <DialogFooter>
-            <Button
-              type="submit"
-              onClick={() => toast.success('URL has been generated')}
-            >
+            <Button type="submit" onClick={() => generateUrlFunction('')}>
               Save URL
             </Button>
           </DialogFooter>

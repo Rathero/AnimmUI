@@ -13,6 +13,7 @@ export interface TemplateVariable {
   defaultValue: string;
   paths: TemplateVariablePath[];
   value: string;
+  id: number;
 }
 
 export interface TemplateVariablePath {
@@ -27,10 +28,12 @@ export enum TemplateVariableTypeEnum {
 }
 
 export interface TemplateImage {
+  id: number;
   image: string;
 }
 
 export interface Module {
+  id: number;
   moduleType: ModuleTypeEnum;
   file: string;
   variables: TemplateVariable[];

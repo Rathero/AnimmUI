@@ -8,6 +8,7 @@ import {
 import { AppSidebar } from '@/components/app-sidebar';
 
 import { Toaster } from '@/components/ui/sonner';
+import LoginChecker from './login/LoginChecker';
 
 export const metadata: Metadata = {
   title: 'Animm.',
@@ -24,16 +25,18 @@ export default function RootLayout({
       <body>
         <SidebarProvider>
           <AppSidebar />
-          <SidebarInset>
-            <header className="flex h-16 shrink-0 items-center gap-2 ease-linear">
-              <div className="flex items-center gap-2 px-4">
-                <SidebarTrigger className="-ml-1" />
+          <LoginChecker>
+            <SidebarInset>
+              <header className="flex h-16 shrink-0 items-center gap-2 ease-linear">
+                <div className="flex items-center gap-2 px-4">
+                  <SidebarTrigger className="-ml-1" />
+                </div>
+              </header>
+              <div className="h-[calc(100vh-64px)] w-full p-4 pt-0 relative">
+                {children}
               </div>
-            </header>
-            <div className="h-[calc(100vh-64px)] w-full p-4 pt-0 relative">
-              {children}
-            </div>
-          </SidebarInset>
+            </SidebarInset>
+          </LoginChecker>
         </SidebarProvider>
         <Toaster position="top-right" />
       </body>

@@ -1,29 +1,44 @@
+'use client';
 import { GeneratedAnimation } from '@/types/generatedAnimations';
+import useFetchWithAuth from './fetchWithAuth';
 
-export const genera = {
-  get: async (id: string): Promise<GeneratedAnimation | undefined> => {
-    const response = await fetch(process.env.API_URL + '/animations/' + id);
+const useGeneratedAnimationService = () => {
+  const fetchWithAuth = useFetchWithAuth();
+
+  const get = async (id: string): Promise<GeneratedAnimation | undefined> => {
+    const response = await fetchWithAuth(
+      process.env.NEXT_PUBLIC_API_URL + '/users/animations/' + id
+    );
     if (!response.ok) {
       return undefined;
     }
-
     return await response.json();
-  },
-  getAll: async (): Promise<GeneratedAnimation[]> => {
-    const response = await fetch(process.env.API_URL + '/animations/');
+  };
+
+  const getAll = async (): Promise<GeneratedAnimation[]> => {
+    const response = await fetchWithAuth(
+      process.env.NEXT_PUBLIC_API_URL + '/users/animations/'
+    );
     if (!response.ok) {
       return [];
     }
-
     return await response.json();
-  },
-  add: async (generatedAnimation: GeneratedAnimation) => {
-    await fetch(process.env.API_URL + '/animations/', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(generatedAnimation),
-    });
-  },
+  };
+
+  const add = async (generatedAnimation: GeneratedAnimation) => {
+    await fetchWithAuth(
+      process.env.NEXT_PUBLIC_API_URL + '/users/animations/',
+      {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(generatedAnimation),
+      }
+    );
+  };
+
+  return { get, getAll, add };
 };
+
+export default useGeneratedAnimationService;

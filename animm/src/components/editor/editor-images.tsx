@@ -49,7 +49,18 @@ export default function EditorImages({
   useEffect(() => {
     setImgSrc([]);
     setOriginalSrc([]);
-    let imgSrcs: string[] = [];
+    const imgSrcs: string[] = [];
+    images = images.sort((x, y) => {
+      if (x.image > y.image) {
+        return 1;
+      }
+
+      if (x.image < y.image) {
+        return -1;
+      }
+
+      return 0;
+    });
     images.forEach(x => {
       imgSrcs.push(x.image);
     });
@@ -100,14 +111,9 @@ export default function EditorImages({
     const cropX = crop.x * scaleX;
     const cropY = crop.y * scaleY;
 
-    const centerX = image.naturalWidth / 2;
-    const centerY = image.naturalHeight / 2;
-
     ctx.save();
 
     ctx.translate(-cropX, -cropY);
-    ctx.translate(centerX, centerY);
-    ctx.translate(-centerX, -centerY);
     ctx.drawImage(
       image,
       0,
@@ -219,6 +225,7 @@ export default function EditorImages({
                                   setCrop(c);
                                 }}
                                 minHeight={100}
+                                minWidth={100}
                               >
                                 <Image
                                   ref={imgRef}

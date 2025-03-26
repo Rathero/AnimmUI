@@ -17,26 +17,42 @@ import { EditorResolution } from '@/components/editor/editor-resolution';
 import { EditorText } from '@/components/editor/editor-text';
 import { EditorSelect } from '@/components/editor/editor-select';
 
-import { templatesService } from '@/app/services/TemplatesService';
 import { ApiTemplate, Module, TemplateVariable } from '@/types/collections';
 import { ChevronDown } from 'lucide-react';
 import EditorImages from '@/components/editor/editor-images';
 import RiveComp from '@/components/editor/rive-component';
 import EditorUrl from '@/components/editor/editor-url';
+import {
+  GeneratedAnimation,
+  GeneratedAnimationStatusEnum,
+  GeneratedModule,
+} from '@/types/generatedAnimations';
+import useTemplatesService from '@/app/services/TemplatesService';
+import useGeneratedAnimationService from '@/app/services/GeneratedAnimationsService';
 
 export default function Editor() {
   const params = useParams<{ id: string }>();
 
   const [template, setTemplate] = useState<ApiTemplate | undefined>(undefined);
+  const [generatedAnimation, setGeneratedAnimation] = useState<
+    GeneratedAnimation | undefined
+  >(undefined);
 
   const [assets, setAssets] = useState<Array<FileAsset>>([]);
   const [rivesStates, setRiveStates] = useState<Rive[]>([]);
   const changeImage = async (url: string, i: number) => {
+    let stringImage = '';
     if (assets.length > 0) {
       fetch(url).then(async res => {
-        const image = await decodeImage(
-          new Uint8Array(await res.arrayBuffer())
-        );
+        const array = new Uint8Array(await res.arrayBuffer());
+        stringImage = new TextDecoder().decode(array);
+        if (generatedAnimation) {
+          generatedAnimation.modules.forEach(x => {
+            if (x.images[i]) x.images[i].image = stringImage;
+          });
+          setGeneratedAnimation(generatedAnimation);
+        }
+        const image = await decodeImage(array);
         (assets[i] as any).setRenderImage(image);
       });
     }
@@ -60,11 +76,11 @@ export default function Editor() {
         if (riveState) {
           text = text === '' ? ' ' : text;
           if (variableToModify.paths.length > 0) {
-            variableToModify.paths.map((path: any) => {
+            variableToModify.paths.map(path => {
               riveState!.setTextRunValueAtPath(
                 variableToModify.value,
                 text,
-                path
+                path.path
               );
             });
           } else riveState.setTextRunValue(variableToModify.value, text);
@@ -73,10 +89,58 @@ export default function Editor() {
       variableToModify.defaultValue = text;
       setTemplate(template);
     }
+    if (generatedAnimation) {
+      generatedAnimation.modules.forEach(x => {
+        x.variables.forEach(y => {
+          if (y.templateVariable.id == variableToModify.id) {
+            y.value = text;
+          }
+        });
+      });
+      setGeneratedAnimation(generatedAnimation);
+    }
   }
+  const { get } = useTemplatesService();
   async function initializeTemplate() {
-    const template = await templatesService.get(params.id);
+    const template = await get(params.id);
     setTemplate(template);
+    if (template) {
+      const newGeneratedAnimation: GeneratedAnimation = {
+        baseTemplate: template.Result,
+        baseTemplateId: template.Result.id,
+        image: template.Result.thumbnail,
+        name: '',
+        folder: '',
+        status: GeneratedAnimationStatusEnum.NoStatus,
+        modules: [],
+      };
+      template.Result.modules.forEach(module => {
+        const newModuleToAdd: GeneratedModule = {
+          baseModule: module,
+          baseModuleId: module.id,
+          file: module.file,
+          images: [],
+          variables: [],
+          moduleType: module.moduleType,
+        };
+        module.images.forEach(image => {
+          newModuleToAdd.images.push({
+            image: '',
+            templateImage: image,
+            tepmlateImageId: image.id,
+          });
+        });
+        module.variables.forEach(variable => {
+          newModuleToAdd.variables.push({
+            value: '',
+            templateVariable: variable,
+            tepmlateVariableId: variable.id,
+          });
+        });
+        newGeneratedAnimation.modules.push(newModuleToAdd);
+      });
+      setGeneratedAnimation(newGeneratedAnimation);
+    }
   }
 
   async function changeresolution(event: any) {
@@ -86,6 +150,14 @@ export default function Editor() {
       console.log(resolution);
       mainCan.style.width = resolution[0] + 'px';
       mainCan.style.height = resolution[1] + 'px';
+    }
+  }
+
+  const { add } = useGeneratedAnimationService();
+  async function generateUrlFunction(name: string) {
+    if (generatedAnimation) {
+      generatedAnimation.name = name;
+      add(generatedAnimation);
     }
   }
 
@@ -221,7 +293,7 @@ export default function Editor() {
               );
             })}
           </div>
-          <EditorUrl />
+          <EditorUrl generateUrlFunction={generateUrlFunction} />
         </aside>
       </div>
     </>

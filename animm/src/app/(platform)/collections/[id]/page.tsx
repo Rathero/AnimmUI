@@ -1,16 +1,27 @@
+'use client';
+import useCollectionsService from '@/app/services/CollectionsService';
 import { HeaderPage } from '@/components/header-page';
 import TemplateElement from '@/components/template-card';
+import { ApiCollection } from '@/types/collections';
+import { useEffect, useState } from 'react';
 
-import { collectionsService } from '@/app/services/CollectionsService';
+export default function page({ params }: { params: Promise<{ id: string }> }) {
+  const [collection, setCollection] = useState<ApiCollection | undefined>(
+    undefined
+  );
+  const { get } = useCollectionsService();
 
-export default async function page({
-  params,
-}: {
-  params: Promise<{ id: string }>;
-}) {
-  const { id } = await params;
+  const fetchCollections = async () => {
+    params.then(async x => {
+      const coll = await get(x.id);
+      setCollection(coll);
+    });
+  };
 
-  const collection = await collectionsService.get(id);
+  useEffect(() => {
+    fetchCollections();
+  }, []);
+
   if (!collection) return <></>;
   return (
     <div className="h-full flex flex-col gap-4">
