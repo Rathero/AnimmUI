@@ -27,7 +27,7 @@ export function LoginForm({
       const response = await login(email, password);
       if (response?.Result) {
         setAuthenticationResponse(response.Result);
-        router.push('/');
+        router.push('/collections');
       } else {
         setError('Invalid credentials');
       }

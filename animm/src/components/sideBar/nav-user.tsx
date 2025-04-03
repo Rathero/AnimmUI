@@ -1,14 +1,11 @@
 'use client';
 
-import Link from 'next/link';
+import { ChevronsUpDown, LogOut } from 'lucide-react';
 
-import { BadgeCheck, ChevronsUpDown, CreditCard, LogOut } from 'lucide-react';
-
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Avatar, AvatarImage } from '@/components/ui/avatar';
 import {
   DropdownMenu,
   DropdownMenuContent,
-  DropdownMenuGroup,
   DropdownMenuItem,
   DropdownMenuLabel,
   DropdownMenuSeparator,
@@ -21,24 +18,25 @@ import {
   useSidebar,
 } from '@/components/ui/sidebar';
 import { platformStore } from '@/stores/platformStore';
-
-const optionsUser = [
-  {
-    title: 'Account',
-    url: '/',
-    icon: BadgeCheck,
-  },
-  {
-    title: 'Billing',
-    url: '/collections',
-    icon: CreditCard,
-  },
-];
+import useLoginService from '@/app/services/LoginService';
+import { useRouter } from 'next/navigation';
 
 export function NavUser() {
   const { isMobile } = useSidebar();
 
-  const { authenticationResponse } = platformStore(state => state);
+  const { authenticationResponse, setAuthenticationResponse } = platformStore(
+    state => state
+  );
+  const { logout } = useLoginService();
+  const router = useRouter();
+  async function logoutFunction() {
+    try {
+      const response = await logout(authenticationResponse?.jwtToken ?? '');
+      setAuthenticationResponse(undefined);
+      router.push('/login');
+    } catch (err) {}
+  }
+
   if (!authenticationResponse) return <></>;
   return (
     <SidebarMenu>
@@ -93,7 +91,7 @@ export function NavUser() {
             </DropdownMenuLabel>
 
             <DropdownMenuSeparator />
-
+            {/*
             <DropdownMenuGroup>
               {optionsUser.map(option => (
                 <Link href={option.url} key={option.title}>
@@ -103,11 +101,14 @@ export function NavUser() {
                   </DropdownMenuItem>
                 </Link>
               ))}
-            </DropdownMenuGroup>
+            </DropdownMenuGroup>*/}
 
             <DropdownMenuSeparator />
 
-            <DropdownMenuItem className="focus:!text-red-600 focus:!bg-red-100">
+            <DropdownMenuItem
+              className="focus:!text-red-600 focus:!bg-red-100"
+              onClick={logoutFunction}
+            >
               <LogOut />
               Log out
             </DropdownMenuItem>
