@@ -14,6 +14,7 @@ export interface GeneratedAnimation {
   folder: string;
   status: GeneratedAnimationStatusEnum;
   modules: GeneratedModule[];
+  id: number;
 }
 
 export interface GeneratedModule {

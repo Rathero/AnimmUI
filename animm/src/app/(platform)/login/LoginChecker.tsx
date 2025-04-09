@@ -25,7 +25,7 @@ const LoginChecker: React.FC<LoginCheckerProps> = ({
         }
       } else {
         if (isLoginPage) {
-          router.push('/');
+          router.push('/collections');
           return;
         }
       }

@@ -1,6 +1,7 @@
 'use client';
 import { GeneratedAnimation } from '@/types/generatedAnimations';
 import useFetchWithAuth from './fetchWithAuth';
+import { BaseApiResponse } from '@/types/baseApi';
 
 const useGeneratedAnimationService = () => {
   const fetchWithAuth = useFetchWithAuth();
@@ -15,12 +16,14 @@ const useGeneratedAnimationService = () => {
     return await response.json();
   };
 
-  const getAll = async (): Promise<GeneratedAnimation[]> => {
+  const getAll = async (): Promise<
+    BaseApiResponse<GeneratedAnimation[]> | undefined
+  > => {
     const response = await fetchWithAuth(
       process.env.NEXT_PUBLIC_API_URL + '/users/animations/'
     );
     if (!response.ok) {
-      return [];
+      return undefined;
     }
     return await response.json();
   };

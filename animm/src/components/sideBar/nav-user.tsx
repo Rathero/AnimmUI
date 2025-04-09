@@ -31,7 +31,7 @@ export function NavUser() {
   const router = useRouter();
   async function logoutFunction() {
     try {
-      const response = await logout(authenticationResponse?.jwtToken ?? '');
+      //const response = await logout(authenticationResponse?.jwtToken ?? '');
       setAuthenticationResponse(undefined);
       router.push('/login');
     } catch (err) {}

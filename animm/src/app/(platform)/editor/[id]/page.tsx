@@ -70,6 +70,17 @@ export default function Editor() {
     }
   }
 
+  async function changeSelect(
+    value: string,
+    variableToModify: TemplateVariable
+  ) {
+    rivesStates.forEach(riveState => {
+      riveState.stateMachineInputs('SM')[0].value = isNaN(Number(value))
+        ? value === 'true'
+        : Number(value);
+    });
+  }
+
   async function changeText(text: string, variableToModify: TemplateVariable) {
     if (rivesStates) {
       rivesStates.forEach(riveState => {
@@ -272,7 +283,7 @@ export default function Editor() {
                                     {y.type === 2 && (
                                       <EditorSelect
                                         variable={y}
-                                        changeInput={changeText}
+                                        changeInput={changeSelect}
                                       />
                                     )}
                                   </div>

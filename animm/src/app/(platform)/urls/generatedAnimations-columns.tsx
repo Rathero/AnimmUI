@@ -19,19 +19,12 @@ import Link from 'next/link';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
+import {
+  GeneratedAnimation,
+  GeneratedAnimationStatusEnum,
+} from '@/types/generatedAnimations';
 
-const Remove = () => {};
-
-export interface Url {
-  id: string;
-  name: string;
-  templateId: number;
-  url: string;
-  enabled: boolean;
-  date: string;
-}
-
-export const columns: ColumnDef<Url>[] = [
+export const GeneratedAnimationsColumns: ColumnDef<GeneratedAnimation>[] = [
   {
     accessorKey: 'id',
     header: 'Id',
@@ -53,13 +46,13 @@ export const columns: ColumnDef<Url>[] = [
     size: undefined,
   },
   {
-    accessorKey: 'templateId',
+    accessorKey: 'baseTemplateId',
     header: 'Base Template',
     size: undefined,
   },
 
   {
-    accessorKey: 'date',
+    accessorKey: 'creationDate',
     header: 'Date',
     size: undefined,
   },
@@ -67,21 +60,24 @@ export const columns: ColumnDef<Url>[] = [
     accessorKey: 'url',
     header: 'URL',
     cell: ({ row }) => {
-      const url = row.original;
+      const url =
+        'https://animm-ui.vercel.app/editor/' +
+        row.original.id +
+        '?generated=true';
       return (
         <div className="flex items-center space-x-2">
           <div className="grid flex-1 gap-2">
             <Label htmlFor="url" className="sr-only">
               Link
             </Label>
-            <Input id="url" defaultValue={url.url} readOnly />
+            <Input id="url" defaultValue={url} readOnly />
           </div>
           <Button
             variant="outline"
             size="sm"
             className="w-9"
             onClick={() => {
-              navigator.clipboard.writeText(url.url);
+              navigator.clipboard.writeText(url);
               toast.success('URL has been copied');
             }}
           >
@@ -107,8 +103,9 @@ export const columns: ColumnDef<Url>[] = [
       );
     },
     cell: ({ row }) => {
-      const url = row.original;
-      if (url.enabled) {
+      const status = row.original.status;
+      //if (status == GeneratedAnimationStatusEnum.Approved) {
+      if (true) {
         return (
           <div className="flex w-full justify-center">
             <Badge variant="default">Enabled</Badge>
@@ -127,16 +124,19 @@ export const columns: ColumnDef<Url>[] = [
   {
     id: 'actions',
     cell: ({ row }) => {
-      const url = row.original;
+      const url =
+        'https://animm-ui.vercel.app/editor/' +
+        row.original.id +
+        '?generated=true&fullScreen=true';
+      const urlEditor =
+        'https://animm-ui.vercel.app/editor/' +
+        row.original.id +
+        '?generated=true';
 
       return (
         <div className="flex gap-2 justify-end">
           <Button variant="ghost" size="sm" className="h-8 w-8 p-0" asChild>
-            <a
-              rel="noopener noreferrer"
-              target="_blank"
-              href={'https://' + url.url}
-            >
+            <a rel="noopener noreferrer" target="_blank" href={url}>
               <Eye className="h-4 w-4" />
             </a>
           </Button>
@@ -150,13 +150,13 @@ export const columns: ColumnDef<Url>[] = [
             <DropdownMenuContent align="end">
               <DropdownMenuLabel>Actions</DropdownMenuLabel>
               <DropdownMenuItem asChild>
-                <Link href={'/editor/' + url.id}>Edit</Link>
+                <Link href={urlEditor}>Edit</Link>
               </DropdownMenuItem>
               <DropdownMenuSeparator />
               <DropdownMenuItem
                 className="focus:!text-red-600 focus:!bg-red-100"
                 onClick={() =>
-                  toast.success(`URL ${url.name} has been deleted`)
+                  toast.success(`URL ${row.original.name} has been deleted`)
                 }
               >
                 Delete
