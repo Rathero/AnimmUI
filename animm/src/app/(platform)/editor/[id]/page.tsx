@@ -124,6 +124,7 @@ export default function Editor() {
         folder: '',
         status: GeneratedAnimationStatusEnum.NoStatus,
         modules: [],
+        id: 0,
       };
       template.Result.modules.forEach(module => {
         const newModuleToAdd: GeneratedModule = {
