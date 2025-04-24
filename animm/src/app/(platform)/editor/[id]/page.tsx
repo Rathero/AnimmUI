@@ -111,6 +111,7 @@ export default function Editor() {
       setGeneratedAnimation(generatedAnimation);
     }
   }
+
   const { get } = useTemplatesService();
   async function initializeTemplate() {
     const template = await get(params.id);
