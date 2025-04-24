@@ -35,11 +35,11 @@ const Components = [
   ['0', '/Test/WL_Product.riv', 'Template', 'Module01'],
   ['0', '/Test/WL_Totem.riv', 'Template', 'Module02'],
   ['0', '/Test/WL_Pb.riv', 'Template', 'Module03'],
-  ['0', '/Test/WL_Modules.riv', 'Module_01', 'Module04'],
-  ['0', '/Test/WL_Modules.riv', 'Module_02', 'Module05'],
-  ['0', '/Test/WL_Modules.riv', 'Module_03', 'Module06'],
-  ['0', '/Test/WL_Modules.riv', 'Module_04', 'Module07'],
-  ['0', '/Test/WL_Modules.riv', 'Module_05', 'Module08'],
+  ['0', '/Test/IND_Modules.riv', 'Module_01', 'Module04'],
+  ['0', '/Test/IND_Modules.riv', 'Module_02', 'Module05'],
+  ['0', '/Test/IND_Modules.riv', 'Module_03', 'Module06'],
+  ['0', '/Test/IND_Modules.riv', 'Module_04', 'Module07'],
+  ['0', '/Test/IND_Modules.riv', 'Module_05', 'Module08'],
 ];
 
 interface DraggableDivProps {
@@ -165,7 +165,7 @@ export default function Editor() {
   const [divs, setDivs] = useState<DivForCreator[]>([
     {
       id: 0,
-      direction: 'vertical',
+      direction: 'horizontal',
       nestedDivs: [],
       module: 2,
     },
@@ -302,7 +302,7 @@ export default function Editor() {
                   <TransformComponent wrapperClass="!w-full !h-full">
                     <div
                       id="MainCanvas"
-                      className="h-[1920px] w-[1080px] resizeItem border bg-white shadow-md shadow-slate-500/1 "
+                      className="h-[1080px] w-[1920px] resizeItem border bg-white shadow-md shadow-slate-500/1 "
                     >
                       <ResizablePanelGroup
                         key={divs ? divs[0].id : '0'}
