@@ -1,5 +1,7 @@
 import Screens from '../../data/Screens.json';
-
+import ScreensMM1 from '../../data/ScreensMM1.json';
+import ScreensMM2 from '../../data/ScreensMM2.json';
+import ScreensMM3 from '../../data/ScreensMM3.json';
 import {
   Select,
   SelectContent,
@@ -12,8 +14,13 @@ import {
 
 export function EditorResolution(props: {
   resolution: ((value: string) => void) | undefined;
+  templateId: string | undefined;
 }) {
-  const ScreensDef = Screens.map((screen: any) => {
+  let screensToUse = Screens;
+  if (props.templateId === '5') screensToUse = ScreensMM1;
+  if (props.templateId === '4') screensToUse = ScreensMM2;
+  if (props.templateId === '6') screensToUse = ScreensMM3;
+  const ScreensDef = screensToUse.map((screen: any) => {
     return {
       value: '' + screen.id,
       label: screen.name,

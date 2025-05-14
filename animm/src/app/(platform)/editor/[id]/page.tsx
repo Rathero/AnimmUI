@@ -219,7 +219,10 @@ export default function Editor() {
                 zoomToElement,
               }) => (
                 <>
-                  <EditorResolution resolution={changeresolution} />
+                  <EditorResolution
+                    resolution={changeresolution}
+                    templateId={params.id}
+                  />
                   <EditorPlay playRive={playRive} playing={playing} />
                   <EditorZoom
                     zoomIn={zoomIn}
@@ -232,7 +235,7 @@ export default function Editor() {
                   <TransformComponent wrapperClass="!w-full !h-full">
                     <div
                       id="MainCanvas"
-                      className="h-[1920px] w-[1080px] resizeItem flex rounded-lg border bg-white shadow-md shadow-slate-500/10"
+                      className="h-[1920px] w-[1080px] flex rounded-lg border bg-white shadow-md shadow-slate-500/10"
                     >
                       <div className="size-full">
                         {template &&

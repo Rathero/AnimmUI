@@ -1,0 +1,38 @@
+[
+  {
+    "id": 1,
+    "name": "DV_300x600",
+    "width": 300,
+    "height": 600
+  },
+  {
+    "id": 2,
+    "name": "DV_160x600",
+    "width": 160,
+    "height": 600
+  },
+  {
+    "id": 3,
+    "name": "DH_980x250",
+    "width": 980,
+    "height": 250
+  },
+  {
+    "id": 4,
+    "name": "DH_320x100",
+    "width": 320,
+    "height": 100
+  },
+  {
+    "id": 5,
+    "name": "DH_728x90",
+    "width": 300,
+    "height": 600
+  },
+  {
+    "id": 6,
+    "name": "DC_1200x1200",
+    "width": 1200,
+    "height": 1200
+  }
+]

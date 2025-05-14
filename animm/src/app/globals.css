@@ -112,9 +112,6 @@ body {
 }
 #MainCanvas {
   padding: 0;
-  min-height: 125px;
-  min-width: 325px;
-  resize: both;
   overflow: hidden;
 }
 
