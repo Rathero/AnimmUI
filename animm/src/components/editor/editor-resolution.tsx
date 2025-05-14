@@ -14,7 +14,7 @@ import {
 
 export function EditorResolution(props: {
   resolution: ((value: string) => void) | undefined;
-  templateId: string | undefined;
+  templateId?: string | undefined;
 }) {
   let screensToUse = Screens;
   if (props.templateId === '5') screensToUse = ScreensMM1;
