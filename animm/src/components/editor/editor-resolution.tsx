@@ -28,6 +28,8 @@ export function EditorResolution(props: {
       height: screen.height,
     };
   });
+  if (props.resolution)
+    props.resolution(ScreensDef[0].width + '-' + ScreensDef[0].height);
   return (
     <div className="absolute left-0 top-0 z-50 p-4 ">
       <Select onValueChange={props.resolution}>

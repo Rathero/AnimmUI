@@ -1,32 +1,32 @@
 [
   {
     "id": 1,
+    "name": "DV_800x1200",
+    "width": 800,
+    "height": 1200
+  },
+  {
+    "id": 2,
     "name": "DV_160x600",
     "width": 160,
     "height": 600
   },
   {
-    "id": 2,
+    "id": 3,
     "name": "DV_240x400",
     "width": 240,
     "height": 400
   },
   {
-    "id": 3,
+    "id": 4,
     "name": "DV_289x545",
     "width": 289,
     "height": 545
   },
   {
-    "id": 4,
+    "id": 5,
     "name": "DV_300x600",
     "width": 300,
     "height": 600
-  },
-  {
-    "id": 5,
-    "name": "DV_800x1200",
-    "width": 800,
-    "height": 1200
   }
 ]
