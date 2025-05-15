@@ -161,8 +161,8 @@ export default function Editor() {
     if (mainCan) {
       const resolution = event.split('-');
       console.log(resolution);
-      mainCan.style.width = resolution[0] + 'px';
-      mainCan.style.height = resolution[1] + 'px';
+      mainCan.style.width = Number.parseInt(resolution[0]) + 1 + 'px';
+      mainCan.style.height = Number.parseInt(resolution[1]) + 1 + 'px';
     }
   }
 

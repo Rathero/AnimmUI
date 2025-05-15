@@ -8,14 +8,14 @@
   {
     "id": 2,
     "name": "DV_240x400",
-    "width": 980,
-    "height": 250
+    "width": 240,
+    "height": 400
   },
   {
     "id": 3,
     "name": "DV_289x545",
-    "width": 320,
-    "height": 100
+    "width": 289,
+    "height": 545
   },
   {
     "id": 4,
