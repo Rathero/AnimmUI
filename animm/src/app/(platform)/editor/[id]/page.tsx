@@ -310,7 +310,9 @@ export default function Editor() {
               );
             })}
           </div>
-          <EditorCsv></EditorCsv>
+          {template?.Result && (
+            <EditorCsv template={template.Result}></EditorCsv>
+          )}
           <EditorUrl generateUrlFunction={generateUrlFunction} />
         </aside>
       </div>
