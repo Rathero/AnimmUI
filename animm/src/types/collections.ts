@@ -58,6 +58,28 @@ export interface Template {
   tags: Tag[];
   modules: Module[];
   video: string;
+  static: boolean;
+  templateCompositions: TemplateComposition[];
+}
+
+export interface TemplateComposition {
+  id: number;
+  name: string;
+  templateResolutions: TemplateResolution[];
+}
+
+export interface TemplateResolution {
+  id: number;
+  name: string;
+  width: number;
+  height: number;
+  format: TemplateResolutionFormat;
+}
+
+export enum TemplateResolutionFormat {
+  Png,
+  Mp4,
+  Pdf,
 }
 
 export interface Collection {

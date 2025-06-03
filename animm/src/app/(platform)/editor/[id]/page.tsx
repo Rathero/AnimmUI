@@ -13,7 +13,6 @@ import { TransformWrapper, TransformComponent } from 'react-zoom-pan-pinch';
 
 import { EditorZoom } from '@/components/editor/editor-zoom';
 import { EditorPlay } from '@/components/editor/editor-play';
-import { EditorResolution } from '@/components/editor/editor-resolution';
 import { EditorText } from '@/components/editor/editor-text';
 import { EditorSelect } from '@/components/editor/editor-select';
 
@@ -29,6 +28,7 @@ import {
 } from '@/types/generatedAnimations';
 import useTemplatesService from '@/app/services/TemplatesService';
 import useGeneratedAnimationService from '@/app/services/GeneratedAnimationsService';
+import EditorResolution from '@/components/editor/editor-resolution';
 
 export default function Editor() {
   const params = useParams<{ id: string }>();
@@ -156,13 +156,11 @@ export default function Editor() {
     }
   }
 
-  async function changeresolution(event: any) {
+  async function changeresolution(width: number, height: number) {
     const mainCan: any = document.querySelector('#MainCanvas');
     if (mainCan) {
-      const resolution = event.split('-');
-      console.log(resolution);
-      mainCan.style.width = Number.parseInt(resolution[0]) + 1 + 'px';
-      mainCan.style.height = Number.parseInt(resolution[1]) + 1 + 'px';
+      mainCan.style.width = width + 'px';
+      mainCan.style.height = height + 'px';
     }
   }
 
@@ -220,10 +218,12 @@ export default function Editor() {
               }) => (
                 <>
                   <EditorResolution
-                    resolution={changeresolution}
-                    templateId={params.id}
+                    setResolutionFunction={changeresolution}
+                    compositions={template?.Result.templateCompositions || []}
                   />
-                  <EditorPlay playRive={playRive} playing={playing} />
+                  {!template?.Result.static && (
+                    <EditorPlay playRive={playRive} playing={playing} />
+                  )}
                   <EditorZoom
                     zoomIn={zoomIn}
                     zoomOut={zoomOut}
