@@ -5,7 +5,6 @@ import { useEffect, useState } from 'react';
 import { TransformWrapper, TransformComponent } from 'react-zoom-pan-pinch';
 
 import { EditorZoom } from '@/components/editor/editor-zoom';
-import { EditorResolution } from '@/components/editor/editor-resolution';
 
 import React from 'react';
 
@@ -282,7 +281,6 @@ export default function Editor() {
                 zoomToElement,
               }) => (
                 <>
-                  <EditorResolution resolution={changeresolution} />
                   <EditorZoom
                     zoomIn={zoomIn}
                     zoomOut={zoomOut}

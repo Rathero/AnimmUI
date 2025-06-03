@@ -29,6 +29,7 @@ import {
 import useTemplatesService from '@/app/services/TemplatesService';
 import useGeneratedAnimationService from '@/app/services/GeneratedAnimationsService';
 import EditorResolution from '@/components/editor/editor-resolution';
+import EditorCsv from '@/components/editor/editor-csv';
 
 export default function Editor() {
   const params = useParams<{ id: string }>();
@@ -309,6 +310,7 @@ export default function Editor() {
               );
             })}
           </div>
+          <EditorCsv></EditorCsv>
           <EditorUrl generateUrlFunction={generateUrlFunction} />
         </aside>
       </div>
