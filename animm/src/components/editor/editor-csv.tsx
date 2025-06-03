@@ -16,7 +16,7 @@ import { KeyValuePair } from 'tailwindcss/types/config';
 
 export default function EditorCsv({ template }: { template: Template }) {
   const downloadCSV = () => {
-    let dataToExport: Record<string, any>[] = [];
+    let dataToExport: Record<string, string>[] = [];
     let variables: KeyValuePair<string, string>[] = [];
     template.modules.forEach(module => {
       module.variables.forEach(variable => {
@@ -25,8 +25,14 @@ export default function EditorCsv({ template }: { template: Template }) {
           value: variable.defaultValue,
         });
       });
+      module.images.forEach((variable, i) => {
+        variables.push({
+          key: 'imagen' + i,
+          value: variable.image,
+        });
+      });
     });
-    const row: Record<string, any> = {};
+    const row: Record<string, string> = {};
     variables.forEach(variable => {
       row[variable.key] = variable.value;
     });
@@ -43,7 +49,7 @@ export default function EditorCsv({ template }: { template: Template }) {
 
     dataToExport.forEach(row => {
       const rowValues = headers.map(header => {
-        let cell = (row as Record<string, any>)[header];
+        let cell = (row as Record<string, string>)[header];
         if (typeof cell === 'string') {
           cell = cell.replace(/"/g, '""');
           if (cell.includes(',')) {
