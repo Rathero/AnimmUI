@@ -4,6 +4,7 @@
 
 body {
   font-family: Arial, Helvetica, sans-serif;
+  margin: 0px;
 }
 @theme {
   --ease-in-out-sn: cubic-bezier(0.35, 0, 0.165, 1);

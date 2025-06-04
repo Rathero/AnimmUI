@@ -17,7 +17,7 @@ import { EditorText } from '@/components/editor/editor-text';
 import { EditorSelect } from '@/components/editor/editor-select';
 
 import { ApiTemplate, Module, TemplateVariable } from '@/types/collections';
-import { ChevronDown } from 'lucide-react';
+import { ChevronDown, LinkIcon } from 'lucide-react';
 import EditorImages from '@/components/editor/editor-images';
 import RiveComp from '@/components/editor/rive-component';
 import EditorUrl from '@/components/editor/editor-url';
@@ -30,6 +30,7 @@ import useTemplatesService from '@/app/services/TemplatesService';
 import useGeneratedAnimationService from '@/app/services/GeneratedAnimationsService';
 import EditorResolution from '@/components/editor/editor-resolution';
 import EditorCsv from '@/components/editor/editor-csv';
+import { Button } from '@/components/ui/button';
 
 export default function Editor() {
   const params = useParams<{ id: string }>();
@@ -195,6 +196,9 @@ export default function Editor() {
     mainCanvas.removeEventListener('mousemove', handleMouseEvent);
   }, []);
 
+  const generateUrl = async () => {
+    window.open('/viewer/' + params.id, '_blank');
+  };
   return (
     <>
       <div className="absolute flex top-0 bottom-0 right-0 left-0 overflow-hidden">
@@ -314,6 +318,10 @@ export default function Editor() {
             <EditorCsv template={template.Result}></EditorCsv>
           )}
           <EditorUrl generateUrlFunction={generateUrlFunction} />
+          <Button className="w-full" onClick={() => generateUrl()}>
+            <LinkIcon />
+            Preview
+          </Button>
         </aside>
       </div>
     </>
