@@ -197,7 +197,15 @@ export default function Editor() {
   }, []);
 
   const generateUrl = async () => {
-    window.open('/viewer/' + params.id, '_blank');
+    let paramsUrl = new URLSearchParams();
+    if (template) {
+      template.Result.modules.forEach(module => {
+        module.variables.forEach(variable => {
+          paramsUrl.append(variable.name, variable.defaultValue || '');
+        });
+      });
+    }
+    window.open('/viewer/' + params.id + '?' + paramsUrl.toString(), '_blank');
   };
   return (
     <>
