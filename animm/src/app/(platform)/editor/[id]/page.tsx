@@ -16,7 +16,7 @@ import { EditorPlay } from '@/components/editor/editor-play';
 import { EditorText } from '@/components/editor/editor-text';
 import { EditorSelect } from '@/components/editor/editor-select';
 
-import { ApiTemplate, Module, TemplateVariable } from '@/types/collections';
+import { ApiTemplate, Module, TemplateVariable, TemplateVariableTypeEnum } from '@/types/collections';
 import { ChevronDown, LinkIcon } from 'lucide-react';
 import EditorImages from '@/components/editor/editor-images';
 import RiveComp from '@/components/editor/rive-component';
@@ -31,6 +31,7 @@ import useGeneratedAnimationService from '@/app/services/GeneratedAnimationsServ
 import EditorResolution from '@/components/editor/editor-resolution';
 import EditorCsv from '@/components/editor/editor-csv';
 import { Button } from '@/components/ui/button';
+import { toast } from 'sonner';
 
 export default function Editor() {
   const params = useParams<{ id: string }>();
@@ -207,6 +208,46 @@ export default function Editor() {
     }
     window.open('/viewer/' + params.id + '?' + paramsUrl.toString(), '_blank');
   };
+
+  const handleExport = async () => {
+    try {
+      // Get all variables
+      const variables: Record<string, string> = {};
+      if (template) {
+        template.Result.modules.forEach(module => {
+          module.variables.forEach(variable => {
+            variables[variable.name] = variable.defaultValue || '';
+          });
+        });
+      }
+
+      // Call export API
+      const response = await fetch('/api/export', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          id: params.id,
+          variables,
+        }),
+      });
+
+      const data = await response.json();
+      
+      if (data.success) {
+        toast.success('Video exported successfully!');
+        // Open the video in a new tab
+        window.open(data.videoUrl, '_blank');
+      } else {
+        toast.error('Failed to export video');
+      }
+    } catch (error) {
+      console.error('Export error:', error);
+      toast.error('Failed to export video');
+    }
+  };
+
   return (
     <>
       <div className="absolute flex top-0 bottom-0 right-0 left-0 overflow-hidden">
@@ -292,13 +333,13 @@ export default function Editor() {
                               (y: TemplateVariable, index2: number) => {
                                 return (
                                   <div key={'div2' + index2}>
-                                    {y.type === 1 && (
+                                    {y.type === TemplateVariableTypeEnum.TextArea && (
                                       <EditorText
                                         variable={y}
                                         changeText={changeText}
                                       />
                                     )}
-                                    {y.type === 2 && (
+                                    {y.type === TemplateVariableTypeEnum.Selector && (
                                       <EditorSelect
                                         variable={y}
                                         changeInput={changeSelect}
@@ -329,6 +370,13 @@ export default function Editor() {
           <Button className="w-full" onClick={() => generateUrl()}>
             <LinkIcon />
             Preview
+          </Button>
+          <Button 
+            className="w-full mt-2" 
+            onClick={handleExport}
+            variant="default"
+          >
+            Export Video
           </Button>
         </aside>
       </div>
