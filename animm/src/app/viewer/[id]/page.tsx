@@ -1,8 +1,10 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { useParams } from 'next/navigation';
 import { FileAsset, Rive } from '@rive-app/react-canvas';
+import html2canvas from 'html2canvas';
+import RecordRTC from 'recordrtc';
 
 import {
   ApiTemplate,
@@ -11,6 +13,14 @@ import {
 } from '@/types/collections';
 import RiveComp from '@/components/editor/rive-component';
 import useTemplatesService from '@/app/services/TemplatesService';
+import { Button } from '@/components/ui/button';
+
+// Add type declaration for captureStream
+declare global {
+  interface HTMLElement {
+    captureStream(frameRate?: number): MediaStream;
+  }
+}
 
 export default function Viewer() {
   const params = useParams<{ id: string }>();
@@ -19,6 +29,9 @@ export default function Viewer() {
 
   const [assets, setAssets] = useState<Array<FileAsset>>([]);
   const [rivesStates, setRiveStates] = useState<Rive[]>([]);
+  const [isRecording, setIsRecording] = useState(false);
+  const recorderRef = useRef<RecordRTC | null>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
 
   const { get } = useTemplatesService();
   async function initializeTemplate() {
@@ -46,11 +59,67 @@ export default function Viewer() {
     }
   }
 
+  const startRecording = async () => {
+    if (typeof window === 'undefined') return;
+    if (!containerRef.current) return;
+    
+    setIsRecording(true);
+    
+    // Find the canvas element inside the container
+    const canvas = containerRef.current.querySelector('canvas');
+    if (!canvas) {
+      console.error('No canvas found');
+      setIsRecording(false);
+      return;
+    }
+
+    try {
+      const stream = canvas.captureStream(30); // 30 FPS
+      recorderRef.current = new RecordRTC(stream, {
+        type: 'video',
+        mimeType: 'video/webm',
+        videoBitsPerSecond: 2500000, // 2.5 Mbps
+        frameRate: 30,
+      });
+
+      recorderRef.current.startRecording();
+    } catch (error) {
+      console.error('Error starting recording:', error);
+      setIsRecording(false);
+    }
+  };
+
+  const stopRecording = () => {
+    debugger;
+    if (typeof window === 'undefined') return;
+    if (!recorderRef.current) return;
+
+    try {
+      recorderRef.current.stopRecording(() => {
+        const blob = recorderRef.current?.getBlob();
+        if (blob) {
+          const url = window.URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.href = url;
+          a.download = `animation-${params.id}.webm`;
+          a.click();
+          window.URL.revokeObjectURL(url);
+        }
+        setIsRecording(false);
+        recorderRef.current = null;
+      });
+    } catch (error) {
+      console.error('Error stopping recording:', error);
+      setIsRecording(false);
+    }
+  };
+
   useEffect(() => {
     initializeTemplate();
   }, []);
 
   useEffect(() => {
+    if (typeof window === 'undefined') return;
     if (template && rivesStates && rivesStates.length > 0) {
       const mainCan: any = document.querySelector('#MainCanvas');
       if (mainCan) {
@@ -58,8 +127,7 @@ export default function Viewer() {
         mainCan.style.height = window.innerHeight + 'px';
       }
 
-      const queryString =
-        typeof window !== 'undefined' ? window.location.search : '';
+      const queryString = window.location.search;
       const params = new URLSearchParams(queryString);
       params.forEach((value, key) => {
         const variableToModify = template.Result.modules
@@ -76,7 +144,15 @@ export default function Viewer() {
 
   return (
     <>
-      <div className="h-full w-full" id="MainCanvas">
+      <div className="fixed top-4 right-4 z-50">
+        <Button
+          onClick={isRecording ? stopRecording : startRecording}
+          variant={isRecording ? "destructive" : "default"}
+        >
+          {isRecording ? 'Stop Recording' : 'Export to Video'}
+        </Button>
+      </div>
+      <div className="h-full w-full" id="MainCanvas" ref={containerRef}>
         {template &&
           template.Result.modules.length > 0 &&
           template.Result.modules[0].file && (
