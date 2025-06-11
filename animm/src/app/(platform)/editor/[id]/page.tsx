@@ -16,8 +16,13 @@ import { EditorPlay } from '@/components/editor/editor-play';
 import { EditorText } from '@/components/editor/editor-text';
 import { EditorSelect } from '@/components/editor/editor-select';
 
-import { ApiTemplate, Module, TemplateVariable, TemplateVariableTypeEnum } from '@/types/collections';
-import { ChevronDown, LinkIcon } from 'lucide-react';
+import {
+  ApiTemplate,
+  Module,
+  TemplateVariable,
+  TemplateVariableTypeEnum,
+} from '@/types/collections';
+import { ChevronDown, LinkIcon, Loader2 } from 'lucide-react';
 import EditorImages from '@/components/editor/editor-images';
 import RiveComp from '@/components/editor/rive-component';
 import EditorUrl from '@/components/editor/editor-url';
@@ -209,8 +214,11 @@ export default function Editor() {
     window.open('/viewer/' + params.id + '?' + paramsUrl.toString(), '_blank');
   };
 
+  const [isExporting, setIsExporting] = useState(false);
+
   const handleExport = async () => {
     try {
+      setIsExporting(true);
       // Get all variables
       const variables: Record<string, string> = {};
       if (template) {
@@ -234,7 +242,7 @@ export default function Editor() {
       });
 
       const data = await response.json();
-      
+
       if (data.success) {
         toast.success('Video exported successfully!');
         // Open the video in a new tab
@@ -245,6 +253,8 @@ export default function Editor() {
     } catch (error) {
       console.error('Export error:', error);
       toast.error('Failed to export video');
+    } finally {
+      setIsExporting(false);
     }
   };
 
@@ -333,13 +343,15 @@ export default function Editor() {
                               (y: TemplateVariable, index2: number) => {
                                 return (
                                   <div key={'div2' + index2}>
-                                    {y.type === TemplateVariableTypeEnum.TextArea && (
+                                    {y.type ===
+                                      TemplateVariableTypeEnum.TextArea && (
                                       <EditorText
                                         variable={y}
                                         changeText={changeText}
                                       />
                                     )}
-                                    {y.type === TemplateVariableTypeEnum.Selector && (
+                                    {y.type ===
+                                      TemplateVariableTypeEnum.Selector && (
                                       <EditorSelect
                                         variable={y}
                                         changeInput={changeSelect}
@@ -371,12 +383,20 @@ export default function Editor() {
             <LinkIcon />
             Preview
           </Button>
-          <Button 
-            className="w-full mt-2" 
+          <Button
+            className="w-full mt-2"
             onClick={handleExport}
             variant="default"
+            disabled={isExporting}
           >
-            Export Video
+            {isExporting ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                Exporting...
+              </>
+            ) : (
+              'Export Video'
+            )}
           </Button>
         </aside>
       </div>
