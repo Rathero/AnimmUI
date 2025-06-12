@@ -4,10 +4,7 @@ import { writeFile, mkdir } from 'fs/promises';
 import { join } from 'path';
 import { existsSync } from 'fs';
 import puppeteerCore from 'puppeteer-core';
-import chromium from '@sparticuz/chromium-min';
-
-const remoteExecutablePath =
-  'https://github.com/Sparticuz/chromium/releases/download/v121.0.0/chromium-v121.0.0-pack.tar';
+import chromium from '@sparticuz/chromium';
 let browser: any;
 async function getBrowser() {
   if (browser) return browser;
@@ -15,7 +12,7 @@ async function getBrowser() {
   if (process.env.NEXT_PUBLIC_VERCEL_ENVIRONMENT === 'production') {
     browser = await puppeteerCore.launch({
       args: chromium.args,
-      executablePath: await chromium.executablePath(remoteExecutablePath),
+      executablePath: await chromium.executablePath(),
       headless: true,
     });
   } else {
