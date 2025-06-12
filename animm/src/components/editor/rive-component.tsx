@@ -7,10 +7,12 @@ export default function RiveComp({
   src,
   setAssetsParent,
   setRiveStatesParent,
+  autoplay = true,
 }: {
   src: string;
   setAssetsParent: Dispatch<SetStateAction<FileAsset[]>>;
   setRiveStatesParent: Dispatch<SetStateAction<Rive[]>>;
+  autoplay?: boolean;
 }) {
   const [assets, setAssets] = useState<Array<FileAsset>>([]);
   const setRiveInstance = useRiveStore(state => state.setRiveInstance);
@@ -18,7 +20,7 @@ export default function RiveComp({
     src: src,
     artboard: 'Template',
     stateMachines: 'SM',
-    autoplay: true,
+    autoplay: autoplay,
     layout: new Layout({
       fit: Fit.Layout,
       layoutScaleFactor: 1,
