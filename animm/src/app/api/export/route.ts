@@ -84,7 +84,6 @@ export async function POST(request: Request) {
 
     // Record the animation
     const videoPath = join(exportsDir, `${id}.webm`);
-
     // Start recording with improved settings
     await page.evaluate(() => {
       const canvas = document.querySelector('#MainCanvas canvas');
@@ -92,7 +91,6 @@ export async function POST(request: Request) {
         throw new Error('Canvas element not found');
       }
 
-      const rect = canvas.getBoundingClientRect();
       const stream = (canvas as HTMLCanvasElement).captureStream(60); // 60 FPS for smoother animation
 
       const mediaRecorder = new MediaRecorder(stream, {
@@ -131,18 +129,17 @@ export async function POST(request: Request) {
 
       const riveInstance = (window as any).__RIVE_INSTANCE__;
       if (riveInstance) {
-        riveInstance.stop('SM');
         riveInstance.play('SM');
-        mediaRecorder.start(100); // Get data every 100ms
+        mediaRecorder.start(); // Get data every 100ms
       }
 
       setTimeout(() => {
         mediaRecorder.stop();
-      }, 6000); // Adjust duration as needed
+      }, 10000); // Adjust duration as needed
     });
 
     // Wait for recording to complete with extra buffer time
-    await new Promise(resolve => setTimeout(resolve, 7000));
+    await new Promise(resolve => setTimeout(resolve, 10000 + 2000));
 
     return NextResponse.json({
       success: true,

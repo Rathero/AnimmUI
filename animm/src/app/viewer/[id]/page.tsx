@@ -84,6 +84,7 @@ export default function Viewer() {
               src={template.Result.modules[0].file}
               setAssetsParent={setAssets}
               setRiveStatesParent={setRiveStates}
+              autoplay={false}
             />
           )}
       </div>
