@@ -211,6 +211,7 @@ export default function Editor() {
         });
       });
     }
+    paramsUrl.append('autoplay', 'true');
     window.open('/viewer/' + params.id + '?' + paramsUrl.toString(), '_blank');
   };
 

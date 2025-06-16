@@ -74,6 +74,11 @@ export default function Viewer() {
     }
   }, [template, rivesStates]);
 
+  const queryString =
+    typeof window !== 'undefined' ? window.location.search : '';
+  const urlParams = new URLSearchParams(queryString);
+  const shouldAutoplay = urlParams.get('autoplay') === 'true';
+
   return (
     <>
       <div className="h-full w-full" id="MainCanvas">
@@ -84,7 +89,7 @@ export default function Viewer() {
               src={template.Result.modules[0].file}
               setAssetsParent={setAssets}
               setRiveStatesParent={setRiveStates}
-              autoplay={false}
+              autoplay={shouldAutoplay}
             />
           )}
       </div>
