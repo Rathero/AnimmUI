@@ -230,16 +230,19 @@ export default function Editor() {
       }
 
       // Call export API
-      const response = await fetch('/api/export', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          id: params.id,
-          variables,
-        }),
-      });
+      const response = await fetch(
+        'https://animmapiv2.azurewebsites.net/Export',
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            id: params.id,
+            variables,
+          }),
+        }
+      );
 
       const data = await response.json();
 
