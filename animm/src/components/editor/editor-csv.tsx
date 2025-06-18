@@ -19,7 +19,7 @@ export default function EditorCsv({ template }: { template: Template }) {
   const [columnsMatched, setColumnsMatched] = useState<
     KeyValuePair<string, string>[]
   >([]);
-  let variablesToMatch: string[] = [];
+  const variablesToMatch: string[] = [];
   template.modules.forEach(module => {
     module.variables.forEach(variable => {
       variablesToMatch.push(variable.name);
@@ -33,9 +33,9 @@ export default function EditorCsv({ template }: { template: Template }) {
   const [columnsToMatch, setColumnsToMatch] =
     useState<string[]>(variablesToMatch);
   const downloadCSV = () => {
-    let dataToExport: Record<string, string>[] = [];
-    let variables: KeyValuePair<string, string>[] = [];
-    let variablesToMatch: string[] = [];
+    const dataToExport: Record<string, string>[] = [];
+    const variables: KeyValuePair<string, string>[] = [];
+    const variablesToMatch: string[] = [];
     template.modules.forEach(module => {
       module.variables.forEach(variable => {
         variables.push({
@@ -215,7 +215,7 @@ export default function EditorCsv({ template }: { template: Template }) {
                         onClick={() => {
                           if (selectedColumn) {
                             setColumnsMatched([]);
-                            let newColumnsMatched = columnsMatched.filter(
+                            const newColumnsMatched = columnsMatched.filter(
                               m => m.key !== selectedColumn
                             );
                             setColumnsMatched([]);

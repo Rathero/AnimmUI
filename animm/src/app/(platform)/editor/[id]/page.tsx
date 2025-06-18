@@ -203,7 +203,7 @@ export default function Editor() {
   }, []);
 
   const generateUrl = async () => {
-    let paramsUrl = new URLSearchParams();
+    const paramsUrl = new URLSearchParams();
     if (template) {
       template.Result.modules.forEach(module => {
         module.variables.forEach(variable => {
