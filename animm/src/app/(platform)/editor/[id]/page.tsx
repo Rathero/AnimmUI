@@ -232,7 +232,7 @@ export default function Editor() {
 
       // Call export API
       const response = await fetch(
-        'https://animmapiv2.azurewebsites.net/Export',
+        'https://animmexport.azurewebsites.net/Export',
         {
           method: 'POST',
           headers: {
