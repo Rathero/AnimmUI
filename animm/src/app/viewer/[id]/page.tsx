@@ -152,7 +152,7 @@ export default function Viewer() {
                 setTimeout(() => {
                     mediaRecorder.stop();
                     console.log('Stopping recording...');
-                }, 10000); // Record for 10 seconds
+                }, 6000); // Record for 10 seconds
             }, 4000); // Delay to ensure the canvas is ready`,
         }}
       />
