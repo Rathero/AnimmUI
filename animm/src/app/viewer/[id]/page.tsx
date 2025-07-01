@@ -79,6 +79,7 @@ export default function Viewer() {
     typeof window !== 'undefined' ? window.location.search : '';
   const urlParams = new URLSearchParams(queryString);
   const shouldAutoplay = urlParams.get('autoplay') === 'true';
+  const shouldRecord = urlParams.get('record') === 'true';
 
   return (
     <>
@@ -95,11 +96,12 @@ export default function Viewer() {
           )}
       </div>
 
-      <Script
-        id="metapixel-script"
-        strategy="lazyOnload"
-        dangerouslySetInnerHTML={{
-          __html: `setTimeout(() => {
+      {shouldRecord && (
+        <Script
+          id="metapixel-script"
+          strategy="lazyOnload"
+          dangerouslySetInnerHTML={{
+            __html: `setTimeout(() => {
                 const canvas = document.querySelector('#MainCanvas canvas');
                 if (!canvas) {
                     throw new Error('Canvas element not found');
@@ -154,8 +156,9 @@ export default function Viewer() {
                     console.log('Stopping recording...');
                 }, 6000); // Record for 10 seconds
             }, 4000); // Delay to ensure the canvas is ready`,
-        }}
-      />
+          }}
+        />
+      )}
     </>
   );
 }

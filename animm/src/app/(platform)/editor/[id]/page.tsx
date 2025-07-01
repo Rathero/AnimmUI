@@ -216,6 +216,7 @@ export default function Editor() {
   };
 
   const [isExporting, setIsExporting] = useState(false);
+  const [isExportingJpeg, setIsExportingJpeg] = useState(false);
 
   const handleExport = async () => {
     try {
@@ -259,6 +260,41 @@ export default function Editor() {
       toast.error('Failed to export video');
     } finally {
       setIsExporting(false);
+    }
+  };
+
+  const handleExportJpeg = async () => {
+    setIsExportingJpeg(true);
+    try {
+      if (rivesStates && rivesStates.length > 0) {
+        rivesStates.forEach(riveState => {
+          if (riveState) {
+            riveState.pause();
+          }
+        });
+        setPlaying(false);
+      }
+
+      const canvas = document.querySelector(
+        '#MainCanvas canvas'
+      ) as HTMLCanvasElement;
+      if (canvas) {
+        const dataUrl = canvas.toDataURL('image/jpeg', 0.9);
+        const link = document.createElement('a');
+        link.href = dataUrl;
+        link.download = `${template?.Result.name || 'export'}.jpeg`;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        toast.success('JPEG exported successfully!');
+      } else {
+        toast.error('Failed to find canvas element for export.');
+      }
+    } catch (error) {
+      console.error('JPEG export error:', error);
+      toast.error('Failed to export JPEG.');
+    } finally {
+      setIsExportingJpeg(false);
     }
   };
 
@@ -387,21 +423,40 @@ export default function Editor() {
             <LinkIcon />
             Preview
           </Button>
-          <Button
-            className="w-full mt-2"
-            onClick={handleExport}
-            variant="default"
-            disabled={isExporting}
-          >
-            {isExporting ? (
-              <>
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                Exporting...
-              </>
-            ) : (
-              'Export Video'
-            )}
-          </Button>
+          {!template?.Result.static && (
+            <Button
+              className="w-full mt-2"
+              onClick={handleExport}
+              variant="default"
+              disabled={isExporting}
+            >
+              {isExporting ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Exporting...
+                </>
+              ) : (
+                'Export Video'
+              )}
+            </Button>
+          )}
+          {!template?.Result.static && (
+            <Button
+              className="w-full mt-2"
+              onClick={handleExportJpeg}
+              variant="default"
+              disabled={isExportingJpeg}
+            >
+              {isExportingJpeg ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Exporting...
+                </>
+              ) : (
+                'Export JPEG'
+              )}
+            </Button>
+          )}
         </aside>
       </div>
     </>
