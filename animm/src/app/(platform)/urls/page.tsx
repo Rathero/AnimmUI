@@ -29,6 +29,7 @@ export default function UrlsPage() {
           <DataTable
             columns={GeneratedAnimationsColumns}
             data={generatedAnimations}
+            showFilter={false}
           />
         )}
       </div>
