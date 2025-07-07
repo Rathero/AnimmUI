@@ -24,10 +24,15 @@ const items = [
     icon: GalleryVertical,
   },
   {
+    title: 'Exports',
+    url: '/exports',
+    icon: Link2,
+  },
+  /*{
     title: 'URLs',
     url: '/urls',
     icon: Link2,
-  },
+  },*/
 ];
 
 export function AppSidebar() {

@@ -29,11 +29,15 @@ import { Input } from '@/components/ui/input';
 interface DataTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[];
   data: TData[];
+  showFilter: boolean;
+  exportFunction?: () => void;
 }
 
 export function DataTable<TData, TValue>({
   columns,
   data,
+  showFilter = true,
+  exportFunction = undefined,
 }: DataTableProps<TData, TValue>) {
   const [sorting, setSorting] = React.useState<SortingState>([]);
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>(
@@ -57,16 +61,25 @@ export function DataTable<TData, TValue>({
 
   return (
     <div>
-      <div className="flex items-center pb-4">
-        <Input
-          placeholder="Filter Urls..."
-          value={(table.getColumn('name')?.getFilterValue() as string) ?? ''}
-          onChange={event =>
-            table.getColumn('name')?.setFilterValue(event.target.value)
-          }
-          className="max-w-sm"
-        />
-      </div>
+      {showFilter && (
+        <div className="flex items-center pb-4">
+          <Input
+            placeholder="Filter Urls..."
+            value={(table.getColumn('name')?.getFilterValue() as string) ?? ''}
+            onChange={event =>
+              table.getColumn('name')?.setFilterValue(event.target.value)
+            }
+            className="max-w-sm"
+          />
+        </div>
+      )}
+      {exportFunction && (
+        <div className="flex items-center justify-end pb-4">
+          <Button variant="outline" size="sm" onClick={exportFunction}>
+            Save as ZIP
+          </Button>
+        </div>
+      )}
       <div className="rounded-md border">
         <Table>
           <TableHeader>
