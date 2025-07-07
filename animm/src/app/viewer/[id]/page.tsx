@@ -80,21 +80,90 @@ export default function Viewer() {
   const urlParams = new URLSearchParams(queryString);
   const shouldAutoplay = urlParams.get('autoplay') === 'true';
   const shouldRecord = urlParams.get('record') === 'true';
+  const isPdf = urlParams.get('pdf') === 'true';
+  // Bleed size: 3mm = ~12px at 96dpi
+  const bleedPx = isPdf ? 12 : 0;
 
   return (
     <>
-      <div className="h-full w-full" id="MainCanvas">
-        {template &&
-          template.Result.modules.length > 0 &&
-          template.Result.modules[0].file && (
-            <RiveComp
-              src={template.Result.modules[0].file}
-              setAssetsParent={setAssets}
-              setRiveStatesParent={setRiveStates}
-              autoplay={shouldAutoplay}
-            />
-          )}
-      </div>
+      {isPdf ? (
+        <div
+          className="relative flex items-center justify-center"
+          style={{
+            background: '#fff',
+            padding: bleedPx,
+            boxSizing: 'content-box',
+            minHeight: '100vh',
+            minWidth: '100vw',
+          }}
+        >
+          <img
+            src="/pdf/Print Guide_Top Left.svg"
+            alt="Print Guide Top Left"
+            style={{
+              position: 'absolute',
+              top: bleedPx,
+              left: bleedPx,
+              zIndex: 10,
+            }}
+          />
+          <img
+            src="/pdf/Print Guide_Top Right.svg"
+            alt="Print Guide Top Left"
+            style={{
+              position: 'absolute',
+              top: bleedPx,
+              right: bleedPx,
+              zIndex: 10,
+            }}
+          />
+          <img
+            src="/pdf/Print Guide_Bottom Right.svg"
+            alt="Print Guide Top Left"
+            style={{
+              position: 'absolute',
+              bottom: bleedPx,
+              right: bleedPx,
+              zIndex: 10,
+            }}
+          />
+          <img
+            src="/pdf/Print Guide_Bottom Left.svg"
+            alt="Print Guide Top Left"
+            style={{
+              position: 'absolute',
+              bottom: bleedPx,
+              left: bleedPx,
+              zIndex: 10,
+            }}
+          />
+          <div id="MainCanvas" style={{ position: 'relative', zIndex: 1 }}>
+            {template &&
+              template.Result.modules.length > 0 &&
+              template.Result.modules[0].file && (
+                <RiveComp
+                  src={template.Result.modules[0].file}
+                  setAssetsParent={setAssets}
+                  setRiveStatesParent={setRiveStates}
+                  autoplay={shouldAutoplay}
+                />
+              )}
+          </div>
+        </div>
+      ) : (
+        <div className="h-full w-full" id="MainCanvas">
+          {template &&
+            template.Result.modules.length > 0 &&
+            template.Result.modules[0].file && (
+              <RiveComp
+                src={template.Result.modules[0].file}
+                setAssetsParent={setAssets}
+                setRiveStatesParent={setRiveStates}
+                autoplay={shouldAutoplay}
+              />
+            )}
+        </div>
+      )}
 
       {shouldRecord && (
         <Script
