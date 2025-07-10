@@ -8,17 +8,19 @@ export default function RiveComp({
   setAssetsParent,
   setRiveStatesParent,
   autoplay = true,
+  artboard = 'Template',
 }: {
   src: string;
   setAssetsParent: Dispatch<SetStateAction<FileAsset[]>>;
   setRiveStatesParent: Dispatch<SetStateAction<Rive[]>>;
   autoplay?: boolean;
+  artboard?: string;
 }) {
   const [assets, setAssets] = useState<Array<FileAsset>>([]);
   const setRiveInstance = useRiveStore(state => state.setRiveInstance);
   const { rive, RiveComponent } = useRive({
     src: src,
-    artboard: 'Banners',
+    artboard: artboard,
     stateMachines: 'SM',
     autoplay: autoplay,
     layout: new Layout({

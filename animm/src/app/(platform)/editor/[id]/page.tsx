@@ -47,6 +47,7 @@ export default function Editor() {
     GeneratedAnimation | undefined
   >(undefined);
 
+  const [artBoard, setArtBoard] = useState<string>('Template');
   const [assets, setAssets] = useState<Array<FileAsset>>([]);
   const [rivesStates, setRiveStates] = useState<Rive[]>([]);
   const changeImage = async (url: string, i: number) => {
@@ -126,6 +127,12 @@ export default function Editor() {
     const template = await get(params.id);
     setTemplate(template);
     if (template) {
+      if (
+        template?.Result.templateCompositions &&
+        template.Result.templateCompositions.length > 0
+      ) {
+        setArtBoard(template?.Result.templateCompositions[0].name);
+      }
       const newGeneratedAnimation: GeneratedAnimation = {
         baseTemplate: template.Result,
         baseTemplateId: template.Result.id,
@@ -165,7 +172,15 @@ export default function Editor() {
     }
   }
 
-  async function changeresolution(width: number, height: number) {
+  async function changeresolution(
+    width: number,
+    height: number,
+    artBoard: string
+  ) {
+    setArtBoard(artBoard);
+    rivesStates[0].reset({
+      artboard: artBoard,
+    });
     const mainCan: any = document.querySelector('#MainCanvas');
     if (mainCan) {
       mainCan.style.width = width + 'px';
@@ -302,6 +317,18 @@ export default function Editor() {
   return (
     <>
       <div className="absolute flex top-0 bottom-0 right-0 left-0 overflow-hidden">
+        <aside className="w-64 px-4 flex flex-col ps-0 pt-0 transition-all">
+          {/* Compositions/Resolutions Accordion */}
+          <div className="flex-auto overflow-y-auto max-h-[60vh] mb-4">
+            {template?.Result.templateCompositions &&
+              template.Result.templateCompositions.length > 0 && (
+                <AccordionCompositions
+                  compositions={template.Result.templateCompositions}
+                  setResolutionFunction={changeresolution}
+                />
+              )}
+          </div>
+        </aside>
         <div className="w-full h-full overflow-hidden p-4 pt-0">
           <div className="w-full h-full relative rounded-lg border bg-sidebar bg-editor">
             <TransformWrapper
@@ -346,6 +373,7 @@ export default function Editor() {
                               src={template.Result.modules[0].file}
                               setAssetsParent={setAssets}
                               setRiveStatesParent={setRiveStates}
+                              artboard={artBoard}
                             />
                           )}
                       </div>
@@ -358,16 +386,6 @@ export default function Editor() {
         </div>
 
         <aside className="w-64 px-4 flex flex-col ps-0 pt-0 transition-all">
-          {/* Compositions/Resolutions Accordion */}
-          <div className="flex-auto overflow-y-auto max-h-[60vh] mb-4">
-            {template?.Result.templateCompositions &&
-              template.Result.templateCompositions.length > 0 && (
-                <AccordionCompositions
-                  compositions={template.Result.templateCompositions}
-                  setResolutionFunction={changeresolution}
-                />
-              )}
-          </div>
           <div className="flex-auto">
             {template?.Result.modules.map((x: Module, index) => {
               return (
@@ -475,7 +493,11 @@ function AccordionCompositions({
   setResolutionFunction,
 }: {
   compositions: TemplateComposition[];
-  setResolutionFunction: (width: number, height: number) => void;
+  setResolutionFunction: (
+    width: number,
+    height: number,
+    artBoard: string
+  ) => void;
 }) {
   const [openIndex, setOpenIndex] = useState<number | null>(null);
   return (
@@ -505,7 +527,11 @@ function AccordionCompositions({
                   key={resolution.id}
                   className="cursor-pointer rounded px-2 py-1 hover:bg-accent text-xs flex justify-between items-center"
                   onClick={() =>
-                    setResolutionFunction(resolution.width, resolution.height)
+                    setResolutionFunction(
+                      resolution.width,
+                      resolution.height,
+                      composition.name
+                    )
                   }
                 >
                   <span>{resolution.name}</span>
