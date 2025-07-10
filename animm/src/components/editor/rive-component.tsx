@@ -18,7 +18,7 @@ export default function RiveComp({
   const setRiveInstance = useRiveStore(state => state.setRiveInstance);
   const { rive, RiveComponent } = useRive({
     src: src,
-    artboard: 'Template',
+    artboard: 'Banners',
     stateMachines: 'SM',
     autoplay: autoplay,
     layout: new Layout({

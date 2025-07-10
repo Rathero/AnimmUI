@@ -21,6 +21,7 @@ import {
   Module,
   TemplateVariable,
   TemplateVariableTypeEnum,
+  TemplateComposition,
 } from '@/types/collections';
 import { ChevronDown, LinkIcon, Loader2 } from 'lucide-react';
 import EditorImages from '@/components/editor/editor-images';
@@ -321,10 +322,6 @@ export default function Editor() {
                 zoomToElement,
               }) => (
                 <>
-                  <EditorResolution
-                    setResolutionFunction={changeresolution}
-                    compositions={template?.Result.templateCompositions || []}
-                  />
                   {!template?.Result.static && (
                     <EditorPlay playRive={playRive} playing={playing} />
                   )}
@@ -361,6 +358,16 @@ export default function Editor() {
         </div>
 
         <aside className="w-64 px-4 flex flex-col ps-0 pt-0 transition-all">
+          {/* Compositions/Resolutions Accordion */}
+          <div className="flex-auto overflow-y-auto max-h-[60vh] mb-4">
+            {template?.Result.templateCompositions &&
+              template.Result.templateCompositions.length > 0 && (
+                <AccordionCompositions
+                  compositions={template.Result.templateCompositions}
+                  setResolutionFunction={changeresolution}
+                />
+              )}
+          </div>
           <div className="flex-auto">
             {template?.Result.modules.map((x: Module, index) => {
               return (
@@ -460,5 +467,57 @@ export default function Editor() {
         </aside>
       </div>
     </>
+  );
+}
+
+function AccordionCompositions({
+  compositions,
+  setResolutionFunction,
+}: {
+  compositions: TemplateComposition[];
+  setResolutionFunction: (width: number, height: number) => void;
+}) {
+  const [openIndex, setOpenIndex] = useState<number | null>(null);
+  return (
+    <div className="space-y-2">
+      {compositions.map((composition, idx) => (
+        <div key={composition.id}>
+          <button
+            className={`w-full flex items-center justify-between rounded border px-3 py-2 text-sm bg-sidebar hover:bg-muted transition-colors ${
+              openIndex === idx ? 'font-semibold' : ''
+            }`}
+            onClick={() => setOpenIndex(openIndex === idx ? null : idx)}
+            type="button"
+          >
+            <span>{composition.name}</span>
+            <span
+              className={`transition-transform ${
+                openIndex === idx ? 'rotate-90' : ''
+              }`}
+            >
+              ▶
+            </span>
+          </button>
+          {openIndex === idx && (
+            <div className="pl-4 py-2 space-y-1">
+              {composition.templateResolutions.map(resolution => (
+                <div
+                  key={resolution.id}
+                  className="cursor-pointer rounded px-2 py-1 hover:bg-accent text-xs flex justify-between items-center"
+                  onClick={() =>
+                    setResolutionFunction(resolution.width, resolution.height)
+                  }
+                >
+                  <span>{resolution.name}</span>
+                  <span>
+                    {resolution.width}x{resolution.height}
+                  </span>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      ))}
+    </div>
   );
 }
