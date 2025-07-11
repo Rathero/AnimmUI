@@ -132,6 +132,12 @@ export default function Editor() {
         template.Result.templateCompositions.length > 0
       ) {
         setArtBoard(template?.Result.templateCompositions[0].name);
+        setCurrentHeight(
+          template?.Result.templateCompositions[0].templateResolutions[0].height
+        );
+        setCurrentWidth(
+          template?.Result.templateCompositions[0].templateResolutions[0].width
+        );
       }
       const newGeneratedAnimation: GeneratedAnimation = {
         baseTemplate: template.Result,
@@ -172,6 +178,8 @@ export default function Editor() {
     }
   }
 
+  const [currentWidth, setCurrentWidth] = useState(0);
+  const [currentHeight, setCurrentHeight] = useState(0);
   async function changeresolution(
     width: number,
     height: number,
@@ -184,7 +192,9 @@ export default function Editor() {
     const mainCan: any = document.querySelector('#MainCanvas');
     if (mainCan) {
       mainCan.style.width = width + 'px';
+      setCurrentWidth(width);
       mainCan.style.height = height + 'px';
+      setCurrentHeight(height);
     }
   }
 
@@ -315,176 +325,135 @@ export default function Editor() {
   };
 
   return (
-    <>
-      <div className="absolute flex top-0 bottom-0 right-0 left-0 overflow-hidden">
-        <aside className="w-64 px-4 flex flex-col ps-0 pt-0 transition-all">
-          {/* Compositions/Resolutions Accordion */}
-          <div className="flex-auto overflow-y-auto max-h-[60vh] mb-4">
+    <div className="w-screen h-screen flex flex-col bg-[#f7f8fa]">
+      {/* Top Bar */}
+      <div className="flex items-center justify-between px-8 py-4 border-b bg-white shadow-sm z-10">
+        <div className="flex items-center gap-4">
+          <span className="text-xs text-muted-foreground">
+            <span className="font-semibold text-base">Campaña:</span>{' '}
+            {template?.Result.name}
+          </span>
+        </div>
+        <div className="flex items-center gap-2">
+          <Button
+            variant="outline"
+            onClick={handleExport}
+            disabled={isExporting}
+          >
+            {isExporting ? (
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+            ) : null}
+            Export
+          </Button>
+          <Button variant="default">Save Project</Button>
+        </div>
+      </div>
+      {/* Main Content */}
+      <div className="flex flex-1 min-h-0">
+        {/* Left Sidebar: Variables */}
+        <div className="w-[320px] bg-white border-r flex flex-col p-4 overflow-y-auto min-h-0 max-h-full">
+          {template?.Result.modules.map((mod: Module, idx: number) => (
+            <Collapsible key={mod.id} defaultOpen className="mb-4">
+              <CollapsibleTrigger className="w-full">
+                <div className="flex items-center gap-2 text-sm font-medium py-2 px-2 rounded hover:bg-muted transition-colors border">
+                  <span>Section {String(idx + 1).padStart(2, '0')}</span>
+                  <ChevronDown className="ml-auto h-4 transition-transform group-data-[state=open]/collapsible:rotate-180" />
+                </div>
+              </CollapsibleTrigger>
+              <CollapsibleContent className="space-y-4 pt-2">
+                {mod.variables.map((v: TemplateVariable, vIdx: number) => (
+                  <div key={v.id} className="space-y-1">
+                    {v.type === TemplateVariableTypeEnum.TextArea && (
+                      <EditorText variable={v} changeText={changeText} />
+                    )}
+                    {v.type === TemplateVariableTypeEnum.Selector && (
+                      <EditorSelect variable={v} changeInput={changeSelect} />
+                    )}
+                  </div>
+                ))}
+              </CollapsibleContent>
+            </Collapsible>
+          ))}
+        </div>
+        {/* Center: Preview/Canvas */}
+        <div className="flex-1 flex flex-col items-center justify-center min-w-0">
+          <div className="w-full flex justify-center items-center py-2 text-xs text-muted-foreground">
             {template?.Result.templateCompositions &&
               template.Result.templateCompositions.length > 0 && (
-                <AccordionCompositions
-                  compositions={template.Result.templateCompositions}
-                  setResolutionFunction={changeresolution}
-                />
+                <span>
+                  {artBoard} {currentWidth}x{currentHeight}
+                </span>
               )}
           </div>
-        </aside>
-        <div className="w-full h-full overflow-hidden p-4 pt-0">
-          <div className="w-full h-full relative rounded-lg border bg-sidebar bg-editor">
-            <TransformWrapper
-              disabled={isResizing}
-              disablePadding={true}
-              centerOnInit={true}
-              initialScale={1}
-              wheel={{ step: 0.1 }}
-              minScale={0.1}
-              maxScale={3}
-            >
-              {({
-                zoomIn,
-                zoomOut,
-                setTransform,
-                resetTransform,
-                centerView,
-                zoomToElement,
-              }) => (
-                <>
-                  {!template?.Result.static && (
-                    <EditorPlay playRive={playRive} playing={playing} />
-                  )}
-                  <EditorZoom
-                    zoomIn={zoomIn}
-                    zoomOut={zoomOut}
-                    setTransform={setTransform}
-                    resetTransform={resetTransform}
-                    centerView={centerView}
-                    zoomToElement={zoomToElement}
-                  />
-                  <TransformComponent wrapperClass="!w-full !h-full">
-                    <div
-                      id="MainCanvas"
-                      className="h-[1920px] w-[1080px] flex rounded-lg border bg-white shadow-md shadow-slate-500/10"
-                    >
-                      <div className="size-full">
-                        {template &&
-                          template.Result.modules.length > 0 &&
-                          template.Result.modules[0].file && (
-                            <RiveComp
-                              src={template.Result.modules[0].file}
-                              setAssetsParent={setAssets}
-                              setRiveStatesParent={setRiveStates}
-                              artboard={artBoard}
-                            />
-                          )}
+          <div className="w-full h-full overflow-hidden p-4 pt-0">
+            <div className="w-full h-full relative rounded-lg border bg-sidebar bg-editor">
+              <TransformWrapper
+                disabled={isResizing}
+                disablePadding={true}
+                centerOnInit={true}
+                initialScale={1}
+                wheel={{ step: 0.1 }}
+                minScale={0.1}
+                maxScale={3}
+              >
+                {({
+                  zoomIn,
+                  zoomOut,
+                  setTransform,
+                  resetTransform,
+                  centerView,
+                  zoomToElement,
+                }) => (
+                  <>
+                    {!template?.Result.static && (
+                      <EditorPlay playRive={playRive} playing={playing} />
+                    )}
+                    <EditorZoom
+                      zoomIn={zoomIn}
+                      zoomOut={zoomOut}
+                      setTransform={setTransform}
+                      resetTransform={resetTransform}
+                      centerView={centerView}
+                      zoomToElement={zoomToElement}
+                    />
+                    <TransformComponent wrapperClass="!w-full !h-full">
+                      <div
+                        id="MainCanvas"
+                        className="h-[1920px] w-[1080px] flex rounded-lg border bg-white shadow-md shadow-slate-500/10"
+                      >
+                        <div className="size-full">
+                          {template &&
+                            template.Result.modules.length > 0 &&
+                            template.Result.modules[0].file && (
+                              <RiveComp
+                                src={template.Result.modules[0].file}
+                                setAssetsParent={setAssets}
+                                setRiveStatesParent={setRiveStates}
+                                artboard={artBoard}
+                              />
+                            )}
+                        </div>
                       </div>
-                    </div>
-                  </TransformComponent>
-                </>
-              )}
-            </TransformWrapper>
+                    </TransformComponent>
+                  </>
+                )}
+              </TransformWrapper>
+            </div>
           </div>
         </div>
-
-        <aside className="w-64 px-4 flex flex-col ps-0 pt-0 transition-all">
-          <div className="flex-auto">
-            {template?.Result.modules.map((x: Module, index) => {
-              return (
-                <div key={'div1' + index}>
-                  <Collapsible
-                    defaultOpen
-                    className="group/collapsible space-y-2"
-                  >
-                    <CollapsibleTrigger className="w-full">
-                      <div className="rounded-md border ps-4 pe-2 py-2 text-sm bg-sidebar flex flex-row items-center">
-                        Module {index}
-                        <ChevronDown className="ml-auto h-4 transition-transform group-data-[state=open]/collapsible:rotate-180" />
-                      </div>
-                    </CollapsibleTrigger>
-                    <CollapsibleContent className="space-y-6 py-2">
-                      {x.variables.length > 0 && (
-                        <div className="space-y-2">
-                          <div className="ps-3 space-y-2">
-                            {x.variables.map(
-                              (y: TemplateVariable, index2: number) => {
-                                return (
-                                  <div key={'div2' + index2}>
-                                    {y.type ===
-                                      TemplateVariableTypeEnum.TextArea && (
-                                      <EditorText
-                                        variable={y}
-                                        changeText={changeText}
-                                      />
-                                    )}
-                                    {y.type ===
-                                      TemplateVariableTypeEnum.Selector && (
-                                      <EditorSelect
-                                        variable={y}
-                                        changeInput={changeSelect}
-                                      />
-                                    )}
-                                  </div>
-                                );
-                              }
-                            )}
-                          </div>
-                        </div>
-                      )}
-
-                      <EditorImages
-                        images={x.images}
-                        changeImageParent={changeImage}
-                      />
-                    </CollapsibleContent>
-                  </Collapsible>
-                </div>
-              );
-            })}
-          </div>
-          {template?.Result && (
-            <EditorCsv template={template.Result}></EditorCsv>
-          )}
-          <EditorUrl generateUrlFunction={generateUrlFunction} />
-          <Button className="w-full" onClick={() => generateUrl()}>
-            <LinkIcon />
-            Preview
-          </Button>
-          {!template?.Result.static && (
-            <Button
-              className="w-full mt-2"
-              onClick={handleExport}
-              variant="default"
-              disabled={isExporting}
-            >
-              {isExporting ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Exporting...
-                </>
-              ) : (
-                'Export Video'
-              )}
-            </Button>
-          )}
-          {!template?.Result.static && (
-            <Button
-              className="w-full mt-2"
-              onClick={handleExportJpeg}
-              variant="default"
-              disabled={isExportingJpeg}
-            >
-              {isExportingJpeg ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Exporting...
-                </>
-              ) : (
-                'Export JPEG'
-              )}
-            </Button>
-          )}
-        </aside>
+        {/* Right Sidebar: Compositions/Resolutions */}
+        <div className="w-[320px] bg-white border-l flex flex-col p-4 overflow-y-auto min-h-0 max-h-full">
+          <div className="text-sm font-semibold mb-2">Formats</div>
+          {template?.Result.templateCompositions &&
+            template.Result.templateCompositions.length > 0 && (
+              <AccordionCompositions
+                compositions={template.Result.templateCompositions}
+                setResolutionFunction={changeresolution}
+              />
+            )}
+        </div>
       </div>
-    </>
+    </div>
   );
 }
 
