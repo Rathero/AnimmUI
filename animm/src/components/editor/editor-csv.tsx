@@ -128,7 +128,7 @@ export default function EditorCsv({ template }: { template: Template }) {
   };
   const hiddenFileInput = useRef<HTMLInputElement>(null);
   return (
-    <div className="py-4 border-t">
+    <div className="">
       <Dialog>
         <DialogTrigger asChild>
           <Button className="w-full">

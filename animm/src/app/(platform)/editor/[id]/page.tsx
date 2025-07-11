@@ -229,16 +229,20 @@ export default function Editor() {
   }, []);
 
   const generateUrl = async () => {
-    const paramsUrl = new URLSearchParams();
     if (template) {
+      const paramsUrl = new URLSearchParams();
       template.Result.modules.forEach(module => {
         module.variables.forEach(variable => {
           paramsUrl.append(variable.name, variable.defaultValue || '');
         });
       });
+      if (!template.Result.static) paramsUrl.append('autoplay', 'true');
+      paramsUrl.append('artboard', artBoard);
+      window.open(
+        '/viewer/' + params.id + '?' + paramsUrl.toString(),
+        '_blank'
+      );
     }
-    paramsUrl.append('autoplay', 'true');
-    window.open('/viewer/' + params.id + '?' + paramsUrl.toString(), '_blank');
   };
 
   const [isExporting, setIsExporting] = useState(false);
@@ -335,17 +339,48 @@ export default function Editor() {
           </span>
         </div>
         <div className="flex items-center gap-2">
-          <Button
-            variant="outline"
-            onClick={handleExport}
-            disabled={isExporting}
-          >
-            {isExporting ? (
-              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-            ) : null}
-            Export
+          {template?.Result && (
+            <EditorCsv template={template.Result}></EditorCsv>
+          )}
+          <EditorUrl generateUrlFunction={generateUrlFunction} />
+          <Button className="w-full" onClick={() => generateUrl()}>
+            <LinkIcon />
+            Preview
           </Button>
-          <Button variant="default">Save Project</Button>
+          {!template?.Result.static && (
+            <Button
+              className="w-full"
+              onClick={handleExport}
+              variant="default"
+              disabled={isExporting}
+            >
+              {isExporting ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Exporting...
+                </>
+              ) : (
+                'Export Video'
+              )}
+            </Button>
+          )}
+          {template?.Result.static && (
+            <Button
+              className="w-full"
+              onClick={handleExportJpeg}
+              variant="default"
+              disabled={isExportingJpeg}
+            >
+              {isExportingJpeg ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Exporting...
+                </>
+              ) : (
+                'Export JPEG'
+              )}
+            </Button>
+          )}
         </div>
       </div>
       {/* Main Content */}

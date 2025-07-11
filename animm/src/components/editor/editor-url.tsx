@@ -19,7 +19,7 @@ export default function EditorUrl({
   generateUrlFunction: (name: string) => void;
 }) {
   return (
-    <div className="py-4 border-t">
+    <div className="">
       <Dialog>
         <DialogTrigger asChild>
           <Button className="w-full">

@@ -81,6 +81,7 @@ export default function Viewer() {
   const shouldAutoplay = urlParams.get('autoplay') === 'true';
   const shouldRecord = urlParams.get('record') === 'true';
   const isPdf = urlParams.get('pdf') === 'true';
+  const artBoard = urlParams.get('artboard');
   // Bleed size: 3mm = ~12px at 96dpi
   const bleedPx = isPdf ? 12 : 0;
 
@@ -160,6 +161,7 @@ export default function Viewer() {
                 setAssetsParent={setAssets}
                 setRiveStatesParent={setRiveStates}
                 autoplay={shouldAutoplay}
+                artboard={artBoard || ''}
               />
             )}
         </div>
