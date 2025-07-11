@@ -329,7 +329,7 @@ export default function Editor() {
   };
 
   return (
-    <div className="w-screen h-screen flex flex-col bg-[#f7f8fa]">
+    <div className="w-full h-full flex flex-col bg-[#f7f8fa]">
       {/* Top Bar */}
       <div className="flex items-center justify-between px-8 py-4 border-b bg-white shadow-sm z-10">
         <div className="flex items-center gap-4">
