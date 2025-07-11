@@ -17,12 +17,15 @@ export function LoginForm({
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
+
   const router = useRouter();
 
   const { setAuthenticationResponse } = platformStore(state => state);
   const { login } = useLoginService();
   async function loginFunction() {
     setError('');
+    setLoading(true);
     try {
       const response = await login(email, password);
       if (response?.Result) {
@@ -30,9 +33,11 @@ export function LoginForm({
         router.push('/collections');
       } else {
         setError('Invalid credentials');
+        setLoading(false);
       }
     } catch (err) {
       setError('An error occurred during login');
+      setLoading(false);
     }
   }
 
@@ -75,11 +80,13 @@ export function LoginForm({
               type="password"
               value={password}
               onChange={e => setPassword(e.target.value)}
+              disabled={loading}
               required
             />
           </div>
           <Button type="submit" className="w-full" onClick={loginFunction}>
-            Login
+            {!loading && 'Login'}
+            {loading && 'Loading...'}
           </Button>
         </div>
       </div>

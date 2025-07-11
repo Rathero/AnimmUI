@@ -14,11 +14,16 @@ import { Label } from '@/components/ui/label';
 import { Template } from '@/types/collections';
 import { KeyValuePair } from 'tailwindcss/types/config';
 import { useRef, useState } from 'react';
+import { BatchDefinitions, ExportBatchRequest } from '@/types/exports';
+import useExportsService from '@/app/services/ExportsService';
+import { toast } from 'sonner';
 
 export default function EditorCsv({ template }: { template: Template }) {
   const [columnsMatched, setColumnsMatched] = useState<
     KeyValuePair<string, string>[]
   >([]);
+
+  const [csvString, setCsvString] = useState<string>('');
   const variablesToMatch: string[] = [];
   template.modules.forEach(module => {
     module.variables.forEach(variable => {
@@ -32,6 +37,7 @@ export default function EditorCsv({ template }: { template: Template }) {
   const [selectedColumn, setSelectedColumn] = useState<string>('');
   const [columnsToMatch, setColumnsToMatch] =
     useState<string[]>(variablesToMatch);
+
   const downloadCSV = () => {
     const dataToExport: Record<string, string>[] = [];
     const variables: KeyValuePair<string, string>[] = [];
@@ -91,7 +97,46 @@ export default function EditorCsv({ template }: { template: Template }) {
     link.click();
     document.body.removeChild(link);
   };
+  const { createExportBatch } = useExportsService();
+  const uploadCsv = () => {
+    const lines = csvString.split(/\r\n|\n/);
+    let exportBatchRequest: ExportBatchRequest = {
+      templateId: template.id,
+      userId: 0,
+      format: 'png',
+      id: 0,
+      batchDefinitions: [],
+    };
+    var headerColumns = lines[0].split(',');
+    headerColumns = headerColumns.slice(3);
+    lines.forEach((line, i) => {
+      if (i != 0) {
+        let columns = line.split(',');
+        var batchDefinition: BatchDefinitions = {
+          resolutions: [
+            {
+              name: columns[0],
+              width: Number.parseInt(columns[1]),
+              height: Number.parseInt(columns[2]),
+            },
+          ],
+          variables: [],
+        };
 
+        columns = columns.slice(3);
+        columns.forEach((column, y) => {
+          batchDefinition.variables.push({
+            key: headerColumns[y],
+            value: column,
+          });
+        });
+        exportBatchRequest.batchDefinitions.push(batchDefinition);
+      }
+    });
+    createExportBatch(exportBatchRequest).then(() => {
+      toast.success('Export batch created');
+    });
+  };
   const matchColumns = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files == null || e.target.files.length === 0) return;
     const file = e.target.files[0];
@@ -102,9 +147,11 @@ export default function EditorCsv({ template }: { template: Template }) {
         if (ev.target) {
           const text = ev.target.result;
           if (typeof text === 'string') {
+            setCsvString(text);
             const firstLine = text.split(/\r\n|\n/)[0];
             const headerColumns = firstLine.split(',');
-            const columns = headerColumns.map(col => col.trim());
+            let columns = headerColumns.map(col => col.trim());
+            columns = columns.slice(3);
             setColumnsCsvToMatch(columns);
             columnsToMatch.forEach(col => {
               if (columns.includes(col)) {
@@ -248,7 +295,9 @@ export default function EditorCsv({ template }: { template: Template }) {
           </div>
 
           <DialogFooter>
-            <Button type="submit">Export</Button>
+            <Button type="submit" onClick={uploadCsv}>
+              Export
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

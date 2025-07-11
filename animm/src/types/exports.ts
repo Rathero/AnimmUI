@@ -1,6 +1,27 @@
 import { BaseApiResponse } from './baseApi';
 import { Template } from './collections';
 
+export interface ExportBatchRequest {
+  id: number;
+  templateId: number;
+  format: string;
+  userId: number;
+  batchDefinitions: BatchDefinitions[];
+}
+
+export interface BatchDefinitions {
+  resolutions: Resolutions[];
+  variables: Variables[];
+}
+export interface Resolutions {
+  width: number;
+  height: number;
+  name: string;
+}
+export interface Variables {
+  key: string;
+  value: string;
+}
 export interface ExportBatch {
   id: number;
   templateId: number;
