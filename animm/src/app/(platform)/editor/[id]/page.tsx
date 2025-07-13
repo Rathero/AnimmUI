@@ -47,7 +47,7 @@ export default function Editor() {
     GeneratedAnimation | undefined
   >(undefined);
 
-  const [artBoard, setArtBoard] = useState<string>('Template');
+  const [artBoard, setArtBoard] = useState<string>('');
   const [assets, setAssets] = useState<Array<FileAsset>>([]);
   const [rivesStates, setRiveStates] = useState<Rive[]>([]);
   const changeImage = async (url: string, i: number) => {
@@ -186,9 +186,8 @@ export default function Editor() {
     artBoard: string
   ) {
     setArtBoard(artBoard);
-    rivesStates[0].reset({
-      artboard: artBoard,
-    });
+    width = Number.parseInt(width.toString()) + 1;
+    height = Number.parseInt(height.toString()) + 1;
     const mainCan: any = document.querySelector('#MainCanvas');
     if (mainCan) {
       mainCan.style.width = width + 'px';
@@ -196,6 +195,11 @@ export default function Editor() {
       mainCan.style.height = height + 'px';
       setCurrentHeight(height);
     }
+    rivesStates[0].reset({
+      artboard: artBoard,
+      stateMachines: 'SM',
+      autoplay: true,
+    });
   }
 
   const { add } = useGeneratedAnimationService();
@@ -236,7 +240,7 @@ export default function Editor() {
           paramsUrl.append(variable.name, variable.defaultValue || '');
         });
       });
-      if (!template.Result.static) paramsUrl.append('autoplay', 'true');
+      paramsUrl.append('autoplay', 'true');
       paramsUrl.append('artboard', artBoard);
       window.open(
         '/viewer/' + params.id + '?' + paramsUrl.toString(),
@@ -459,7 +463,8 @@ export default function Editor() {
                         <div className="size-full">
                           {template &&
                             template.Result.modules.length > 0 &&
-                            template.Result.modules[0].file && (
+                            template.Result.modules[0].file &&
+                            artBoard && (
                               <RiveComp
                                 src={template.Result.modules[0].file}
                                 setAssetsParent={setAssets}
