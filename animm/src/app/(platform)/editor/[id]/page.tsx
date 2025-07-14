@@ -38,6 +38,7 @@ import EditorResolution from '@/components/editor/editor-resolution';
 import EditorCsv from '@/components/editor/editor-csv';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
+import { EditorCheckbox } from '@/components/editor/editor-checkbox';
 
 export default function Editor() {
   const params = useParams<{ id: string }>();
@@ -407,6 +408,9 @@ export default function Editor() {
                     )}
                     {v.type === TemplateVariableTypeEnum.Selector && (
                       <EditorSelect variable={v} changeInput={changeSelect} />
+                    )}
+                    {v.type === TemplateVariableTypeEnum.Boolean && (
+                      <EditorCheckbox variable={v} changeInput={changeSelect} />
                     )}
                   </div>
                 ))}
