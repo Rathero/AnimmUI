@@ -12,6 +12,7 @@ import {
 import RiveComp from '@/components/editor/rive-component';
 import useTemplatesService from '@/app/services/TemplatesService';
 import Script from 'next/script';
+import { VariableStringSetter } from '@/components/editor/variable-string-setter';
 
 export default function Viewer() {
   const params = useParams<{ id: string }>();
@@ -26,25 +27,28 @@ export default function Viewer() {
     const template = await get(params.id);
     setTemplate(template);
   }
+  const [functionsToSetBoolean, setFunctionsToSetBoolean] = useState<
+    Array<{ x: Number; f: (x: boolean) => void }>
+  >([]);
+  async function changeCheckbox(
+    value: boolean,
+    variableToModify: TemplateVariable
+  ) {
+    functionsToSetBoolean.forEach(x => {
+      if (x.x == variableToModify.id) {
+        x.f(value);
+      }
+    });
+  }
+  const [functionsToSetStrings, setFunctionsToSetStrings] = useState<
+    Array<{ x: Number; f: (x: string) => void }>
+  >([]);
   async function changeText(text: string, variableToModify: TemplateVariable) {
-    if (rivesStates) {
-      rivesStates.forEach(riveState => {
-        if (riveState) {
-          text = text === '' ? ' ' : text;
-          if (variableToModify.paths.length > 0) {
-            variableToModify.paths.map(path => {
-              riveState!.setTextRunValueAtPath(
-                variableToModify.value,
-                text,
-                path.path
-              );
-            });
-          } else riveState.setTextRunValue(variableToModify.value, text);
-        }
-      });
-      variableToModify.defaultValue = text;
-      setTemplate(template);
-    }
+    functionsToSetStrings.forEach(x => {
+      if (x.x == variableToModify.id) {
+        x.f(text);
+      }
+    });
   }
 
   useEffect(() => {
@@ -76,7 +80,8 @@ export default function Viewer() {
           } else if (
             variableToModify.type === TemplateVariableTypeEnum.Boolean
           ) {
-            changeSelect(value, variableToModify);
+            debugger;
+            changeCheckbox(value == 'true', variableToModify);
           }
         }
       });
@@ -181,6 +186,27 @@ export default function Viewer() {
                 autoplay={shouldAutoplay}
                 artboard={artBoard || ''}
               />
+            )}
+          {template?.Result &&
+            template?.Result.modules.map(module =>
+              module.variables.map(variable => (
+                <VariableStringSetter
+                  variable={variable}
+                  rive={rivesStates[0]}
+                  onSetFunctionString={setValueFunction => {
+                    setFunctionsToSetStrings(prev => [
+                      { x: variable.id, f: setValueFunction },
+                      ...prev,
+                    ]);
+                  }}
+                  onSetFunctionBoolean={setValueFunction => {
+                    setFunctionsToSetBoolean(prev => [
+                      { x: variable.id, f: setValueFunction },
+                      ...prev,
+                    ]);
+                  }}
+                />
+              ))
             )}
         </div>
       )}

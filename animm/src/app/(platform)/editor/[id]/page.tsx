@@ -48,6 +48,7 @@ import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
 import { EditorCheckbox } from '@/components/editor/editor-checkbox';
 import React from 'react';
+import { VariableStringSetter } from '@/components/editor/variable-string-setter';
 
 export default function Editor() {
   const params = useParams<{ id: string }>();
@@ -90,9 +91,6 @@ export default function Editor() {
     }
   }
 
-  const [functionsToSetBoolean, setFunctionsToSetBoolean] = useState<
-    Array<{ x: Number; f: (x: boolean) => void }>
-  >([]);
   async function changeSelect(
     value: string,
     variableToModify: TemplateVariable
@@ -110,6 +108,9 @@ export default function Editor() {
     });*/
   }
 
+  const [functionsToSetBoolean, setFunctionsToSetBoolean] = useState<
+    Array<{ x: Number; f: (x: boolean) => void }>
+  >([]);
   async function changeCheckbox(
     value: boolean,
     variableToModify: TemplateVariable
@@ -119,12 +120,6 @@ export default function Editor() {
         x.f(value);
       }
     });
-    /*
-    rivesStates.forEach(riveState => {
-      riveState.stateMachineInputs('SM')[
-        Number.parseInt(variableToModify.defaultValue)
-      ].value = isNaN(Number(value)) ? value === 'true' : Number(value);
-    });*/
   }
   const [functionsToSetStrings, setFunctionsToSetStrings] = useState<
     Array<{ x: Number; f: (x: string) => void }>
@@ -607,45 +602,4 @@ function AccordionCompositions({
       ))}
     </div>
   );
-}
-
-function VariableStringSetter({
-  variable,
-  rive,
-  onSetFunctionString,
-  onSetFunctionBoolean,
-}: {
-  variable: TemplateVariable;
-  rive: Rive;
-  onSetFunctionString: (setValueFunction: (value: string) => void) => void;
-  onSetFunctionBoolean: (setValueFunction: (value: boolean) => void) => void;
-}) {
-  const { setValue: setValueFunctionString } = useViewModelInstanceString(
-    variable.value,
-    rive?.viewModelInstance
-  );
-  useEffect(() => {
-    if (
-      onSetFunctionString &&
-      setValueFunctionString &&
-      variable.type == TemplateVariableTypeEnum.TextArea
-    ) {
-      onSetFunctionString(setValueFunctionString);
-    }
-  }, [setValueFunctionString]);
-
-  const { setValue: setValueFunctionBoolean } = useViewModelInstanceBoolean(
-    variable.value,
-    rive?.viewModelInstance
-  );
-  useEffect(() => {
-    if (
-      onSetFunctionBoolean &&
-      variable.type == TemplateVariableTypeEnum.Boolean
-    ) {
-      onSetFunctionBoolean(setValueFunctionBoolean);
-    }
-  }, [setValueFunctionBoolean]);
-
-  return null;
 }
