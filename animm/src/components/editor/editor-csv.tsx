@@ -18,25 +18,49 @@ import { BatchDefinitions, ExportBatchRequest } from '@/types/exports';
 import useExportsService from '@/app/services/ExportsService';
 import { toast } from 'sonner';
 
+// Utility function to parse a CSV line, handling quoted fields with commas
+function parseCsvLine(line: string): string[] {
+  const result: string[] = [];
+  let current = '';
+  let inQuotes = false;
+  for (let i = 0; i < line.length; i++) {
+    const char = line[i];
+    if (char === '"') {
+      if (inQuotes && line[i + 1] === '"') {
+        current += '"';
+        i++; // skip next quote
+      } else {
+        inQuotes = !inQuotes;
+      }
+    } else if (char === ',' && !inQuotes) {
+      result.push(current);
+      current = '';
+    } else {
+      current += char;
+    }
+  }
+  result.push(current);
+  return result;
+}
+
 export default function EditorCsv({ template }: { template: Template }) {
   const [columnsMatched, setColumnsMatched] = useState<
     KeyValuePair<string, string>[]
   >([]);
 
   const [csvString, setCsvString] = useState<string>('');
-  const variablesToMatch: string[] = [];
+  const variablesToMatch: Array<{ id: number; name: string }> = [];
   template.modules.forEach(module => {
     module.variables.forEach(variable => {
-      variablesToMatch.push(variable.name);
+      variablesToMatch.push({ id: variable.id, name: variable.name });
     });
     module.images.forEach((variable, i) => {
-      variablesToMatch.push('imagen' + i);
+      variablesToMatch.push({ id: variable.id, name: 'imagen' + i });
     });
   });
   const [columnsCsvToMatch, setColumnsCsvToMatch] = useState<string[]>([]);
   const [selectedColumn, setSelectedColumn] = useState<string>('');
-  const [columnsToMatch, setColumnsToMatch] =
-    useState<string[]>(variablesToMatch);
+  const [columnsToMatch, setColumnsToMatch] = useState<string[]>([]);
 
   const downloadCSV = () => {
     const dataToExport: Record<string, string>[] = [];
@@ -107,11 +131,11 @@ export default function EditorCsv({ template }: { template: Template }) {
       id: 0,
       batchDefinitions: [],
     };
-    var headerColumns = lines[0].split(',');
+    var headerColumns = parseCsvLine(lines[0]);
     headerColumns = headerColumns.slice(3);
     lines.forEach((line, i) => {
       if (i != 0) {
-        let columns = line.split(',');
+        let columns = parseCsvLine(line);
         var batchDefinition: BatchDefinitions = {
           resolutions: [
             {
@@ -126,7 +150,10 @@ export default function EditorCsv({ template }: { template: Template }) {
         columns = columns.slice(3);
         columns.forEach((column, y) => {
           batchDefinition.variables.push({
-            key: headerColumns[y],
+            key:
+              variablesToMatch
+                .find(x => x.name == headerColumns[y])
+                ?.id?.toString() || '',
             value: column,
           });
         });
@@ -149,7 +176,7 @@ export default function EditorCsv({ template }: { template: Template }) {
           if (typeof text === 'string') {
             setCsvString(text);
             const firstLine = text.split(/\r\n|\n/)[0];
-            const headerColumns = firstLine.split(',');
+            const headerColumns = parseCsvLine(firstLine);
             let columns = headerColumns.map(col => col.trim());
             columns = columns.slice(3);
             setColumnsCsvToMatch(columns);
