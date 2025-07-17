@@ -65,16 +65,34 @@ export default function Viewer() {
       params.forEach((value, key) => {
         const variableToModify = template.Result.modules
           .flatMap(module => module.variables)
-          .find(variable => variable.name === key);
+          .find(variable => variable.id === Number.parseInt(key));
         if (variableToModify) {
           if (variableToModify.type === TemplateVariableTypeEnum.TextArea) {
             changeText(value, variableToModify);
+          } else if (
+            variableToModify.type === TemplateVariableTypeEnum.Selector
+          ) {
+            changeSelect(value, variableToModify);
+          } else if (
+            variableToModify.type === TemplateVariableTypeEnum.Boolean
+          ) {
+            changeSelect(value, variableToModify);
           }
         }
       });
     }
   }, [template, rivesStates]);
 
+  async function changeSelect(
+    value: string,
+    variableToModify: TemplateVariable
+  ) {
+    rivesStates.forEach(riveState => {
+      riveState.stateMachineInputs('SM')[0].value = isNaN(Number(value))
+        ? value === 'true'
+        : Number(value);
+    });
+  }
   const queryString =
     typeof window !== 'undefined' ? window.location.search : '';
   const urlParams = new URLSearchParams(queryString);

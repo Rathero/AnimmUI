@@ -4,6 +4,14 @@ import { useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
 import { FileAsset, decodeImage, Rive } from '@rive-app/react-canvas';
 import {
+  useRive,
+  useViewModel,
+  useViewModelInstanceString,
+  useViewModelInstance,
+  useViewModelInstanceNumber,
+  useViewModelInstanceBoolean,
+} from '@rive-app/react-canvas';
+import {
   Collapsible,
   CollapsibleContent,
   CollapsibleTrigger,
@@ -39,6 +47,7 @@ import EditorCsv from '@/components/editor/editor-csv';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
 import { EditorCheckbox } from '@/components/editor/editor-checkbox';
+import React from 'react';
 
 export default function Editor() {
   const params = useParams<{ id: string }>();
@@ -81,48 +90,52 @@ export default function Editor() {
     }
   }
 
+  const [functionsToSetBoolean, setFunctionsToSetBoolean] = useState<
+    Array<{ x: Number; f: (x: boolean) => void }>
+  >([]);
   async function changeSelect(
     value: string,
     variableToModify: TemplateVariable
   ) {
+    functionsToSetBoolean.forEach(x => {
+      if (x.x == variableToModify.id) {
+        x.f(value === 'on');
+      }
+    });
+    /*
     rivesStates.forEach(riveState => {
-      riveState.stateMachineInputs('SM')[0].value = isNaN(Number(value))
-        ? value === 'true'
-        : Number(value);
+      riveState.stateMachineInputs('SM')[
+        Number.parseInt(variableToModify.defaultValue)
+      ].value = isNaN(Number(value)) ? value === 'true' : Number(value);
+    });*/
+  }
+
+  async function changeCheckbox(
+    value: boolean,
+    variableToModify: TemplateVariable
+  ) {
+    functionsToSetBoolean.forEach(x => {
+      if (x.x == variableToModify.id) {
+        x.f(value);
+      }
+    });
+    /*
+    rivesStates.forEach(riveState => {
+      riveState.stateMachineInputs('SM')[
+        Number.parseInt(variableToModify.defaultValue)
+      ].value = isNaN(Number(value)) ? value === 'true' : Number(value);
+    });*/
+  }
+  const [functionsToSetStrings, setFunctionsToSetStrings] = useState<
+    Array<{ x: Number; f: (x: string) => void }>
+  >([]);
+  async function changeText(text: string, variableToModify: TemplateVariable) {
+    functionsToSetStrings.forEach(x => {
+      if (x.x == variableToModify.id) {
+        x.f(text);
+      }
     });
   }
-
-  async function changeText(text: string, variableToModify: TemplateVariable) {
-    if (rivesStates) {
-      rivesStates.forEach(riveState => {
-        if (riveState) {
-          text = text === '' ? ' ' : text;
-          if (variableToModify.paths.length > 0) {
-            variableToModify.paths.map(path => {
-              riveState!.setTextRunValueAtPath(
-                variableToModify.value,
-                text,
-                path.path
-              );
-            });
-          } else riveState.setTextRunValue(variableToModify.value, text);
-        }
-      });
-      variableToModify.defaultValue = text;
-      setTemplate(template);
-    }
-    if (generatedAnimation) {
-      generatedAnimation.modules.forEach(x => {
-        x.variables.forEach(y => {
-          if (y.templateVariable.id == variableToModify.id) {
-            y.value = text;
-          }
-        });
-      });
-      setGeneratedAnimation(generatedAnimation);
-    }
-  }
-
   const { get } = useTemplatesService();
   async function initializeTemplate() {
     const template = await get(params.id);
@@ -132,13 +145,10 @@ export default function Editor() {
         template?.Result.templateCompositions &&
         template.Result.templateCompositions.length > 0
       ) {
+        const composition = template?.Result.templateCompositions[0];
         setArtBoard(template?.Result.templateCompositions[0].name);
-        setCurrentHeight(
-          template?.Result.templateCompositions[0].templateResolutions[0].height
-        );
-        setCurrentWidth(
-          template?.Result.templateCompositions[0].templateResolutions[0].width
-        );
+        setCurrentHeight(composition.templateResolutions[0].height);
+        setCurrentWidth(composition.templateResolutions[0].width);
       }
       const newGeneratedAnimation: GeneratedAnimation = {
         baseTemplate: template.Result,
@@ -179,6 +189,14 @@ export default function Editor() {
     }
   }
 
+  const { setValue: setValueWidth } = useViewModelInstanceNumber(
+    'CurrentWidth',
+    rivesStates[0]?.viewModelInstance
+  );
+  const { setValue: setValueHeight } = useViewModelInstanceNumber(
+    'CurrentHeight',
+    rivesStates[0]?.viewModelInstance
+  );
   const [currentWidth, setCurrentWidth] = useState(0);
   const [currentHeight, setCurrentHeight] = useState(0);
   async function changeresolution(
@@ -186,6 +204,8 @@ export default function Editor() {
     height: number,
     artBoard: string
   ) {
+    setValueWidth(width);
+    setValueHeight(height);
     setArtBoard(artBoard);
     width = Number.parseInt(width.toString()) + 1;
     height = Number.parseInt(height.toString()) + 1;
@@ -196,11 +216,14 @@ export default function Editor() {
       mainCan.style.height = height + 'px';
       setCurrentHeight(height);
     }
+    //if (rivesStates && rivesStates[0]) {
     rivesStates[0].reset({
       artboard: artBoard,
       stateMachines: 'SM',
       autoplay: true,
+      autoBind: true,
     });
+    //}
   }
 
   const { add } = useGeneratedAnimationService();
@@ -238,7 +261,7 @@ export default function Editor() {
       const paramsUrl = new URLSearchParams();
       template.Result.modules.forEach(module => {
         module.variables.forEach(variable => {
-          paramsUrl.append(variable.name, variable.defaultValue || '');
+          paramsUrl.append(variable.id.toString(), variable.defaultValue || '');
         });
       });
       paramsUrl.append('autoplay', 'true');
@@ -410,7 +433,10 @@ export default function Editor() {
                       <EditorSelect variable={v} changeInput={changeSelect} />
                     )}
                     {v.type === TemplateVariableTypeEnum.Boolean && (
-                      <EditorCheckbox variable={v} changeInput={changeSelect} />
+                      <EditorCheckbox
+                        variable={v}
+                        changeCheckbox={changeCheckbox}
+                      />
                     )}
                   </div>
                 ))}
@@ -497,6 +523,28 @@ export default function Editor() {
             )}
         </div>
       </div>
+      {template?.Result &&
+        template?.Result.modules.map(module =>
+          module.variables.map(variable => (
+            <VariableStringSetter
+              key={currentHeight + currentWidth + variable.id}
+              variable={variable}
+              rive={rivesStates[0]}
+              onSetFunctionString={setValueFunction => {
+                setFunctionsToSetStrings(prev => [
+                  { x: variable.id, f: setValueFunction },
+                  ...prev,
+                ]);
+              }}
+              onSetFunctionBoolean={setValueFunction => {
+                setFunctionsToSetBoolean(prev => [
+                  { x: variable.id, f: setValueFunction },
+                  ...prev,
+                ]);
+              }}
+            />
+          ))
+        )}
     </div>
   );
 }
@@ -559,4 +607,45 @@ function AccordionCompositions({
       ))}
     </div>
   );
+}
+
+function VariableStringSetter({
+  variable,
+  rive,
+  onSetFunctionString,
+  onSetFunctionBoolean,
+}: {
+  variable: TemplateVariable;
+  rive: Rive;
+  onSetFunctionString: (setValueFunction: (value: string) => void) => void;
+  onSetFunctionBoolean: (setValueFunction: (value: boolean) => void) => void;
+}) {
+  const { setValue: setValueFunctionString } = useViewModelInstanceString(
+    variable.value,
+    rive?.viewModelInstance
+  );
+  useEffect(() => {
+    if (
+      onSetFunctionString &&
+      setValueFunctionString &&
+      variable.type == TemplateVariableTypeEnum.TextArea
+    ) {
+      onSetFunctionString(setValueFunctionString);
+    }
+  }, [setValueFunctionString]);
+
+  const { setValue: setValueFunctionBoolean } = useViewModelInstanceBoolean(
+    variable.value,
+    rive?.viewModelInstance
+  );
+  useEffect(() => {
+    if (
+      onSetFunctionBoolean &&
+      variable.type == TemplateVariableTypeEnum.Boolean
+    ) {
+      onSetFunctionBoolean(setValueFunctionBoolean);
+    }
+  }, [setValueFunctionBoolean]);
+
+  return null;
 }

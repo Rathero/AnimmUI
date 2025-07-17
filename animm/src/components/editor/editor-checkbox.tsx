@@ -4,10 +4,10 @@ import { Label } from '@/components/ui/label';
 
 export function EditorCheckbox({
   variable,
-  changeInput,
+  changeCheckbox,
 }: {
   variable: TemplateVariable;
-  changeInput: (arg0: string, arg1: TemplateVariable) => void;
+  changeCheckbox: (arg0: boolean, arg1: TemplateVariable) => void;
 }) {
   return (
     <div className="grid w-full gap-1.5">
@@ -15,7 +15,9 @@ export function EditorCheckbox({
       <Input
         defaultChecked={false}
         className="justify-end"
-        onChange={e => changeInput(e.target.value, variable)}
+        onChange={e => {
+          changeCheckbox(e.target.checked, variable);
+        }}
         color="rgba(0, 0, 0, 1)"
         type="checkbox"
       />

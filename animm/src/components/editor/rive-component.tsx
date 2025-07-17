@@ -1,4 +1,13 @@
-import { useRive, Fit, Layout, FileAsset, Rive } from '@rive-app/react-canvas';
+import {
+  useRive,
+  Fit,
+  Layout,
+  FileAsset,
+  Rive,
+  useViewModel,
+  useViewModelInstanceString,
+  useViewModelInstance,
+} from '@rive-app/react-canvas';
 import { Dispatch, SetStateAction, useEffect, useState } from 'react';
 import { useRiveStore } from '@/stores/rive-store';
 import { exposeRiveInstance } from '@/lib/expose-rive';
@@ -27,6 +36,7 @@ export default function RiveComp({
       fit: Fit.Layout,
       layoutScaleFactor: 1,
     }),
+    autoBind: true,
     assetLoader: asset => {
       if (asset.isImage) {
         assets.push(asset);
