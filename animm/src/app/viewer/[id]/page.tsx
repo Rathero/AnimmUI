@@ -72,30 +72,37 @@ export default function Viewer() {
           .find(variable => variable.id === Number.parseInt(key));
         if (variableToModify) {
           if (variableToModify.type === TemplateVariableTypeEnum.TextArea) {
+            value = value.replaceAll(
+              '\\n',
+              `
+              `
+            );
             changeText(value, variableToModify);
           } else if (
             variableToModify.type === TemplateVariableTypeEnum.Selector
           ) {
-            changeSelect(value, variableToModify);
+            changeSelect(Number.parseInt(value), variableToModify);
           } else if (
             variableToModify.type === TemplateVariableTypeEnum.Boolean
           ) {
-            debugger;
-            changeCheckbox(value == 'true', variableToModify);
+            changeCheckbox(value.toLowerCase() == 'true', variableToModify);
           }
         }
       });
     }
   }, [template, rivesStates]);
 
+  const [functionsToSetNumbers, setFunctionsToSetNumbers] = useState<
+    Array<{ x: Number; f: (x: number) => void }>
+  >([]);
   async function changeSelect(
-    value: string,
+    value: number,
     variableToModify: TemplateVariable
   ) {
-    rivesStates.forEach(riveState => {
-      riveState.stateMachineInputs('SM')[0].value = isNaN(Number(value))
-        ? value === 'true'
-        : Number(value);
+    functionsToSetNumbers.forEach(x => {
+      if (x.x == variableToModify.id) {
+        x.f(value);
+      }
     });
   }
   const queryString =
@@ -201,6 +208,12 @@ export default function Viewer() {
                   }}
                   onSetFunctionBoolean={setValueFunction => {
                     setFunctionsToSetBoolean(prev => [
+                      { x: variable.id, f: setValueFunction },
+                      ...prev,
+                    ]);
+                  }}
+                  onSetFunctionNumber={setValueFunction => {
+                    setFunctionsToSetNumbers(prev => [
                       { x: variable.id, f: setValueFunction },
                       ...prev,
                     ]);

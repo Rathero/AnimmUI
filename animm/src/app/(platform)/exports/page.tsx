@@ -36,8 +36,27 @@ export default function ExportsPage() {
           const response = await fetch(exp.url);
           if (!response.ok) throw new Error('Failed to fetch file');
           const blob = await response.blob();
-          const ext = exp.url.split('.').pop()?.split('?')[0] || 'file';
-          zip.file(`export_${exp.id}.${ext}`, blob);
+          // Extract the path after '/exports' in the URL
+          const match = exp.url.match(/\/exports(.+)/i);
+          let zipPath = '';
+          if (match && match[1]) {
+            // Decode URL-encoded path and replace backslashes with slashes
+            let decodedPath = decodeURIComponent(match[1])
+              .replace(/\\/g, '/')
+              .replace(/^\//, '');
+            // Remove the first folder (ID)
+            const pathParts = decodedPath.split('/');
+            if (pathParts.length > 1) {
+              zipPath = pathParts.slice(1).join('/');
+            } else {
+              zipPath = pathParts[0];
+            }
+          } else {
+            // fallback to export_<id> if parsing fails
+            const ext = exp.url.split('.').pop()?.split('?')[0] || 'file';
+            zipPath = `export_${exp.id}.${ext}`;
+          }
+          zip.file(zipPath, blob);
         } catch (e) {}
       })
     );

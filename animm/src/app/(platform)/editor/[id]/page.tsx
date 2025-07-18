@@ -91,23 +91,6 @@ export default function Editor() {
     }
   }
 
-  async function changeSelect(
-    value: string,
-    variableToModify: TemplateVariable
-  ) {
-    functionsToSetBoolean.forEach(x => {
-      if (x.x == variableToModify.id) {
-        x.f(value === 'on');
-      }
-    });
-    /*
-    rivesStates.forEach(riveState => {
-      riveState.stateMachineInputs('SM')[
-        Number.parseInt(variableToModify.defaultValue)
-      ].value = isNaN(Number(value)) ? value === 'true' : Number(value);
-    });*/
-  }
-
   const [functionsToSetBoolean, setFunctionsToSetBoolean] = useState<
     Array<{ x: Number; f: (x: boolean) => void }>
   >([]);
@@ -116,6 +99,20 @@ export default function Editor() {
     variableToModify: TemplateVariable
   ) {
     functionsToSetBoolean.forEach(x => {
+      if (x.x == variableToModify.id) {
+        x.f(value);
+      }
+    });
+  }
+
+  const [functionsToSetNumbers, setFunctionsToSetNumbers] = useState<
+    Array<{ x: Number; f: (x: number) => void }>
+  >([]);
+  async function changeSelect(
+    value: number,
+    variableToModify: TemplateVariable
+  ) {
+    functionsToSetNumbers.forEach(x => {
       if (x.x == variableToModify.id) {
         x.f(value);
       }
@@ -483,7 +480,7 @@ export default function Editor() {
                     <TransformComponent wrapperClass="!w-full !h-full">
                       <div
                         id="MainCanvas"
-                        className="h-[1920px] w-[1080px] flex rounded-lg border bg-white shadow-md shadow-slate-500/10"
+                        className="h-[1920px] w-[1080px] flex rounded-lg border shadow-md shadow-slate-500/10"
                       >
                         <div className="size-full">
                           {template &&
@@ -533,6 +530,12 @@ export default function Editor() {
               }}
               onSetFunctionBoolean={setValueFunction => {
                 setFunctionsToSetBoolean(prev => [
+                  { x: variable.id, f: setValueFunction },
+                  ...prev,
+                ]);
+              }}
+              onSetFunctionNumber={setValueFunction => {
+                setFunctionsToSetNumbers(prev => [
                   { x: variable.id, f: setValueFunction },
                   ...prev,
                 ]);

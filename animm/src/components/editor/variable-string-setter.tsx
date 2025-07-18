@@ -54,11 +54,13 @@ export function VariableStringSetter({
   rive,
   onSetFunctionString,
   onSetFunctionBoolean,
+  onSetFunctionNumber,
 }: {
   variable: TemplateVariable;
   rive: Rive;
   onSetFunctionString: (setValueFunction: (value: string) => void) => void;
   onSetFunctionBoolean: (setValueFunction: (value: boolean) => void) => void;
+  onSetFunctionNumber: (setValueFunction: (value: number) => void) => void;
 }) {
   const { setValue: setValueFunctionString } = useViewModelInstanceString(
     variable.value,
@@ -87,5 +89,17 @@ export function VariableStringSetter({
     }
   }, [setValueFunctionBoolean]);
 
+  const { setValue: setValueFunctionNumber } = useViewModelInstanceNumber(
+    variable.value,
+    rive?.viewModelInstance
+  );
+  useEffect(() => {
+    if (
+      onSetFunctionNumber &&
+      variable.type == TemplateVariableTypeEnum.Selector
+    ) {
+      onSetFunctionNumber(setValueFunctionNumber);
+    }
+  }, [setValueFunctionNumber]);
   return null;
 }

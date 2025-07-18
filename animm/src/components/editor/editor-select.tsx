@@ -14,13 +14,15 @@ export function EditorSelect({
   changeInput,
 }: {
   variable: TemplateVariable;
-  changeInput: (arg0: string, arg1: TemplateVariable) => void;
+  changeInput: (arg0: number, arg1: TemplateVariable) => void;
 }) {
   return (
     <div className="grid w-full gap-1.5">
       <Label className="text-sm text-muted-foreground">{variable.name}</Label>
       <Select
-        onValueChange={e => changeInput(e, variable)}
+        onValueChange={e => {
+          changeInput(Number.parseInt(e), variable);
+        }}
         defaultValue={variable.defaultValue}
       >
         <SelectTrigger className="w-full !text-left">
