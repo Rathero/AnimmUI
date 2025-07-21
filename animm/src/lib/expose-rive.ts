@@ -1,4 +1,4 @@
-import { Rive } from '@rive-app/react-canvas';
+import { Rive } from '@rive-app/react-webgl2';
 
 declare global {
   interface Window {

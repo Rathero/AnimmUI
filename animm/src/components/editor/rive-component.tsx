@@ -7,7 +7,7 @@ import {
   useViewModel,
   useViewModelInstanceString,
   useViewModelInstance,
-} from '@rive-app/react-canvas';
+} from '@rive-app/react-webgl2';
 import { Dispatch, SetStateAction, useEffect, useState } from 'react';
 import { useRiveStore } from '@/stores/rive-store';
 import { exposeRiveInstance } from '@/lib/expose-rive';

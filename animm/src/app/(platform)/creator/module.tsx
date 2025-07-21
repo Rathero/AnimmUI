@@ -1,4 +1,4 @@
-import { useRive, Fit, Layout } from '@rive-app/react-canvas';
+import { useRive, Fit, Layout } from '@rive-app/react-webgl2';
 import Image from 'next/image';
 import { useEffect } from 'react';
 

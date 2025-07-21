@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
-import { FileAsset, decodeImage, Rive } from '@rive-app/react-canvas';
+import { FileAsset, decodeImage, Rive } from '@rive-app/react-webgl2';
 import {
   useRive,
   useViewModel,
@@ -10,7 +10,7 @@ import {
   useViewModelInstance,
   useViewModelInstanceNumber,
   useViewModelInstanceBoolean,
-} from '@rive-app/react-canvas';
+} from '@rive-app/react-webgl2';
 import {
   Collapsible,
   CollapsibleContent,

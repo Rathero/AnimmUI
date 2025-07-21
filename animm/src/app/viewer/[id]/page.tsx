@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
-import { FileAsset, Rive } from '@rive-app/react-canvas';
+import { FileAsset, Rive } from '@rive-app/react-webgl2';
 
 import {
   ApiTemplate,

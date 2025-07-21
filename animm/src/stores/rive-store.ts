@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import { Rive } from '@rive-app/react-canvas';
+import { Rive } from '@rive-app/react-webgl2';
 
 interface RiveStore {
   riveInstance: Rive | null;
