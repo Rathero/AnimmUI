@@ -1,70 +1,114 @@
 'use client';
 
 import { ColumnDef } from '@tanstack/react-table';
-import { ArrowUpDown, Copy, Eye } from 'lucide-react';
-import { MoreHorizontal } from 'lucide-react';
+import { ArrowUpDown, Copy, ExternalLink } from 'lucide-react';
 
 import { toast } from 'sonner';
 
 import { Button } from '@/components/ui/button';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
-import Link from 'next/link';
-import { Label } from '@/components/ui/label';
-import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
-import { Export, ExportBatch, ExportStatusEnum } from '@/types/exports';
+import { Export, ExportStatusEnum } from '@/types/exports';
+import ExportPreview from '@/components/export-preview';
+
+// Helper function to extract filename from URL
+const getFileNameFromUrl = (url: string): string => {
+  try {
+    // Remove query parameters and hash
+    const cleanUrl = url.split('?')[0].split('#')[0];
+    // Get the last part of the path
+    const pathParts = cleanUrl.split('/');
+    const fileName = pathParts[pathParts.length - 1];
+
+    // If no filename found, return a default
+    if (!fileName || fileName === '') {
+      return 'Unknown file';
+    }
+
+    // Remove file extension for cleaner display
+    const nameWithoutExtension = fileName.split('.')[0];
+    return nameWithoutExtension || fileName;
+  } catch {
+    return 'Unknown file';
+  }
+};
 
 export const ExportsColumns: ColumnDef<Export>[] = [
   {
-    accessorKey: 'id',
-    header: 'Id',
-    size: undefined,
-  },
-  {
-    accessorKey: 'width',
-    header: 'Width',
-    size: undefined,
-  },
-  {
-    accessorKey: 'height',
-    header: 'Height',
-    size: undefined,
-  },
-  {
-    accessorKey: 'url',
-    header: 'URL',
+    accessorKey: 'preview',
+    header: 'Preview',
     cell: ({ row }) => {
+      const exportItem = row.original;
+
+      if (exportItem.status !== ExportStatusEnum.Finished || !exportItem.url) {
+        return (
+          <div className="flex items-center justify-center w-32 h-20 bg-muted rounded-md">
+            <span className="text-xs text-muted-foreground">
+              {exportItem.status === ExportStatusEnum.Pending
+                ? 'Pending'
+                : exportItem.status === ExportStatusEnum.InProgress
+                ? 'Processing'
+                : 'No preview'}
+            </span>
+          </div>
+        );
+      }
+
       return (
         <div className="flex items-center space-x-2">
-          <div className="grid flex-1 gap-2">
-            <Label htmlFor="url" className="sr-only">
-              Link
-            </Label>
-            <Input id="url" defaultValue={row.original.url} readOnly />
+          <ExportPreview url={exportItem.url} width={128} height={80} />
+          <div className="flex flex-col gap-1">
+            <Button
+              variant="outline"
+              size="sm"
+              className="w-8 h-8 p-0"
+              onClick={() => {
+                navigator.clipboard.writeText(exportItem.url);
+                toast.success('URL copied to clipboard');
+              }}
+            >
+              <Copy className="w-3 h-3" />
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              className="w-8 h-8 p-0"
+              onClick={() => window.open(exportItem.url, '_blank')}
+            >
+              <ExternalLink className="w-3 h-3" />
+            </Button>
           </div>
-          <Button
-            variant="outline"
-            size="sm"
-            className="w-9"
-            onClick={() => {
-              navigator.clipboard.writeText(row.original.url);
-              toast.success('URL has been copied');
-            }}
-          >
-            <span className="sr-only">Copy</span>
-            <Copy />
-          </Button>
         </div>
       );
     },
-    size: undefined,
+    size: 200,
+  },
+  {
+    accessorKey: 'name',
+    header: 'Name',
+    cell: ({ row }) => {
+      const exportItem = row.original;
+      if (!exportItem.url) {
+        return <span className="text-muted-foreground">No file</span>;
+      }
+      return (
+        <div className="text-sm font-medium">
+          {getFileNameFromUrl(exportItem.url)}
+        </div>
+      );
+    },
+    size: 200,
+  },
+  {
+    accessorKey: 'dimensions',
+    header: 'Dimensions',
+    cell: ({ row }) => {
+      return (
+        <div className="text-sm">
+          {row.original.width} × {row.original.height}
+        </div>
+      );
+    },
+    size: 100,
   },
   {
     accessorKey: 'enabled',

@@ -60,6 +60,7 @@ export default function EditorCsv({ template }: { template: Template }) {
   });
   const [columnsCsvToMatch, setColumnsCsvToMatch] = useState<string[]>([]);
   const [selectedColumn, setSelectedColumn] = useState<string>('');
+  const [campaign, setCampaign] = useState<string>('');
   const [columnsToMatch, setColumnsToMatch] = useState<string[]>([]);
 
   const downloadCSV = () => {
@@ -130,6 +131,7 @@ export default function EditorCsv({ template }: { template: Template }) {
       format: 'png',
       id: 0,
       batchDefinitions: [],
+      campaign: campaign,
     };
     var headerColumns = parseCsvLine(lines[0]);
     headerColumns = headerColumns.slice(3);
@@ -230,6 +232,10 @@ export default function EditorCsv({ template }: { template: Template }) {
                 placeholder="Enter a name..."
                 className="col-span-4"
                 required
+                value={campaign}
+                onChange={e => {
+                  setCampaign(e.target.value);
+                }}
               />
             </div>
           </div>

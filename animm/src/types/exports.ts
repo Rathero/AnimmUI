@@ -7,6 +7,7 @@ export interface ExportBatchRequest {
   format: string;
   userId: number;
   batchDefinitions: BatchDefinitions[];
+  campaign: string;
 }
 
 export interface BatchDefinitions {
@@ -29,6 +30,7 @@ export interface ExportBatch {
   format: string;
   userId: string;
   exports: Export[];
+  campaign: string;
 }
 
 export interface Export {
@@ -38,6 +40,7 @@ export interface Export {
   width: number;
   height: number;
   status: ExportStatusEnum;
+  campaign: string;
 }
 
 export enum ExportStatusEnum {

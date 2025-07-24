@@ -3,19 +3,18 @@ import { HeaderPage } from '@/components/header-page';
 import { ExportsColumns } from './exports-columns';
 import { DataTable } from '@/components/table/data-table';
 import { useEffect, useState } from 'react';
-import { GeneratedAnimation } from '@/types/generatedAnimations';
 import useExportsService from '@/app/services/ExportsService';
 import { Export, ExportBatch } from '@/types/exports';
-import { debug } from 'console';
 import JSZip from 'jszip';
-import useFetchWithAuth from '@/app/services/fetchWithAuth';
+import CampaignCard from '@/components/campaign-card';
+import { Button } from '@/components/ui/button';
+import { ArrowLeft } from 'lucide-react';
 
 export default function ExportsPage() {
   const [exportBatches, setExportBatches] = useState<ExportBatch[]>([]);
-  const [downloading, setDownloading] = useState(false);
+  const [selectedCampaign, setSelectedCampaign] = useState<string | null>(null);
 
   const { getAll } = useExportsService();
-  const fetchWithAuth = useFetchWithAuth();
   const fetchExports = async () => {
     const exports = await getAll(0);
     setExportBatches(exports?.Result ?? []);
@@ -25,13 +24,27 @@ export default function ExportsPage() {
     fetchExports();
   }, []);
 
+  // Group export batches by campaign
+  const campaigns = exportBatches.reduce((acc, batch) => {
+    const campaign = batch.campaign || 'Unnamed Campaign';
+    if (!acc[campaign]) {
+      acc[campaign] = [];
+    }
+    acc[campaign].push(batch);
+    return acc;
+  }, {} as Record<string, ExportBatch[]>);
+
+  // Get all exports for a specific campaign
+  const getCampaignExports = (campaign: string): Export[] => {
+    return campaigns[campaign]?.flatMap(batch => batch.exports) || [];
+  };
+
   // Download all exports as zip
   const handleDownloadAllAsZip = async (exports: Export[]) => {
-    setDownloading(true);
     const zip = new JSZip();
     const finishedExports = exports.filter(e => e.status === 2 && e.url);
     await Promise.all(
-      finishedExports.map(async (exp, idx) => {
+      finishedExports.map(async exp => {
         try {
           const response = await fetch(exp.url);
           if (!response.ok) throw new Error('Failed to fetch file');
@@ -41,7 +54,7 @@ export default function ExportsPage() {
           let zipPath = '';
           if (match && match[1]) {
             // Decode URL-encoded path and replace backslashes with slashes
-            let decodedPath = decodeURIComponent(match[1])
+            const decodedPath = decodeURIComponent(match[1])
               .replace(/\\/g, '/')
               .replace(/^\//, '');
             // Remove the first folder (ID)
@@ -57,7 +70,9 @@ export default function ExportsPage() {
             zipPath = `export_${exp.id}.${ext}`;
           }
           zip.file(zipPath, blob);
-        } catch (e) {}
+        } catch (error) {
+          console.error('Error downloading export:', error);
+        }
       })
     );
     const zipBlob = await zip.generateAsync({ type: 'blob' });
@@ -69,26 +84,55 @@ export default function ExportsPage() {
     a.click();
     a.remove();
     URL.revokeObjectURL(url);
-    setDownloading(false);
   };
 
   return (
     <div className="h-full flex flex-col gap-4">
       <HeaderPage title="Exports" desc="Generated exports" />
       <div className="w-full p-4 flex flex-col gap-4">
-        {exportBatches.map(batch => {
-          if (batch.exports.length > 0) {
-            return (
-              <DataTable
-                key={batch.id}
-                columns={ExportsColumns}
-                data={batch.exports}
-                showFilter={false}
-                exportFunction={() => handleDownloadAllAsZip(batch.exports)}
-              />
-            );
-          }
-        })}
+        {selectedCampaign ? (
+          // Campaign detail view
+          <div className="flex flex-col gap-4">
+            <div className="flex items-center gap-4">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setSelectedCampaign(null)}
+              >
+                <ArrowLeft className="w-4 h-4 mr-2" />
+                Back to Campaigns
+              </Button>
+              <h2 className="text-xl font-semibold">{selectedCampaign}</h2>
+            </div>
+            <DataTable
+              columns={ExportsColumns}
+              data={getCampaignExports(selectedCampaign)}
+              showFilter={false}
+              exportFunction={() =>
+                handleDownloadAllAsZip(getCampaignExports(selectedCampaign))
+              }
+            />
+          </div>
+        ) : (
+          // Campaign cards view
+          <div className="grid gap-4">
+            {Object.keys(campaigns).length === 0 ? (
+              <div className="text-center py-8 text-muted-foreground">
+                No campaigns found. Create some exports to see them grouped by
+                campaign.
+              </div>
+            ) : (
+              Object.entries(campaigns).map(([campaign, batches]) => (
+                <CampaignCard
+                  key={campaign}
+                  campaign={campaign}
+                  exportBatches={batches}
+                  onClick={() => setSelectedCampaign(campaign)}
+                />
+              ))
+            )}
+          </div>
+        )}
       </div>
     </div>
   );
