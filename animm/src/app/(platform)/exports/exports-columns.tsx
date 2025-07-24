@@ -36,6 +36,7 @@ export const ExportsColumns: ColumnDef<Export>[] = [
   {
     accessorKey: 'preview',
     header: 'Preview',
+    enableGlobalFilter: false,
     cell: ({ row }) => {
       const exportItem = row.original;
 
@@ -85,6 +86,7 @@ export const ExportsColumns: ColumnDef<Export>[] = [
   {
     accessorKey: 'name',
     header: 'Name',
+    accessorFn: row => getFileNameFromUrl(row.url || ''),
     cell: ({ row }) => {
       const exportItem = row.original;
       if (!exportItem.url) {
@@ -99,8 +101,26 @@ export const ExportsColumns: ColumnDef<Export>[] = [
     size: 200,
   },
   {
+    accessorKey: 'url',
+    header: 'URL',
+    accessorFn: row => row.url || '',
+    cell: ({ row }) => {
+      const exportItem = row.original;
+      if (!exportItem.url) {
+        return <span className="text-muted-foreground">No URL</span>;
+      }
+      return (
+        <div className="text-sm text-muted-foreground truncate max-w-[200px]">
+          {exportItem.url}
+        </div>
+      );
+    },
+    size: 250,
+  },
+  {
     accessorKey: 'dimensions',
     header: 'Dimensions',
+    accessorFn: row => `${row.width} × ${row.height}`,
     cell: ({ row }) => {
       return (
         <div className="text-sm">
@@ -123,6 +143,7 @@ export const ExportsColumns: ColumnDef<Export>[] = [
         </Button>
       );
     },
+    enableGlobalFilter: false,
     cell: ({ row }) => {
       const status = row.original.status;
       if (status === ExportStatusEnum.Pending) {

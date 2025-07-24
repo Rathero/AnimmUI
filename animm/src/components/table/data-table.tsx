@@ -12,6 +12,7 @@ import {
   getPaginationRowModel,
   getSortedRowModel,
   useReactTable,
+  GlobalFilterTableState,
 } from '@tanstack/react-table';
 
 import {
@@ -31,6 +32,7 @@ interface DataTableProps<TData, TValue> {
   data: TData[];
   showFilter: boolean;
   exportFunction?: () => void;
+  globalFilter?: boolean;
 }
 
 export function DataTable<TData, TValue>({
@@ -38,11 +40,13 @@ export function DataTable<TData, TValue>({
   data,
   showFilter = true,
   exportFunction = undefined,
+  globalFilter = false,
 }: DataTableProps<TData, TValue>) {
   const [sorting, setSorting] = React.useState<SortingState>([]);
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>(
     []
   );
+  const [globalFilterValue, setGlobalFilterValue] = React.useState('');
 
   const table = useReactTable({
     data,
@@ -53,31 +57,44 @@ export function DataTable<TData, TValue>({
     getSortedRowModel: getSortedRowModel(),
     onColumnFiltersChange: setColumnFilters,
     getFilteredRowModel: getFilteredRowModel(),
+    globalFilterFn: 'includesString',
     state: {
       sorting,
       columnFilters,
+      globalFilter: globalFilterValue,
     },
+    onGlobalFilterChange: setGlobalFilterValue,
   });
 
   return (
     <div>
-      {showFilter && (
-        <div className="flex items-center pb-4">
-          <Input
-            placeholder="Filter Urls..."
-            value={(table.getColumn('name')?.getFilterValue() as string) ?? ''}
-            onChange={event =>
-              table.getColumn('name')?.setFilterValue(event.target.value)
-            }
-            className="max-w-sm"
-          />
-        </div>
-      )}
-      {exportFunction && (
-        <div className="flex items-center justify-end pb-4">
-          <Button variant="outline" size="sm" onClick={exportFunction}>
-            Save as ZIP
-          </Button>
+      {(showFilter || exportFunction) && (
+        <div className="flex items-center justify-between pb-4">
+          {showFilter && (
+            <Input
+              placeholder={
+                globalFilter
+                  ? 'Search in URL, name, width, height...'
+                  : 'Filter Urls...'
+              }
+              value={
+                globalFilter
+                  ? globalFilterValue
+                  : (table.getColumn('name')?.getFilterValue() as string) ?? ''
+              }
+              onChange={event =>
+                globalFilter
+                  ? setGlobalFilterValue(event.target.value)
+                  : table.getColumn('name')?.setFilterValue(event.target.value)
+              }
+              className="max-w-sm"
+            />
+          )}
+          {exportFunction && (
+            <Button variant="outline" size="sm" onClick={exportFunction}>
+              Save as ZIP
+            </Button>
+          )}
         </div>
       )}
       <div className="rounded-md border">

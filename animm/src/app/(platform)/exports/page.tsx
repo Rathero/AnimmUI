@@ -88,7 +88,7 @@ export default function ExportsPage() {
 
   return (
     <div className="h-full flex flex-col gap-4">
-      <HeaderPage title="Exports" desc="Generated exports" />
+      <HeaderPage title="Exports" />
       <div className="w-full p-4 flex flex-col gap-4">
         {selectedCampaign ? (
           // Campaign detail view
@@ -107,7 +107,8 @@ export default function ExportsPage() {
             <DataTable
               columns={ExportsColumns}
               data={getCampaignExports(selectedCampaign)}
-              showFilter={false}
+              showFilter={true}
+              globalFilter={true}
               exportFunction={() =>
                 handleDownloadAllAsZip(getCampaignExports(selectedCampaign))
               }

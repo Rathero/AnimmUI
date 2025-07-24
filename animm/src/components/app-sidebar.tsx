@@ -3,6 +3,7 @@
 import { Link2, GalleryVertical } from 'lucide-react';
 import { NavUser } from './sideBar/nav-user';
 import Link from 'next/link';
+import { usePathname } from 'next/navigation';
 
 import {
   Sidebar,
@@ -36,6 +37,8 @@ const items = [
 ];
 
 export function AppSidebar() {
+  const pathname = usePathname();
+
   return (
     <Sidebar collapsible="icon">
       {/*<SidebarHeader>
@@ -45,16 +48,19 @@ export function AppSidebar() {
         <SidebarGroup>
           <SidebarGroupContent>
             <SidebarMenu>
-              {items.map(item => (
-                <SidebarMenuItem key={item.title}>
-                  <SidebarMenuButton asChild>
-                    <Link href={item.url}>
-                      <item.icon />
-                      <span>{item.title}</span>
-                    </Link>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-              ))}
+              {items.map(item => {
+                const isActive = pathname === item.url;
+                return (
+                  <SidebarMenuItem key={item.title}>
+                    <SidebarMenuButton asChild isActive={isActive}>
+                      <Link href={item.url}>
+                        <item.icon />
+                        <span>{item.title}</span>
+                      </Link>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                );
+              })}
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
