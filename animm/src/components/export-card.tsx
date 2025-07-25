@@ -60,9 +60,31 @@ export default function ExportCard({ exportItem }: ExportCardProps) {
             exportItem.url ? (
               <div className="relative">
                 <ExportPreview url={exportItem.url} width={280} height={160} />
-                {/* Status Badge - Top Right */}
-                <div className="absolute top-2 right-2 z-10">
+                {/* Status Badge and Action Buttons - Top Right */}
+                <div className="absolute top-2 right-2 z-10 flex flex-col gap-1">
                   {getStatusBadge(exportItem.status)}
+                  {/* Action Buttons */}
+                  <div className="flex gap-1">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="w-8 h-8 p-0"
+                      onClick={() => {
+                        navigator.clipboard.writeText(exportItem.url);
+                        toast.success('URL copied to clipboard');
+                      }}
+                    >
+                      <Copy className="w-3 h-3" />
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="w-8 h-8 p-0"
+                      onClick={() => window.open(exportItem.url, '_blank')}
+                    >
+                      <ExternalLink className="w-3 h-3" />
+                    </Button>
+                  </div>
                 </div>
               </div>
             ) : (
@@ -82,7 +104,7 @@ export default function ExportCard({ exportItem }: ExportCardProps) {
             )}
           </div>
 
-          {/* Name and Actions */}
+          {/* Name */}
           <div className="space-y-2">
             <div className="flex items-center justify-between">
               <h3 className="font-medium text-sm truncate">
@@ -91,31 +113,6 @@ export default function ExportCard({ exportItem }: ExportCardProps) {
                   : 'No file'}
               </h3>
             </div>
-            {/* Action Buttons - Always Visible */}
-            {exportItem.status === ExportStatusEnum.Finished &&
-              exportItem.url && (
-                <div className="flex gap-1 justify-center">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="w-8 h-8 p-0"
-                    onClick={() => {
-                      navigator.clipboard.writeText(exportItem.url);
-                      toast.success('URL copied to clipboard');
-                    }}
-                  >
-                    <Copy className="w-3 h-3" />
-                  </Button>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="w-8 h-8 p-0"
-                    onClick={() => window.open(exportItem.url, '_blank')}
-                  >
-                    <ExternalLink className="w-3 h-3" />
-                  </Button>
-                </div>
-              )}
           </div>
         </div>
       </CardContent>
