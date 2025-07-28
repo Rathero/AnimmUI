@@ -74,11 +74,23 @@ export default function ExportsPage() {
     const exports = getCurrentFolderExports(campaign);
     if (!searchQuery) return exports;
 
+    // Normalize search query: remove extra spaces and convert to lowercase
+    const normalizedQuery = searchQuery
+      .toLowerCase()
+      .trim()
+      .replace(/\s+/g, ' ');
+
     return exports.filter(exp => {
       const fileName = exp.url
         ? exp.url.split('/').pop()?.split('.')[0] || ''
         : '';
-      return fileName.toLowerCase().includes(searchQuery.toLowerCase());
+
+      // Normalize filename: remove underscores and convert to lowercase
+      const normalizedFileName = fileName.toLowerCase().replace(/_/g, ' ');
+
+      // Check if all search terms are present in the filename
+      const searchTerms = normalizedQuery.split(' ');
+      return searchTerms.every(term => normalizedFileName.includes(term));
     });
   };
 
@@ -259,7 +271,7 @@ export default function ExportsPage() {
               </div>
 
               {/* Cards Grid */}
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-4">
                 {getFilteredExports(selectedCampaign).map(exportItem => (
                   <ExportCard key={exportItem.id} exportItem={exportItem} />
                 ))}
