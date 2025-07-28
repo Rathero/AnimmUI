@@ -13,6 +13,7 @@ export function EditorCheckbox({
     <div className="grid w-full gap-1.5">
       <Label className="text-sm text-muted-foreground">{variable.name}</Label>
       <Input
+        data-variable-id={variable.id}
         defaultChecked={false}
         className="justify-end"
         onChange={e => {

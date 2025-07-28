@@ -134,27 +134,59 @@ export default function EditorCsv({ template }: { template: Template }) {
       campaign: campaign,
     };
     var headerColumns = parseCsvLine(lines[0]);
-    headerColumns = headerColumns.slice(3);
+
+    // Check if "Resize" column exists in the CSV
+    const resizeColumnIndex = headerColumns.findIndex(
+      col => col.trim() === 'Resize'
+    );
+    const hasResizeColumn = resizeColumnIndex !== -1;
+
+    // Remove the first 3 columns (name, width, height) and resize column if it exists
+    let variableColumns = headerColumns.slice(3);
+    if (hasResizeColumn && resizeColumnIndex >= 3) {
+      // Remove the resize column from variable columns since it's handled separately
+      variableColumns = variableColumns.filter(
+        (_, index) => index !== resizeColumnIndex - 3
+      );
+    }
+
     lines.forEach((line, i) => {
       if (i != 0) {
         let columns = parseCsvLine(line);
+
+        // Determine resize value
+        let resize = false;
+        if (hasResizeColumn) {
+          const resizeValue = columns[resizeColumnIndex];
+          resize = resizeValue === '1';
+        }
+
         var batchDefinition: BatchDefinitions = {
           resolutions: [
             {
               name: columns[0],
               width: Number.parseInt(columns[1]),
               height: Number.parseInt(columns[2]),
+              resize: resize,
             },
           ],
           variables: [],
         };
 
-        columns = columns.slice(3);
-        columns.forEach((column, y) => {
+        // Process variable columns (skip resize column)
+        let variableData = columns.slice(3);
+        if (hasResizeColumn && resizeColumnIndex >= 3) {
+          // Remove the resize column from variable data
+          variableData = variableData.filter(
+            (_, index) => index !== resizeColumnIndex - 3
+          );
+        }
+
+        variableData.forEach((column, y) => {
           batchDefinition.variables.push({
             key:
               variablesToMatch
-                .find(x => x.name == headerColumns[y])
+                .find(x => x.name == variableColumns[y])
                 ?.id?.toString() || '',
             value: column,
           });
@@ -303,7 +335,6 @@ export default function EditorCsv({ template }: { template: Template }) {
                               key: selectedColumn,
                               value: col,
                             });
-                            console.log(newColumnsMatched);
                             setColumnsMatched(newColumnsMatched);
                           }
                         }}

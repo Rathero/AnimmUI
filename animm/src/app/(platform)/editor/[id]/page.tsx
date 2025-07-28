@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { useParams } from 'next/navigation';
 import { FileAsset, decodeImage, Rive } from '@rive-app/react-webgl2';
 import {
@@ -94,21 +94,12 @@ export default function Editor() {
   const [functionsToSetBoolean, setFunctionsToSetBoolean] = useState<
     Array<{ x: Number; f: (x: boolean) => void }>
   >([]);
-  // Reusable function to update generatedAnimation state
+  // Reusable function to update variable values state (kept for compatibility)
   const updateGeneratedAnimationVariable = (
     variableId: number,
     value: string | number | boolean
   ) => {
-    if (template?.Result) {
-      template?.Result.modules.forEach(module => {
-        module.variables.forEach(variable => {
-          if (variable.id === variableId) {
-            variable.value = value.toString();
-          }
-        });
-      });
-      setTemplate(template);
-    }
+    // This function is kept for compatibility but no longer needed
   };
 
   async function changeCheckbox(
@@ -141,14 +132,12 @@ export default function Editor() {
     Array<{ x: Number; f: (x: string) => void }>
   >([]);
   async function changeText(text: string, variableToModify: TemplateVariable) {
-    console.log('changeText', text, variableToModify);
-    console.log('functionsToSetStrings', functionsToSetStrings);
     functionsToSetStrings.forEach(x => {
-      console.log('x', x);
       if (x.x == variableToModify.id) {
         x.f(text);
       }
     });
+
     updateGeneratedAnimationVariable(variableToModify.id, text);
   }
   const { get } = useTemplatesService();
@@ -156,6 +145,8 @@ export default function Editor() {
     const template = await get(params.id);
     setTemplate(template);
     if (template) {
+      // No longer need to initialize variable values state since we read directly from inputs
+
       if (
         template?.Result.templateCompositions &&
         template.Result.templateCompositions.length > 0
@@ -241,29 +232,47 @@ export default function Editor() {
     //}
   }
   function updateAllVariablesAfterResolutionChange() {
-    console.log('updateAllVariablesAfterResolutionChange'); /*
-    if (template?.Result) {
-      template?.Result.modules.forEach(module => {
-        module.variables.forEach(variable => {
-          if (variable.value) {
-            const templateVariable = variable;
-            switch (templateVariable.type) {
-              case TemplateVariableTypeEnum.Input:
-              case TemplateVariableTypeEnum.TextArea:
-                console.log('changeText', variable.value, templateVariable);
-                changeText(variable.value, templateVariable);
-                break;
-              case TemplateVariableTypeEnum.Boolean:
-                changeCheckbox(variable.value === 'true', templateVariable);
-                break;
-              case TemplateVariableTypeEnum.Selector:
-                changeSelect(parseInt(variable.value), templateVariable);
-                break;
+    // Add a small delay to ensure Rive is ready*/
+    /*setTimeout(() => {
+      if (template?.Result) {
+        template?.Result.modules.forEach(module => {
+          module.variables.forEach(variable => {
+            // Find the input element for this variable
+            const inputElement = document.querySelector(
+              `[data-variable-id="${variable.id}"]`
+            ) as HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement;
+
+            if (inputElement) {
+              let currentValue: string | number | boolean;
+
+              // Get the current value based on input type
+              if (inputElement.type === 'checkbox') {
+                currentValue = (inputElement as HTMLInputElement).checked;
+              } else if (inputElement.tagName === 'SELECT') {
+                currentValue = parseInt(
+                  (inputElement as HTMLSelectElement).value
+                );
+              } else {
+                currentValue = inputElement.value;
+              }
+              // Update the variable based on its type
+              switch (variable.type) {
+                case TemplateVariableTypeEnum.Input:
+                case TemplateVariableTypeEnum.TextArea:
+                  changeText(currentValue as string, variable);
+                  break;
+                case TemplateVariableTypeEnum.Boolean:
+                  changeCheckbox(currentValue as boolean, variable);
+                  break;
+                case TemplateVariableTypeEnum.Selector:
+                  changeSelect(currentValue as number, variable);
+                  break;
+              }
             }
-          }
+          });
         });
-      });
-    }*/
+      }
+    }, 1000);*/
   }
   const { add } = useGeneratedAnimationService();
   async function generateUrlFunction(name: string) {

@@ -70,7 +70,8 @@ export function VariableStringSetter({
     if (
       onSetFunctionString &&
       setValueFunctionString &&
-      variable.type == TemplateVariableTypeEnum.TextArea
+      (variable.type == TemplateVariableTypeEnum.TextArea ||
+        variable.type == TemplateVariableTypeEnum.Input)
     ) {
       onSetFunctionString(setValueFunctionString);
     }

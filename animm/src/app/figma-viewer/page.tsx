@@ -375,8 +375,6 @@ const FigmaViewer: React.FC = () => {
           findImageAndVectorAndInstanceIds([frame])
         );
         // Debug: log all vector and instance IDs
-        console.log('VECTOR IDs:', vectorIds);
-        console.log('INSTANCE IDs:', instanceIds);
         if (imageRectIds.length > 0) {
           const images = await fetchFigmaImages(FILE_KEY, imageRectIds);
           setImageMap(images.images);
@@ -384,7 +382,6 @@ const FigmaViewer: React.FC = () => {
         if (vectorIds.length > 0) {
           const vectors = await fetchFigmaImages(FILE_KEY, vectorIds, 'svg');
           // Debug: log returned vector image URLs
-          console.log('VECTOR image URLs:', vectors.images);
           setVectorImages(vectors.images);
         }
         if (instanceIds.length > 0) {
@@ -394,7 +391,6 @@ const FigmaViewer: React.FC = () => {
             'svg'
           );
           // Debug: log returned instance image URLs
-          console.log('INSTANCE image URLs:', instances.images);
           setInstanceImages(instances.images);
         }
       })

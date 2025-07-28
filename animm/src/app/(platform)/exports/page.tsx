@@ -23,6 +23,7 @@ export default function ExportsPage() {
   const [selectedCampaign, setSelectedCampaign] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [currentFolderPath, setCurrentFolderPath] = useState<string[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
   const [folderStructure, setFolderStructure] = useState<FolderNode>({
     name: 'root',
     children: {},
@@ -57,6 +58,21 @@ export default function ExportsPage() {
     acc[campaign].push(batch);
     return acc;
   }, {} as Record<string, ExportBatch[]>);
+
+  // Filter out campaigns with no exports or no campaign name
+  const filteredCampaigns = Object.entries(campaigns).filter(
+    ([campaign, batches]) => {
+      // Check if campaign has a valid name (not empty or 'Unnamed Campaign')
+      const hasValidName =
+        campaign && campaign.trim() !== '' && campaign !== 'Unnamed Campaign';
+
+      // Check if campaign has any exports
+      const totalExports = batches.flatMap(batch => batch.exports).length;
+      const hasExports = totalExports > 0;
+
+      return hasValidName && hasExports;
+    }
+  );
 
   // Get all exports for a specific campaign
   const getCampaignExports = (campaign: string): Export[] => {
@@ -291,13 +307,13 @@ export default function ExportsPage() {
         ) : (
           // Campaign cards view
           <div className="grid gap-4">
-            {Object.keys(campaigns).length === 0 ? (
+            {filteredCampaigns.length === 0 ? (
               <div className="text-center py-8 text-muted-foreground">
                 No campaigns found. Create some exports to see them grouped by
                 campaign.
               </div>
             ) : (
-              Object.entries(campaigns).map(([campaign, batches]) => (
+              filteredCampaigns.map(([campaign, batches]) => (
                 <CampaignCard
                   key={campaign}
                   campaign={campaign}

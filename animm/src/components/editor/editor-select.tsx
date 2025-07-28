@@ -20,6 +20,7 @@ export function EditorSelect({
     <div className="grid w-full gap-1.5">
       <Label className="text-sm text-muted-foreground">{variable.name}</Label>
       <Select
+        data-variable-id={variable.id}
         onValueChange={e => {
           changeInput(Number.parseInt(e), variable);
         }}

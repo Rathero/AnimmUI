@@ -128,47 +128,30 @@ export default function Viewer() {
             minWidth: '100vw',
           }}
         >
+          {/* Full Print Guide SVG - positioned at absolute 0,0 */}
           <img
-            src="/pdf/Print Guide_Top Left.svg"
-            alt="Print Guide Top Left"
+            src="/mm/Print Guide Full.svg"
+            alt="Print Guide Full"
             style={{
               position: 'absolute',
-              top: bleedPx,
-              left: bleedPx,
-              zIndex: 10,
+              top: 0,
+              left: 0,
+              zIndex: 1,
+              width: '100%',
+              height: '100%',
             }}
           />
-          <img
-            src="/pdf/Print Guide_Top Right.svg"
-            alt="Print Guide Top Left"
+
+          {/* Rive animation with margins to overlap the SVG */}
+          <div
+            id="MainCanvas"
             style={{
-              position: 'absolute',
-              top: bleedPx,
-              right: bleedPx,
-              zIndex: 10,
+              position: 'relative',
+              zIndex: 2,
+              marginTop: '20px',
+              marginLeft: '20px',
             }}
-          />
-          <img
-            src="/pdf/Print Guide_Bottom Right.svg"
-            alt="Print Guide Top Left"
-            style={{
-              position: 'absolute',
-              bottom: bleedPx,
-              right: bleedPx,
-              zIndex: 10,
-            }}
-          />
-          <img
-            src="/pdf/Print Guide_Bottom Left.svg"
-            alt="Print Guide Top Left"
-            style={{
-              position: 'absolute',
-              bottom: bleedPx,
-              left: bleedPx,
-              zIndex: 10,
-            }}
-          />
-          <div id="MainCanvas" style={{ position: 'relative', zIndex: 1 }}>
+          >
             {template &&
               template.Result.modules.length > 0 &&
               template.Result.modules[0].file && (

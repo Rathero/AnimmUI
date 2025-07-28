@@ -16,6 +16,7 @@ export function EditorText(props: {
       </Label>
       <Textarea
         id={props.variable.value}
+        data-variable-id={props.variable.id}
         defaultValue={props.variable.defaultValue}
         onChange={e => props.changeText(e.target.value, props.variable)}
       />

@@ -134,7 +134,6 @@ export default function Editor() {
     const mainCan: any = document.querySelector('#MainCanvas');
     if (mainCan) {
       const resolution = event.split('-');
-      console.log(resolution);
       mainCan.style.width = resolution[0] + 'px';
       mainCan.style.height = resolution[1] + 'px';
     }

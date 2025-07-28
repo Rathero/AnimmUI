@@ -47,11 +47,8 @@ export default function RiveComp({
       }
       return false;
     },
-    onRiveReady: () => {
-      console.log('rive ready');
-    },
+    onRiveReady: () => {},
     onStateChange: state => {
-      console.log('onStateChange', onStateChange);
       if (onStateChange) {
         onStateChange();
       }

@@ -18,6 +18,7 @@ export interface Resolutions {
   width: number;
   height: number;
   name: string;
+  resize: boolean;
 }
 export interface Variables {
   key: string;
