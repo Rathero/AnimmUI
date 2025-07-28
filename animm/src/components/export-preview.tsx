@@ -57,11 +57,13 @@ export default function ExportPreview({
 
   if (isVideo) {
     return (
-      <div className="relative group w-full h-full">
+      <div className="relative group">
         <video
           ref={setVideoRef}
           src={formattedUrl}
-          className="w-full h-full object-fill rounded-md"
+          width={width}
+          height={height}
+          className="rounded-md object-fill w-full h-full"
           onEnded={handleVideoEnded}
           onPlay={handleVideoPlay}
           onPause={handleVideoPause}
@@ -87,13 +89,13 @@ export default function ExportPreview({
 
   if (isImage) {
     return (
-      <div className="relative w-full h-full">
+      <div className="relative">
         <Image
           src={formattedUrl}
           alt="Export preview"
-          fill
-          className="object-fill rounded-md"
-          sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+          width={width}
+          height={height}
+          className="rounded-md object-fill w-full h-full"
         />
       </div>
     );
@@ -101,7 +103,10 @@ export default function ExportPreview({
 
   // Fallback for unknown file types
   return (
-    <div className="rounded-md bg-muted flex items-center justify-center w-full h-full">
+    <div
+      className="rounded-md bg-muted flex items-center justify-center"
+      style={{ width, height }}
+    >
       <span className="text-xs text-muted-foreground">
         Preview not available
       </span>
