@@ -94,6 +94,23 @@ export default function Editor() {
   const [functionsToSetBoolean, setFunctionsToSetBoolean] = useState<
     Array<{ x: Number; f: (x: boolean) => void }>
   >([]);
+  // Reusable function to update generatedAnimation state
+  const updateGeneratedAnimationVariable = (
+    variableId: number,
+    value: string | number | boolean
+  ) => {
+    if (template?.Result) {
+      template?.Result.modules.forEach(module => {
+        module.variables.forEach(variable => {
+          if (variable.id === variableId) {
+            variable.value = value.toString();
+          }
+        });
+      });
+      setTemplate(template);
+    }
+  };
+
   async function changeCheckbox(
     value: boolean,
     variableToModify: TemplateVariable
@@ -103,6 +120,7 @@ export default function Editor() {
         x.f(value);
       }
     });
+    updateGeneratedAnimationVariable(variableToModify.id, value);
   }
 
   const [functionsToSetNumbers, setFunctionsToSetNumbers] = useState<
@@ -117,16 +135,21 @@ export default function Editor() {
         x.f(value);
       }
     });
+    updateGeneratedAnimationVariable(variableToModify.id, value);
   }
   const [functionsToSetStrings, setFunctionsToSetStrings] = useState<
     Array<{ x: Number; f: (x: string) => void }>
   >([]);
   async function changeText(text: string, variableToModify: TemplateVariable) {
+    console.log('changeText', text, variableToModify);
+    console.log('functionsToSetStrings', functionsToSetStrings);
     functionsToSetStrings.forEach(x => {
+      console.log('x', x);
       if (x.x == variableToModify.id) {
         x.f(text);
       }
     });
+    updateGeneratedAnimationVariable(variableToModify.id, text);
   }
   const { get } = useTemplatesService();
   async function initializeTemplate() {
@@ -217,7 +240,31 @@ export default function Editor() {
     });
     //}
   }
-
+  function updateAllVariablesAfterResolutionChange() {
+    console.log('updateAllVariablesAfterResolutionChange'); /*
+    if (template?.Result) {
+      template?.Result.modules.forEach(module => {
+        module.variables.forEach(variable => {
+          if (variable.value) {
+            const templateVariable = variable;
+            switch (templateVariable.type) {
+              case TemplateVariableTypeEnum.Input:
+              case TemplateVariableTypeEnum.TextArea:
+                console.log('changeText', variable.value, templateVariable);
+                changeText(variable.value, templateVariable);
+                break;
+              case TemplateVariableTypeEnum.Boolean:
+                changeCheckbox(variable.value === 'true', templateVariable);
+                break;
+              case TemplateVariableTypeEnum.Selector:
+                changeSelect(parseInt(variable.value), templateVariable);
+                break;
+            }
+          }
+        });
+      });
+    }*/
+  }
   const { add } = useGeneratedAnimationService();
   async function generateUrlFunction(name: string) {
     if (generatedAnimation) {
@@ -362,7 +409,7 @@ export default function Editor() {
           {template?.Result && (
             <EditorCsv template={template.Result}></EditorCsv>
           )}
-          <EditorUrl generateUrlFunction={generateUrlFunction} />
+          {/* <EditorUrl generateUrlFunction={generateUrlFunction} />
           <Button className="w-full" onClick={() => generateUrl()}>
             <LinkIcon />
             Preview
@@ -400,7 +447,7 @@ export default function Editor() {
                 'Export JPEG'
               )}
             </Button>
-          )}
+          )} */}
         </div>
       </div>
       {/* Main Content */}
@@ -492,6 +539,9 @@ export default function Editor() {
                                 setAssetsParent={setAssets}
                                 setRiveStatesParent={setRiveStates}
                                 artboard={artBoard}
+                                onStateChange={
+                                  updateAllVariablesAfterResolutionChange
+                                }
                               />
                             )}
                         </div>

@@ -18,12 +18,14 @@ export default function RiveComp({
   setRiveStatesParent,
   autoplay = true,
   artboard = 'Template',
+  onStateChange,
 }: {
   src: string;
   setAssetsParent: Dispatch<SetStateAction<FileAsset[]>>;
   setRiveStatesParent: Dispatch<SetStateAction<Rive[]>>;
   autoplay?: boolean;
   artboard?: string;
+  onStateChange?: () => void;
 }) {
   const [assets, setAssets] = useState<Array<FileAsset>>([]);
   const setRiveInstance = useRiveStore(state => state.setRiveInstance);
@@ -44,6 +46,15 @@ export default function RiveComp({
         setAssetsParent(assets);
       }
       return false;
+    },
+    onRiveReady: () => {
+      console.log('rive ready');
+    },
+    onStateChange: state => {
+      console.log('onStateChange', onStateChange);
+      if (onStateChange) {
+        onStateChange();
+      }
     },
   });
 
