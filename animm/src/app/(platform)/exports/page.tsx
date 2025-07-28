@@ -32,8 +32,15 @@ export default function ExportsPage() {
 
   const { getAll } = useExportsService();
   const fetchExports = async () => {
-    const exports = await getAll(0);
-    setExportBatches(exports?.Result ?? []);
+    setIsLoading(true);
+    try {
+      const exports = await getAll(0);
+      setExportBatches(exports?.Result ?? []);
+    } catch (error) {
+      console.error('Error fetching exports:', error);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   useEffect(() => {
@@ -307,7 +314,11 @@ export default function ExportsPage() {
         ) : (
           // Campaign cards view
           <div className="grid gap-4">
-            {filteredCampaigns.length === 0 ? (
+            {isLoading ? (
+              <div className="text-center py-8 text-muted-foreground">
+                Loading campaigns...
+              </div>
+            ) : filteredCampaigns.length === 0 ? (
               <div className="text-center py-8 text-muted-foreground">
                 No campaigns found. Create some exports to see them grouped by
                 campaign.
