@@ -68,7 +68,7 @@ export const buildFolderStructure = (exports: Export[]): FolderNode => {
           name: folderName,
           children: {},
           exports: [],
-          isOpen: true, // Default to open
+          isOpen: false, // Default to collapsed
         };
       }
 

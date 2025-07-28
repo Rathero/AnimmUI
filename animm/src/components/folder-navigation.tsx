@@ -47,68 +47,56 @@ export default function FolderNavigation({
 
           return (
             <div key={folderName}>
-              <div className="flex items-center">
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className={cn(
-                    'flex-1 justify-start h-8 px-2 text-sm',
-                    isCurrentFolder &&
-                      path.length === currentPath.length - 1 &&
-                      currentPath[currentPath.length - 1] === folderName
-                      ? 'bg-accent text-accent-foreground'
-                      : 'hover:bg-accent/50'
-                  )}
-                  onClick={() => onPathChange(childPath)}
-                >
-                  <div className="flex items-center gap-2 w-full">
-                    <div
-                      className="flex items-center"
-                      style={{ paddingLeft: `${level * 16}px` }}
-                    >
-                      {hasChildren && (
-                        <ChevronRight
-                          className={cn(
-                            'w-3 h-3 transition-transform',
-                            isChildOpen && 'rotate-90'
-                          )}
-                        />
-                      )}
-                    </div>
-                    {hasChildren || hasExports ? (
-                      <FolderOpen className="w-4 h-4 text-blue-500" />
-                    ) : (
-                      <Folder className="w-4 h-4 text-gray-400" />
-                    )}
-                    <span className="truncate">{folderName}</span>
-                    {(hasChildren || hasExports) && (
-                      <span className="ml-auto text-xs text-muted-foreground">
-                        {hasChildren
-                          ? Object.keys(childNode.children).length
-                          : childNode.exports.length}
-                      </span>
-                    )}
-                  </div>
-                </Button>
-                {hasChildren && (
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="h-8 w-8 p-0 hover:bg-accent/50"
-                    onClick={e => {
-                      e.stopPropagation();
-                      onToggleFolder?.(childPath);
+              <Button
+                variant="ghost"
+                size="sm"
+                className={cn(
+                  'w-full justify-start h-8 px-2 text-sm',
+                  isCurrentFolder &&
+                    path.length === currentPath.length - 1 &&
+                    currentPath[currentPath.length - 1] === folderName
+                    ? 'bg-accent text-accent-foreground'
+                    : 'hover:bg-accent/50'
+                )}
+              >
+                <div className="flex items-center gap-2 w-full">
+                  <div
+                    className="flex items-center"
+                    style={{ paddingLeft: `${level * 16}px` }}
+                    onClick={() => {
+                      // If folder has children, toggle expansion
+                      if (hasChildren) {
+                        onToggleFolder?.(childPath);
+                      } else {
+                        // If no children, navigate to the folder
+                        onPathChange(childPath);
+                      }
                     }}
                   >
-                    <ChevronRight
-                      className={cn(
-                        'w-3 h-3 transition-transform',
-                        isChildOpen && 'rotate-90'
-                      )}
-                    />
-                  </Button>
-                )}
-              </div>
+                    {hasChildren && (
+                      <ChevronRight
+                        className={cn(
+                          'w-3 h-3 transition-transform',
+                          isChildOpen && 'rotate-90'
+                        )}
+                      />
+                    )}
+                  </div>
+                  {hasChildren || hasExports ? (
+                    <FolderOpen className="w-4 h-4 text-blue-500" />
+                  ) : (
+                    <Folder className="w-4 h-4 text-gray-400" />
+                  )}
+                  <span
+                    className="truncate"
+                    onClick={() => {
+                      onPathChange(childPath);
+                    }}
+                  >
+                    {folderName}
+                  </span>
+                </div>
+              </Button>
               {hasChildren && isChildOpen && (
                 <div className="ml-4">
                   {renderFolder(childNode, childPath, level + 1)}
