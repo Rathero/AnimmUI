@@ -111,9 +111,6 @@ export default function FolderNavigation({
 
   return (
     <div className={cn('space-y-2', className)}>
-      <div className="text-sm font-medium text-muted-foreground px-2">
-        Folders
-      </div>
       {renderFolder(folderStructure, [])}
     </div>
   );

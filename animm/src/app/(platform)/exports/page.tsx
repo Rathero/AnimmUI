@@ -230,10 +230,6 @@ export default function ExportsPage() {
             {/* Folder Navigation Sidebar */}
             <div className="w-64 flex-shrink-0">
               <div className="sticky top-4">
-                <div className="flex items-center gap-2 mb-4">
-                  <FolderOpen className="w-4 h-4" />
-                  <h3 className="font-medium">Folder Structure</h3>
-                </div>
                 <FolderNavigation
                   folderStructure={folderStructure}
                   currentPath={currentFolderPath}
