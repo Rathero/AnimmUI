@@ -13,7 +13,12 @@ import RiveComp from '@/components/editor/rive-component';
 import useTemplatesService from '@/app/services/TemplatesService';
 import Script from 'next/script';
 import { VariableStringSetter } from '@/components/editor/variable-string-setter';
-import { gifRecorder, GifRecordingConfig } from '@/lib/gif-recorder';
+import {
+  mediaRecorder,
+  RecordingConfig,
+  RecordingResult,
+  RecordingStatus,
+} from '@/lib/media-recorder';
 
 export default function Viewer() {
   const params = useParams<{ id: string }>();
@@ -110,7 +115,6 @@ export default function Viewer() {
     typeof window !== 'undefined' ? window.location.search : '';
   const urlParams = new URLSearchParams(queryString);
   const shouldAutoplay = urlParams.get('autoplay') === 'true';
-  const shouldRecord = urlParams.get('record') === 'true';
   const isPdf = urlParams.get('pdf') === 'true';
   const artBoard = urlParams.get('artboard');
   // Bleed size: 3mm = ~12px at 96dpi
@@ -118,61 +122,168 @@ export default function Viewer() {
 
   // Expose global function for .NET to call
   useEffect(() => {
-    // Make the GIF recording function available globally
-    (window as any).startGifRecording = async (config: GifRecordingConfig) => {
-      try {
-        console.log('Starting GIF recording from .NET:', config);
-        const result = await gifRecorder.startRecording(config);
+    // Store the recording result globally for .NET to poll
+    (window as any).__RECORDING_RESULT__ = null;
+    (window as any).__RECORDING_IN_PROGRESS__ = false;
+    (window as any).__RECORDING_STATUS__ = null;
 
-        if (result.success && result.data) {
-          // Send the GIF data back to .NET via a custom event
-          const event = new CustomEvent('gifRecordingComplete', {
-            detail: {
-              exportId: config.exportId,
-              success: true,
-              data: result.data,
-            },
-          });
-          window.dispatchEvent(event);
-        } else {
-          // Send error back to .NET
-          const event = new CustomEvent('gifRecordingComplete', {
-            detail: {
-              exportId: config.exportId,
-              success: false,
-              error: result.error,
-            },
-          });
-          window.dispatchEvent(event);
+    // Make the recording function available globally for .NET
+    (window as any).startRecording = async (config: RecordingConfig) => {
+      try {
+        console.log('Starting recording from .NET:', config);
+
+        // Set recording in progress
+        (window as any).__RECORDING_IN_PROGRESS__ = true;
+        (window as any).__RECORDING_RESULT__ = null;
+        (window as any).__RECORDING_STATUS__ = null;
+
+        // Ensure Rive animation is ready and stopped before recording
+        const riveInstance = (window as any).__RIVE_INSTANCE__;
+        if (riveInstance && typeof riveInstance.stop === 'function') {
+          try {
+            riveInstance.stop();
+            console.log('Rive animation stopped before recording');
+          } catch (error) {
+            console.warn(
+              'Could not stop Rive animation before recording:',
+              error
+            );
+          }
         }
+
+        // Status update callback
+        const onStatusUpdate = (status: RecordingStatus) => {
+          (window as any).__RECORDING_STATUS__ = status;
+        };
+
+        const result = await mediaRecorder.startRecording(
+          config,
+          onStatusUpdate
+        );
+
+        // Store the result globally for .NET to poll
+        (window as any).__RECORDING_RESULT__ = result;
+        (window as any).__RECORDING_IN_PROGRESS__ = false;
 
         return result;
       } catch (error) {
-        console.error('Error in GIF recording:', error);
-        const event = new CustomEvent('gifRecordingComplete', {
-          detail: {
-            exportId: config.exportId,
-            success: false,
-            error: error instanceof Error ? error.message : 'Unknown error',
-          },
-        });
-        window.dispatchEvent(event);
-        return {
+        console.error('Error in recording:', error);
+        const errorResult: RecordingResult = {
           success: false,
           error: error instanceof Error ? error.message : 'Unknown error',
+          format: config.format,
+          size: 0,
+          duration: 0,
         };
+
+        // Store the error result
+        (window as any).__RECORDING_RESULT__ = errorResult;
+        (window as any).__RECORDING_IN_PROGRESS__ = false;
+
+        return errorResult;
       }
     };
 
-    // Also expose a function to check if recording is in progress
+    // Function to check if recording is in progress
+    (window as any).isRecording = () => {
+      return (
+        mediaRecorder.isCurrentlyRecording() ||
+        (window as any).__RECORDING_IN_PROGRESS__
+      );
+    };
+
+    // Function to get the recording result (for .NET to poll)
+    (window as any).getRecordingResult = () => {
+      return (window as any).__RECORDING_RESULT__;
+    };
+
+    // Function to get the current recording status
+    (window as any).getRecordingStatus = () => {
+      return (
+        (window as any).__RECORDING_STATUS__ || mediaRecorder.getCurrentStatus()
+      );
+    };
+
+    // Function to stop recording manually
+    (window as any).stopRecording = () => {
+      mediaRecorder.stopRecording();
+    };
+
+    // Function to clear the recording result
+    (window as any).clearRecordingResult = () => {
+      (window as any).__RECORDING_RESULT__ = null;
+      (window as any).__RECORDING_IN_PROGRESS__ = false;
+      (window as any).__RECORDING_STATUS__ = null;
+    };
+
+    // Function to manually start Rive animation (for testing)
+    (window as any).startRiveAnimation = () => {
+      const riveInstance = (window as any).__RIVE_INSTANCE__;
+      if (riveInstance && typeof riveInstance.play === 'function') {
+        try {
+          riveInstance.play('SM');
+          console.log('Rive animation started manually');
+        } catch (error) {
+          console.warn('Could not start Rive animation manually:', error);
+        }
+      } else {
+        console.warn('Rive instance not available');
+      }
+    };
+
+    // Function to manually stop Rive animation (for testing)
+    (window as any).stopRiveAnimation = () => {
+      const riveInstance = (window as any).__RIVE_INSTANCE__;
+      if (riveInstance && typeof riveInstance.stop === 'function') {
+        try {
+          riveInstance.stop();
+          console.log('Rive animation stopped manually');
+        } catch (error) {
+          console.warn('Could not stop Rive animation manually:', error);
+        }
+      } else {
+        console.warn('Rive instance not available');
+      }
+    };
+
+    // Legacy GIF functions for backward compatibility
+    (window as any).startGifRecording = async (config: any) => {
+      const recordingConfig: RecordingConfig = {
+        ...config,
+        format: 'gif',
+      };
+      return (window as any).startRecording(recordingConfig);
+    };
+
     (window as any).isGifRecording = () => {
-      return gifRecorder.isCurrentlyRecording();
+      return (window as any).isRecording();
+    };
+
+    (window as any).getGifRecordingResult = () => {
+      return (window as any).getRecordingResult();
+    };
+
+    (window as any).clearGifRecordingResult = () => {
+      return (window as any).clearRecordingResult();
     };
 
     // Cleanup function
     return () => {
+      delete (window as any).startRecording;
+      delete (window as any).isRecording;
+      delete (window as any).getRecordingResult;
+      delete (window as any).getRecordingStatus;
+      delete (window as any).stopRecording;
+      delete (window as any).clearRecordingResult;
+      delete (window as any).startRiveAnimation;
+      delete (window as any).stopRiveAnimation;
       delete (window as any).startGifRecording;
       delete (window as any).isGifRecording;
+      delete (window as any).getGifRecordingResult;
+      delete (window as any).clearGifRecordingResult;
+      delete (window as any).__RECORDING_RESULT__;
+      delete (window as any).__RECORDING_IN_PROGRESS__;
+      delete (window as any).__RECORDING_STATUS__;
     };
   }, []);
 
@@ -220,7 +331,7 @@ export default function Viewer() {
                   src={template.Result.modules[0].file}
                   setAssetsParent={setAssets}
                   setRiveStatesParent={setRiveStates}
-                  autoplay={shouldAutoplay}
+                  autoplay={shouldAutoplay} // Don't autoplay if recording is expected
                 />
               )}
           </div>
@@ -234,7 +345,7 @@ export default function Viewer() {
                 src={template.Result.modules[0].file}
                 setAssetsParent={setAssets}
                 setRiveStatesParent={setRiveStates}
-                autoplay={shouldAutoplay}
+                autoplay={shouldAutoplay} // Don't autoplay if recording is expected
                 artboard={artBoard || ''}
               />
             )}
@@ -266,70 +377,6 @@ export default function Viewer() {
               ))
             )}
         </div>
-      )}
-
-      {shouldRecord && (
-        <Script
-          id="metapixel-script"
-          strategy="lazyOnload"
-          dangerouslySetInnerHTML={{
-            __html: `setTimeout(() => {
-                const canvas = document.querySelector('#MainCanvas canvas');
-                if (!canvas) {
-                    throw new Error('Canvas element not found');
-                }
-
-                const stream = canvas.captureStream(60); // 60 FPS
-                const mediaRecorder = new MediaRecorder(stream, {
-                    mimeType: 'video/webm;codecs=vp9',
-                    videoBitsPerSecond: 40000000,
-                });
-
-                const chunks = [];
-                mediaRecorder.ondataavailable = e => {
-                    if (e.data.size > 0) {
-                        chunks.push(e.data);
-                    }
-                };
-
-                mediaRecorder.onstop = async () => {
-                    const blob = new Blob(chunks, { type: 'video/webm;codecs=vp9' });
-                    const formData = new FormData();
-                    formData.append('video', blob, 'video.webm');
-
-                    try {
-                        const response = await fetch('https://animmapiv2.azurewebsites.net/export/save', {
-                            method: 'POST',
-                            body: formData,
-                        });
-                        if (!response.ok) {
-                          const errorText = await response.text();
-                          console.error('Failed to save video:', errorText);
-                          throw new Error('Failed to save video: ' + errorText);
-                        }
-                        console.log('Video saved successfully.');
-                    } catch (error) {
-                        console.error('Error saving video:', error);
-                    }
-                };
-
-                // Simulating the Rive instance play call
-                // Replace with your actual animation trigger if needed
-                const riveInstance = window.__RIVE_INSTANCE__;
-                if (riveInstance) {
-                    riveInstance.play('SM');
-                }
-
-                console.log('Starting recording...');
-                mediaRecorder.start();
-
-                setTimeout(() => {
-                    mediaRecorder.stop();
-                    console.log('Stopping recording...');
-                }, 6000); // Record for 10 seconds
-            }, 4000); // Delay to ensure the canvas is ready`,
-          }}
-        />
       )}
     </>
   );
