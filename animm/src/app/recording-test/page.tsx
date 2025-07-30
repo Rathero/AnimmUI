@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import {
   RecordingConfig,
   RecordingResult,
@@ -13,6 +13,36 @@ export default function RecordingTestPage() {
   const [recordingResult, setRecordingResult] =
     useState<RecordingResult | null>(null);
   const [isRecording, setIsRecording] = useState(false);
+  const [functionAvailability, setFunctionAvailability] = useState<{
+    startRecording: boolean;
+    isRecording: boolean;
+    getRecordingResult: boolean;
+    stopRecording: boolean;
+    startRiveAnimation: boolean;
+    stopRiveAnimation: boolean;
+    riveInstance: boolean;
+  }>({
+    startRecording: false,
+    isRecording: false,
+    getRecordingResult: false,
+    stopRecording: false,
+    startRiveAnimation: false,
+    stopRiveAnimation: false,
+    riveInstance: false,
+  });
+
+  // Check function availability on client side only
+  useEffect(() => {
+    setFunctionAvailability({
+      startRecording: typeof (window as any).startRecording === 'function',
+      isRecording: typeof (window as any).isRecording === 'function',
+      getRecordingResult: typeof (window as any).getRecordingResult === 'function',
+      stopRecording: typeof (window as any).stopRecording === 'function',
+      startRiveAnimation: typeof (window as any).startRiveAnimation === 'function',
+      stopRiveAnimation: typeof (window as any).stopRiveAnimation === 'function',
+      riveInstance: !!(window as any).__RIVE_INSTANCE__,
+    });
+  }, []);
 
   const testConfigs: RecordingConfig[] = [
     {
@@ -328,37 +358,31 @@ export default function RecordingTestPage() {
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
           <div>
             <strong>startRecording:</strong>{' '}
-            {typeof (window as any).startRecording === 'function' ? '✅' : '❌'}
+            {functionAvailability.startRecording ? '✅' : '❌'}
           </div>
           <div>
             <strong>isRecording:</strong>{' '}
-            {typeof (window as any).isRecording === 'function' ? '✅' : '❌'}
+            {functionAvailability.isRecording ? '✅' : '❌'}
           </div>
           <div>
             <strong>getRecordingResult:</strong>{' '}
-            {typeof (window as any).getRecordingResult === 'function'
-              ? '✅'
-              : '❌'}
+            {functionAvailability.getRecordingResult ? '✅' : '❌'}
           </div>
           <div>
             <strong>stopRecording:</strong>{' '}
-            {typeof (window as any).stopRecording === 'function' ? '✅' : '❌'}
+            {functionAvailability.stopRecording ? '✅' : '❌'}
           </div>
           <div>
             <strong>startRiveAnimation:</strong>{' '}
-            {typeof (window as any).startRiveAnimation === 'function'
-              ? '✅'
-              : '❌'}
+            {functionAvailability.startRiveAnimation ? '✅' : '❌'}
           </div>
           <div>
             <strong>stopRiveAnimation:</strong>{' '}
-            {typeof (window as any).stopRiveAnimation === 'function'
-              ? '✅'
-              : '❌'}
+            {functionAvailability.stopRiveAnimation ? '✅' : '❌'}
           </div>
           <div>
             <strong>__RIVE_INSTANCE__:</strong>{' '}
-            {(window as any).__RIVE_INSTANCE__ ? '✅' : '❌'}
+            {functionAvailability.riveInstance ? '✅' : '❌'}
           </div>
         </div>
       </div>
