@@ -14,6 +14,10 @@ export const getFileNameFromUrl = (url: string): string => {
     // URL decode the path to handle encoded characters like %5C (/)
     cleanUrl = decodeURIComponent(cleanUrl);
 
+    // Handle both forward slashes and backslashes in the path
+    // First, normalize backslashes to forward slashes
+    cleanUrl = cleanUrl.replace(/\\/g, '/');
+
     // Get the last part of the path
     const pathParts = cleanUrl.split('/');
     const fileName = pathParts[pathParts.length - 1];
