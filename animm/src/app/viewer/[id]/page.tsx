@@ -137,6 +137,7 @@ export default function Viewer() {
         (window as any).__RECORDING_RESULT__ = null;
         (window as any).__RECORDING_STATUS__ = null;
 
+        /*
         // Ensure Rive animation is ready and stopped before recording
         const riveInstance = (window as any).__RIVE_INSTANCE__;
         if (riveInstance && typeof riveInstance.stop === 'function') {
@@ -150,16 +151,12 @@ export default function Viewer() {
             );
           }
         }
-
         // Status update callback
         const onStatusUpdate = (status: RecordingStatus) => {
           (window as any).__RECORDING_STATUS__ = status;
         };
-
-        const result = await mediaRecorder.startRecording(
-          config,
-          onStatusUpdate
-        );
+*/
+        const result = await mediaRecorder.startRecording(config);
 
         // Store the result globally for .NET to poll
         (window as any).__RECORDING_RESULT__ = result;

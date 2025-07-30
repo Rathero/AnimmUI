@@ -71,6 +71,13 @@ class MediaRecorder {
       };
     }
 
+    // Optimize canvas for frequent readback operations (prevents performance warnings)
+    const ctx = this.canvas.getContext('2d');
+    if (ctx) {
+      // @ts-ignore - willReadFrequently is a newer attribute
+      ctx.willReadFrequently = true;
+    }
+
     // Ensure Rive animation is stopped and ready to start
     await this.prepareRiveAnimation();
 
@@ -129,14 +136,13 @@ class MediaRecorder {
         quality: config.quality || 10,
         width: config.width || this.canvas!.width,
         height: config.height || this.canvas!.height,
-        workerScript: '/gif.worker.js', // We'll need to add this file
+        workerScript: '/gif.worker.js',
       });
 
       // Set up GIF event handlers
       this.gifRecorder.on('finished', (blob: Blob) => {
-        const actualDuration = this.frameCount * frameDelay;
         console.log(
-          `GIF recording finished: ${this.frameCount} frames, ${actualDuration}ms total duration`
+          `GIF recording finished: ${this.frameCount} frames captured`
         );
         this.isRecording = false;
 
@@ -174,35 +180,31 @@ class MediaRecorder {
         console.log(`GIF rendering progress: ${progress * 100}%`);
       });
 
-      // Calculate frame delay for GIF (total duration divided by number of frames)
+      // Calculate precise frame timing
       const totalFrames = Math.ceil((config.duration / 1000) * config.fps);
       const frameDelay = Math.round(config.duration / totalFrames);
+      const frameInterval = 1000 / config.fps;
 
       console.log(
-        `GIF recording: ${totalFrames} frames, ${frameDelay}ms delay per frame`
+        `Starting GIF recording: ${config.duration}ms, ${config.fps}fps, ${totalFrames} frames, ${frameDelay}ms delay per frame`
       );
 
-      // Start capturing frames
-      const frameInterval = 1000 / config.fps;
-      let frameIndex = 0;
-      let isFirstFrame = true;
+      // Start Rive animation
+      this.startRiveAnimation();
 
+      // Use setInterval for precise frame timing instead of requestAnimationFrame
+      let frameIndex = 0;
       this.recordingInterval = setInterval(() => {
-        if (frameIndex >= totalFrames) {
+        if (!this.isRecording || frameIndex >= totalFrames) {
           console.log(
-            `GIF recording frames reached (${frameIndex} >= ${totalFrames}), stopping...`
+            `GIF recording complete: ${frameIndex} frames captured (target: ${totalFrames})`
           );
           this.stopRecording();
           return;
         }
 
-        // Start Rive animation on the first frame to ensure perfect synchronization
-        if (isFirstFrame) {
-          this.startRiveAnimation();
-          isFirstFrame = false;
-        }
-
         try {
+          // Add frame with precise delay
           this.gifRecorder!.addFrame(this.canvas!, { delay: frameDelay });
           frameIndex++;
           this.frameCount++;
@@ -219,10 +221,11 @@ class MediaRecorder {
           }
         } catch (error) {
           console.error('Error capturing GIF frame:', error);
+          this.stopRecording();
         }
       }, frameInterval);
 
-      // Add timeout to prevent infinite recording (based on actual recording time)
+      // Add timeout to prevent infinite recording
       const estimatedRecordingTime = totalFrames * frameInterval + 2000; // Add 2 seconds buffer
       this.recordingTimeout = setTimeout(() => {
         if (this.isRecording) {
@@ -230,10 +233,6 @@ class MediaRecorder {
           this.stopRecording();
         }
       }, estimatedRecordingTime);
-
-      console.log(
-        `Started GIF recording: ${config.duration}ms, ${config.fps}fps, ${totalFrames} frames, ${frameDelay}ms delay per frame`
-      );
     });
   }
 
