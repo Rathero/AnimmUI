@@ -1,4 +1,5 @@
 import { Export } from '@/types/exports';
+import { getFileNameFromUrl } from './utils';
 
 export interface FolderNode {
   name: string;
@@ -6,24 +7,6 @@ export interface FolderNode {
   exports: string[];
   isOpen?: boolean;
 }
-
-// Helper function to extract filename from URL
-const getFileNameFromUrl = (url: string): string => {
-  try {
-    const cleanUrl = url.split('?')[0].split('#')[0];
-    const pathParts = cleanUrl.split('/');
-    const fileName = pathParts[pathParts.length - 1];
-
-    if (!fileName || fileName === '') {
-      return 'Unknown file';
-    }
-
-    const nameWithoutExtension = fileName.split('.')[0];
-    return nameWithoutExtension || fileName;
-  } catch {
-    return 'Unknown file';
-  }
-};
 
 // Parse export name into folder structure
 const parseExportName = (fileName: string): string[] => {

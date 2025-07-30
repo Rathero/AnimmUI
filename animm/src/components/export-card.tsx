@@ -7,28 +7,7 @@ import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
 import { Export, ExportStatusEnum } from '@/types/exports';
 import ExportPreview from '@/components/export-preview';
-
-// Helper function to extract filename from URL
-const getFileNameFromUrl = (url: string): string => {
-  try {
-    // Remove query parameters and hash
-    const cleanUrl = url.split('?')[0].split('#')[0];
-    // Get the last part of the path
-    const pathParts = cleanUrl.split('/');
-    const fileName = pathParts[pathParts.length - 1];
-
-    // If no filename found, return a default
-    if (!fileName || fileName === '') {
-      return 'Unknown file';
-    }
-
-    // Remove file extension for cleaner display
-    const nameWithoutExtension = fileName.split('.')[0];
-    return nameWithoutExtension || fileName;
-  } catch {
-    return 'Unknown file';
-  }
-};
+import { getFileNameFromUrl } from '@/lib/utils';
 
 interface ExportCardProps {
   exportItem: Export;

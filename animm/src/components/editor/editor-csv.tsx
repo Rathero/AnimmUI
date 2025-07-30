@@ -85,6 +85,13 @@ export default function EditorCsv({ template }: { template: Template }) {
     });
     setColumnsToMatch(variablesToMatch);
     const row: Record<string, string> = {};
+    // Add required columns: Name, Width, Height, Format, Resize
+    row['Name'] = 'Example Name';
+    row['Width'] = '1920';
+    row['Height'] = '1080';
+    row['Format'] = template.static ? 'png' : 'mp4';
+    row['Resize'] = '0';
+    // Add variable columns
     variables.forEach(variable => {
       row[variable.key] = variable.value;
     });
@@ -125,15 +132,35 @@ export default function EditorCsv({ template }: { template: Template }) {
   const { createExportBatch } = useExportsService();
   const uploadCsv = () => {
     const lines = csvString.split(/\r\n|\n/);
+    var headerColumns = parseCsvLine(lines[0]);
+
+    // Check if "Format" column exists in the CSV
+    const formatColumnIndex = headerColumns.findIndex(
+      col => col.trim() === 'Format'
+    );
+    const hasFormatColumn = formatColumnIndex !== -1;
+
+    // Determine format: from CSV column if exists, otherwise from template
+    let format = 'png'; // default fallback
+    if (hasFormatColumn && lines.length > 1) {
+      const firstRow = parseCsvLine(lines[1]);
+      const formatValue = firstRow[formatColumnIndex]?.trim().toLowerCase();
+      if (formatValue) {
+        format = formatValue;
+      }
+    } else {
+      // Use template default: png for static, mp4 for non-static
+      format = template.static ? 'png' : 'mp4';
+    }
+
     let exportBatchRequest: ExportBatchRequest = {
       templateId: template.id,
       userId: 0,
-      format: 'png',
+      format: format,
       id: 0,
       batchDefinitions: [],
       campaign: campaign,
     };
-    var headerColumns = parseCsvLine(lines[0]);
 
     // Check if "Resize" column exists in the CSV
     const resizeColumnIndex = headerColumns.findIndex(
@@ -141,8 +168,14 @@ export default function EditorCsv({ template }: { template: Template }) {
     );
     const hasResizeColumn = resizeColumnIndex !== -1;
 
-    // Remove the first 3 columns (name, width, height) and resize column if it exists
+    // Remove the first 3 columns (name, width, height), format column, and resize column if they exist
     let variableColumns = headerColumns.slice(3);
+    if (hasFormatColumn && formatColumnIndex >= 3) {
+      // Remove the format column from variable columns since it's handled separately
+      variableColumns = variableColumns.filter(
+        (_, index) => index !== formatColumnIndex - 3
+      );
+    }
     if (hasResizeColumn && resizeColumnIndex >= 3) {
       // Remove the resize column from variable columns since it's handled separately
       variableColumns = variableColumns.filter(
@@ -173,8 +206,14 @@ export default function EditorCsv({ template }: { template: Template }) {
           variables: [],
         };
 
-        // Process variable columns (skip resize column)
+        // Process variable columns (skip format and resize columns)
         let variableData = columns.slice(3);
+        if (hasFormatColumn && formatColumnIndex >= 3) {
+          // Remove the format column from variable data
+          variableData = variableData.filter(
+            (_, index) => index !== formatColumnIndex - 3
+          );
+        }
         if (hasResizeColumn && resizeColumnIndex >= 3) {
           // Remove the resize column from variable data
           variableData = variableData.filter(
