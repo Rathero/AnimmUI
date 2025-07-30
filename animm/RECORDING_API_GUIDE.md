@@ -18,7 +18,7 @@ The following functions are exposed globally on the `window` object when the vie
 
 ### Main Recording Functions
 
-````javascript
+```javascript
 // Start recording with configuration
 window.startRecording(config: RecordingConfig): Promise<RecordingResult>
 
@@ -40,6 +40,7 @@ window.clearRecordingResult(): void
 // Rive Animation Control Functions
 window.startRiveAnimation(): void
 window.stopRiveAnimation(): void
+```
 
 ### Legacy GIF Functions (Backward Compatibility)
 
@@ -49,7 +50,7 @@ window.startGifRecording(config: any): Promise<RecordingResult>
 window.isGifRecording(): boolean
 window.getGifRecordingResult(): RecordingResult | null
 window.clearGifRecordingResult(): void
-````
+```
 
 ## Configuration Types
 
