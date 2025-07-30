@@ -130,33 +130,20 @@ export default function Viewer() {
     // Make the recording function available globally for .NET
     (window as any).startRecording = async (config: RecordingConfig) => {
       try {
-        console.log('Starting recording from .NET:', config);
-
         // Set recording in progress
         (window as any).__RECORDING_IN_PROGRESS__ = true;
         (window as any).__RECORDING_RESULT__ = null;
         (window as any).__RECORDING_STATUS__ = null;
 
-        /*
-        // Ensure Rive animation is ready and stopped before recording
-        const riveInstance = (window as any).__RIVE_INSTANCE__;
-        if (riveInstance && typeof riveInstance.stop === 'function') {
-          try {
-            riveInstance.stop();
-            console.log('Rive animation stopped before recording');
-          } catch (error) {
-            console.warn(
-              'Could not stop Rive animation before recording:',
-              error
-            );
-          }
-        }
         // Status update callback
         const onStatusUpdate = (status: RecordingStatus) => {
           (window as any).__RECORDING_STATUS__ = status;
         };
-*/
-        const result = await mediaRecorder.startRecording(config);
+
+        const result = await mediaRecorder.startRecording(
+          config,
+          onStatusUpdate
+        );
 
         // Store the result globally for .NET to poll
         (window as any).__RECORDING_RESULT__ = result;
@@ -219,7 +206,6 @@ export default function Viewer() {
       if (riveInstance && typeof riveInstance.play === 'function') {
         try {
           riveInstance.play('SM');
-          console.log('Rive animation started manually');
         } catch (error) {
           console.warn('Could not start Rive animation manually:', error);
         }
@@ -234,7 +220,6 @@ export default function Viewer() {
       if (riveInstance && typeof riveInstance.stop === 'function') {
         try {
           riveInstance.stop();
-          console.log('Rive animation stopped manually');
         } catch (error) {
           console.warn('Could not stop Rive animation manually:', error);
         }

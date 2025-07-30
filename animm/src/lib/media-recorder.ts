@@ -101,8 +101,6 @@ class MediaRecorder {
 
         // Wait a small amount of time to ensure the stop command is processed
         await new Promise(resolve => setTimeout(resolve, 100));
-
-        console.log('Rive animation prepared and stopped');
       } catch (error) {
         console.warn('Could not prepare Rive animation:', error);
       }
@@ -114,7 +112,6 @@ class MediaRecorder {
     if (riveInstance && typeof riveInstance.play === 'function') {
       try {
         riveInstance.play('SM');
-        console.log('Rive animation started');
       } catch (error) {
         console.warn('Could not start Rive animation:', error);
       }
@@ -141,9 +138,6 @@ class MediaRecorder {
 
       // Set up GIF event handlers
       this.gifRecorder.on('finished', (blob: Blob) => {
-        console.log(
-          `GIF recording finished: ${this.frameCount} frames captured`
-        );
         this.isRecording = false;
 
         blob
@@ -157,9 +151,6 @@ class MediaRecorder {
               size: uint8Array.length,
               duration: config.duration,
             };
-            console.log(
-              `GIF created successfully, size: ${uint8Array.length} bytes`
-            );
             resolve(result);
             this.cleanup();
           })
@@ -176,32 +167,32 @@ class MediaRecorder {
           });
       });
 
-      this.gifRecorder.on('progress', (progress: number) => {
-        console.log(`GIF rendering progress: ${progress * 100}%`);
-      });
-
       // Calculate precise frame timing
       const totalFrames = Math.ceil((config.duration / 1000) * config.fps);
       const frameDelay = Math.round(config.duration / totalFrames);
-      const frameInterval = 1000 / config.fps;
-
-      console.log(
-        `Starting GIF recording: ${config.duration}ms, ${config.fps}fps, ${totalFrames} frames, ${frameDelay}ms delay per frame`
-      );
+      const frameInterval = Math.max(1000 / config.fps, 16); // Minimum 16ms for browser compatibility
 
       // Start Rive animation
       this.startRiveAnimation();
 
-      // Use setInterval for precise frame timing instead of requestAnimationFrame
+      // Use setInterval for precise frame timing with optimized capture
       let frameIndex = 0;
+      let lastFrameTime = 0;
+
       this.recordingInterval = setInterval(() => {
         if (!this.isRecording || frameIndex >= totalFrames) {
-          console.log(
-            `GIF recording complete: ${frameIndex} frames captured (target: ${totalFrames})`
-          );
           this.stopRecording();
           return;
         }
+
+        const currentTime = Date.now();
+
+        // Ensure we don't capture frames too quickly
+        if (currentTime - lastFrameTime < frameInterval) {
+          return;
+        }
+
+        lastFrameTime = currentTime;
 
         try {
           // Add frame with precise delay
@@ -209,7 +200,7 @@ class MediaRecorder {
           frameIndex++;
           this.frameCount++;
 
-          // Update status
+          // Update status (only if callback provided)
           if (this.statusCallback) {
             const progress = Math.min((frameIndex / totalFrames) * 100, 100);
             this.statusCallback({
@@ -223,13 +214,12 @@ class MediaRecorder {
           console.error('Error capturing GIF frame:', error);
           this.stopRecording();
         }
-      }, frameInterval);
+      }, Math.floor(frameInterval / 2)); // Check twice as often to ensure we don't miss frames
 
       // Add timeout to prevent infinite recording
-      const estimatedRecordingTime = totalFrames * frameInterval + 2000; // Add 2 seconds buffer
+      const estimatedRecordingTime = totalFrames * frameInterval + 2000;
       this.recordingTimeout = setTimeout(() => {
         if (this.isRecording) {
-          console.warn('GIF recording timeout, stopping...');
           this.stopRecording();
         }
       }, estimatedRecordingTime);
@@ -276,9 +266,6 @@ class MediaRecorder {
           elapsedTime = Date.now() - this.startTime;
 
           if (elapsedTime >= config.duration) {
-            console.log(
-              `Video recording duration reached (${elapsedTime}ms >= ${config.duration}ms), stopping...`
-            );
             this.stopRecording();
             return;
           }
@@ -301,14 +288,9 @@ class MediaRecorder {
         // Add timeout
         this.recordingTimeout = setTimeout(() => {
           if (this.isRecording) {
-            console.warn('Video recording timeout, stopping...');
             this.stopRecording();
           }
         }, config.duration + 5000);
-
-        console.log(
-          `Started video recording: ${config.duration}ms, ${config.fps}fps, format: ${config.format}`
-        );
       } catch (error) {
         console.error('Error starting video recording:', error);
         resolve({
@@ -328,11 +310,8 @@ class MediaRecorder {
 
   stopRecording(): void {
     if (!this.isRecording) {
-      console.log('Recording already stopped');
       return;
     }
-
-    console.log('Stopping recording...');
 
     // Clear intervals and timeouts
     if (this.recordingInterval) {
@@ -350,7 +329,6 @@ class MediaRecorder {
     // Handle different recording types
     if (this.gifRecorder) {
       try {
-        console.log('Rendering GIF...');
         this.gifRecorder.render();
       } catch (error) {
         console.error('Error rendering GIF:', error);
@@ -383,11 +361,6 @@ class MediaRecorder {
                 size: uint8Array.length,
                 duration: Date.now() - this.startTime,
               };
-              console.log(
-                `${format.toUpperCase()} created successfully, size: ${
-                  uint8Array.length
-                } bytes`
-              );
 
               if (this.resolvePromise) {
                 this.resolvePromise(result);
