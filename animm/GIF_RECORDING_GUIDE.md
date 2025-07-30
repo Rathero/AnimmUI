@@ -33,11 +33,11 @@ window.startGifRecording(config);
 // Check if recording is in progress
 window.isGifRecording();
 
-// Event: gifRecordingComplete
-window.addEventListener('gifRecordingComplete', event => {
-  const { exportId, success, data, error } = event.detail;
-  // Handle the result
-});
+// Get the recording result (poll this function)
+window.getGifRecordingResult();
+
+// Clear the recording result
+window.clearGifRecordingResult();
 ```
 
 ## .NET Integration Steps
@@ -81,37 +81,47 @@ var config = new
 await page.EvaluateFunctionAsync("window.startGifRecording", config);
 ```
 
-### Step 4: Listen for Results
+### Step 4: Poll for Results
 
 ```csharp
-// Set up event listener for recording completion
-var completionSource = new TaskCompletionSource<(bool success, byte[] data, string error)>();
+// Poll for the recording result
+var maxWaitTime = TimeSpan.FromSeconds(30);
+var pollInterval = TimeSpan.FromMilliseconds(100);
+var elapsed = TimeSpan.Zero;
 
-await page.ExposeFunctionAsync("onGifRecordingComplete", (object result) =>
+while (elapsed < maxWaitTime)
 {
-    var resultObj = result as dynamic;
-    var success = resultObj.success;
-    var data = resultObj.data as byte[];
-    var error = resultObj.error as string;
+    // Check if recording is still in progress
+    var isRecording = await page.EvaluateFunctionAsync<bool>("window.isGifRecording");
+    if (!isRecording)
+    {
+        // Get the result
+        var result = await page.EvaluateFunctionAsync<dynamic>("window.getGifRecordingResult");
 
-    completionSource.SetResult((success, data, error));
-});
+        if (result != null)
+        {
+            var success = result.success;
+            var data = result.data as byte[];
+            var error = result.error as string;
 
-// Wait for recording to complete (with timeout)
-var timeoutTask = Task.Delay(TimeSpan.FromSeconds(30));
-var completedTask = await Task.WhenAny(completionSource.Task, timeoutTask);
+            if (success && data != null)
+            {
+                // Clear the result
+                await page.EvaluateFunctionAsync("window.clearGifRecordingResult");
+                return data; // Return the GIF data
+            }
+            else
+            {
+                throw new Exception($"GIF recording failed: {error}");
+            }
+        }
+    }
 
-if (completedTask == timeoutTask)
-{
-    throw new TimeoutException("GIF recording timed out");
+    await Task.Delay(pollInterval);
+    elapsed += pollInterval;
 }
 
-var (success, gifData, error) = await completionSource.Task;
-
-if (!success)
-{
-    throw new Exception($"GIF recording failed: {error}");
-}
+throw new TimeoutException("GIF recording timed out");
 ```
 
 ### Step 5: Save GIF Data
@@ -238,10 +248,45 @@ public class GifRecordingService
             var config = new { exportId, duration = durationMs, fps };
             ((IJavaScriptExecutor)_driver).ExecuteScript("window.startGifRecording(arguments[0]);", config);
 
-            // Wait for completion (implement event listening)
-            // ... event handling code ...
+            // Poll for completion
+            var maxWaitTime = TimeSpan.FromSeconds(30);
+            var pollInterval = TimeSpan.FromMilliseconds(100);
+            var elapsed = TimeSpan.Zero;
 
-            return gifData;
+            while (elapsed < maxWaitTime)
+            {
+                // Check if recording is still in progress
+                var isRecording = (bool)((IJavaScriptExecutor)_driver).ExecuteScript("return window.isGifRecording();");
+                if (!isRecording)
+                {
+                    // Get the result
+                    var result = ((IJavaScriptExecutor)_driver).ExecuteScript("return window.getGifRecordingResult();");
+
+                    if (result != null)
+                    {
+                        var resultDict = result as Dictionary<string, object>;
+                        var success = (bool)resultDict["success"];
+                        var data = resultDict["data"] as byte[];
+                        var error = resultDict["error"] as string;
+
+                        if (success && data != null)
+                        {
+                            // Clear the result
+                            ((IJavaScriptExecutor)_driver).ExecuteScript("window.clearGifRecordingResult();");
+                            return data; // Return the GIF data
+                        }
+                        else
+                        {
+                            throw new Exception($"GIF recording failed: {error}");
+                        }
+                    }
+                }
+
+                await Task.Delay(pollInterval);
+                elapsed += pollInterval;
+            }
+
+            throw new TimeoutException("GIF recording timed out");
         }
         catch (Exception ex)
         {

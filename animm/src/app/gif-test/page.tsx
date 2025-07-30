@@ -43,7 +43,79 @@ export default function GifTestPage() {
     animate();
   }, []);
 
+  // Expose global functions for testing (same as in viewer page)
+  useEffect(() => {
+    // Store the recording result globally for .NET to poll
+    (window as any).__GIF_RECORDING_RESULT__ = null;
+    (window as any).__GIF_RECORDING_IN_PROGRESS__ = false;
+
+    // Make the GIF recording function available globally
+    (window as any).startGifRecording = async (config: GifRecordingConfig) => {
+      try {
+        console.log('Starting GIF recording from .NET:', config);
+
+        // Set recording in progress
+        (window as any).__GIF_RECORDING_IN_PROGRESS__ = true;
+        (window as any).__GIF_RECORDING_RESULT__ = null;
+
+        const result = await gifRecorder.startRecording(config);
+
+        // Store the result globally for .NET to poll
+        (window as any).__GIF_RECORDING_RESULT__ = result;
+        (window as any).__GIF_RECORDING_IN_PROGRESS__ = false;
+
+        return result;
+      } catch (error) {
+        console.error('Error in GIF recording:', error);
+        const errorResult = {
+          success: false,
+          error: error instanceof Error ? error.message : 'Unknown error',
+        };
+
+        // Store the error result
+        (window as any).__GIF_RECORDING_RESULT__ = errorResult;
+        (window as any).__GIF_RECORDING_IN_PROGRESS__ = false;
+
+        return errorResult;
+      }
+    };
+
+    // Also expose a function to check if recording is in progress
+    (window as any).isGifRecording = () => {
+      return (
+        gifRecorder.isCurrentlyRecording() ||
+        (window as any).__GIF_RECORDING_IN_PROGRESS__
+      );
+    };
+
+    // Function to get the recording result (for .NET to poll)
+    (window as any).getGifRecordingResult = () => {
+      return (window as any).__GIF_RECORDING_RESULT__;
+    };
+
+    // Function to clear the recording result
+    (window as any).clearGifRecordingResult = () => {
+      (window as any).__GIF_RECORDING_RESULT__ = null;
+      (window as any).__GIF_RECORDING_IN_PROGRESS__ = false;
+    };
+
+    // Cleanup function
+    return () => {
+      delete (window as any).startGifRecording;
+      delete (window as any).isGifRecording;
+      delete (window as any).getGifRecordingResult;
+      delete (window as any).clearGifRecordingResult;
+      delete (window as any).__GIF_RECORDING_RESULT__;
+      delete (window as any).__GIF_RECORDING_IN_PROGRESS__;
+    };
+  }, []);
+
   const handleStartRecording = async () => {
+    if (isRecording) {
+      setResult('Recording already in progress');
+      return;
+    }
+
     setIsRecording(true);
     setResult('');
 
@@ -56,6 +128,10 @@ export default function GifTestPage() {
 
     try {
       const recordingResult = await gifRecorder.startRecording(config);
+
+      // Update global state for polling
+      (window as any).__GIF_RECORDING_RESULT__ = recordingResult;
+      (window as any).__GIF_RECORDING_IN_PROGRESS__ = false;
 
       if (recordingResult.success && recordingResult.data) {
         setResult(
@@ -74,6 +150,15 @@ export default function GifTestPage() {
         setResult(`Recording failed: ${recordingResult.error}`);
       }
     } catch (error) {
+      const errorResult = {
+        success: false,
+        error: error instanceof Error ? error.message : 'Unknown error',
+      };
+
+      // Update global state for polling
+      (window as any).__GIF_RECORDING_RESULT__ = errorResult;
+      (window as any).__GIF_RECORDING_IN_PROGRESS__ = false;
+
       setResult(
         `Error: ${error instanceof Error ? error.message : 'Unknown error'}`
       );
@@ -125,9 +210,49 @@ export default function GifTestPage() {
             3. Call: <code>window.startGifRecording(config)</code>
           </p>
           <p>
-            4. Listen for: <code>gifRecordingComplete</code> event
+            4. Poll: <code>window.getGifRecordingResult()</code>
           </p>
-          <p>5. Extract GIF data from event detail</p>
+          <p>5. Extract GIF data from result</p>
+        </div>
+      </div>
+
+      <div className="mt-4">
+        <h2 className="text-lg font-semibold mb-2">
+          Test the Polling Mechanism:
+        </h2>
+        <div className="bg-blue-50 p-4 rounded">
+          <button
+            onClick={() => {
+              const result = (window as any).getGifRecordingResult();
+              console.log('Current recording result:', result);
+              if (result) {
+                alert(
+                  `Recording Result:\nSuccess: ${result.success}\n${
+                    result.success
+                      ? `Data size: ${result.data?.length || 0} bytes`
+                      : `Error: ${result.error}`
+                  }`
+                );
+              } else {
+                alert(
+                  'No recording result available yet. Start a recording first!'
+                );
+              }
+            }}
+            className="px-3 py-1 bg-blue-500 text-white rounded text-sm"
+          >
+            Check Recording Result
+          </button>
+          <button
+            onClick={() => {
+              const isRecording = (window as any).isGifRecording();
+              console.log('Is recording:', isRecording);
+              alert(`Recording in progress: ${isRecording ? 'Yes' : 'No'}`);
+            }}
+            className="px-3 py-1 bg-green-500 text-white rounded text-sm ml-2"
+          >
+            Check Recording Status
+          </button>
         </div>
       </div>
 
@@ -139,6 +264,58 @@ export default function GifTestPage() {
           <li>The GIF will be automatically downloaded when complete</li>
           <li>Check the browser console for detailed logging</li>
         </ul>
+      </div>
+
+      <div className="mt-4">
+        <h2 className="text-lg font-semibold mb-2">Debug Info:</h2>
+        <div className="bg-yellow-50 p-4 rounded text-sm">
+          <p>
+            <strong>Global State:</strong>
+          </p>
+          <p>
+            Recording in progress:{' '}
+            {typeof window !== 'undefined' &&
+            (window as any).__GIF_RECORDING_IN_PROGRESS__
+              ? 'Yes'
+              : 'No'}
+          </p>
+          <p>
+            Has result:{' '}
+            {typeof window !== 'undefined' &&
+            (window as any).__GIF_RECORDING_RESULT__
+              ? 'Yes'
+              : 'No'}
+          </p>
+          <p>
+            GIF Recorder state:{' '}
+            {gifRecorder.isCurrentlyRecording() ? 'Recording' : 'Idle'}
+          </p>
+          <button
+            onClick={() => {
+              console.log('=== DEBUG INFO ===');
+              console.log(
+                'Global recording in progress:',
+                (window as any).__GIF_RECORDING_IN_PROGRESS__
+              );
+              console.log(
+                'Global result:',
+                (window as any).__GIF_RECORDING_RESULT__
+              );
+              console.log(
+                'GIF recorder state:',
+                gifRecorder.isCurrentlyRecording()
+              );
+              console.log(
+                'Canvas found:',
+                !!document.querySelector('#MainCanvas')
+              );
+              console.log('==================');
+            }}
+            className="px-3 py-1 bg-yellow-500 text-white rounded text-xs mt-2"
+          >
+            Log Debug Info
+          </button>
+        </div>
       </div>
     </div>
   );

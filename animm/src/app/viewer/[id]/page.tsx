@@ -118,61 +118,68 @@ export default function Viewer() {
 
   // Expose global function for .NET to call
   useEffect(() => {
+    // Store the recording result globally for .NET to poll
+    (window as any).__GIF_RECORDING_RESULT__ = null;
+    (window as any).__GIF_RECORDING_IN_PROGRESS__ = false;
+
     // Make the GIF recording function available globally
     (window as any).startGifRecording = async (config: GifRecordingConfig) => {
       try {
         console.log('Starting GIF recording from .NET:', config);
+
+        // Set recording in progress
+        (window as any).__GIF_RECORDING_IN_PROGRESS__ = true;
+        (window as any).__GIF_RECORDING_RESULT__ = null;
+
         const result = await gifRecorder.startRecording(config);
 
-        if (result.success && result.data) {
-          // Send the GIF data back to .NET via a custom event
-          const event = new CustomEvent('gifRecordingComplete', {
-            detail: {
-              exportId: config.exportId,
-              success: true,
-              data: result.data,
-            },
-          });
-          window.dispatchEvent(event);
-        } else {
-          // Send error back to .NET
-          const event = new CustomEvent('gifRecordingComplete', {
-            detail: {
-              exportId: config.exportId,
-              success: false,
-              error: result.error,
-            },
-          });
-          window.dispatchEvent(event);
-        }
+        // Store the result globally for .NET to poll
+        (window as any).__GIF_RECORDING_RESULT__ = result;
+        (window as any).__GIF_RECORDING_IN_PROGRESS__ = false;
 
         return result;
       } catch (error) {
         console.error('Error in GIF recording:', error);
-        const event = new CustomEvent('gifRecordingComplete', {
-          detail: {
-            exportId: config.exportId,
-            success: false,
-            error: error instanceof Error ? error.message : 'Unknown error',
-          },
-        });
-        window.dispatchEvent(event);
-        return {
+        const errorResult = {
           success: false,
           error: error instanceof Error ? error.message : 'Unknown error',
         };
+
+        // Store the error result
+        (window as any).__GIF_RECORDING_RESULT__ = errorResult;
+        (window as any).__GIF_RECORDING_IN_PROGRESS__ = false;
+
+        return errorResult;
       }
     };
 
     // Also expose a function to check if recording is in progress
     (window as any).isGifRecording = () => {
-      return gifRecorder.isCurrentlyRecording();
+      return (
+        gifRecorder.isCurrentlyRecording() ||
+        (window as any).__GIF_RECORDING_IN_PROGRESS__
+      );
+    };
+
+    // Function to get the recording result (for .NET to poll)
+    (window as any).getGifRecordingResult = () => {
+      return (window as any).__GIF_RECORDING_RESULT__;
+    };
+
+    // Function to clear the recording result
+    (window as any).clearGifRecordingResult = () => {
+      (window as any).__GIF_RECORDING_RESULT__ = null;
+      (window as any).__GIF_RECORDING_IN_PROGRESS__ = false;
     };
 
     // Cleanup function
     return () => {
       delete (window as any).startGifRecording;
       delete (window as any).isGifRecording;
+      delete (window as any).getGifRecordingResult;
+      delete (window as any).clearGifRecordingResult;
+      delete (window as any).__GIF_RECORDING_RESULT__;
+      delete (window as any).__GIF_RECORDING_IN_PROGRESS__;
     };
   }, []);
 
