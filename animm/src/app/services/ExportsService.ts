@@ -8,7 +8,7 @@ const useExportsService = () => {
   const createExportBatch = async (
     exportBatchRequest: ExportBatchRequest
   ): Promise<ApiExports | undefined> => {
-    var url = process.env.NEXT_PUBLIC_API_URL + '/export/';
+    const url = process.env.NEXT_PUBLIC_API_URL + '/export/';
     const response = await fetchWithAuth(url, {
       method: 'POST',
       headers: {
@@ -24,7 +24,7 @@ const useExportsService = () => {
   const getAll = async (
     templateId: number | undefined
   ): Promise<ApiExports | undefined> => {
-    var url = process.env.NEXT_PUBLIC_API_URL + '/export/';
+    let url = process.env.NEXT_PUBLIC_API_URL + '/export/';
     if (templateId) {
       url += '?templateId=' + templateId;
     }

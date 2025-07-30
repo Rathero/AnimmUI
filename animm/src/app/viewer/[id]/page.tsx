@@ -34,7 +34,7 @@ export default function Viewer() {
     setTemplate(template);
   }
   const [functionsToSetBoolean, setFunctionsToSetBoolean] = useState<
-    Array<{ x: Number; f: (x: boolean) => void }>
+    Array<{ x: number; f: (x: boolean) => void }>
   >([]);
   async function changeCheckbox(
     value: boolean,
@@ -47,7 +47,7 @@ export default function Viewer() {
     });
   }
   const [functionsToSetStrings, setFunctionsToSetStrings] = useState<
-    Array<{ x: Number; f: (x: string) => void }>
+    Array<{ x: number; f: (x: string) => void }>
   >([]);
   async function changeText(text: string, variableToModify: TemplateVariable) {
     functionsToSetStrings.forEach(x => {
@@ -99,7 +99,7 @@ export default function Viewer() {
   }, [template, rivesStates]);
 
   const [functionsToSetNumbers, setFunctionsToSetNumbers] = useState<
-    Array<{ x: Number; f: (x: number) => void }>
+    Array<{ x: number; f: (x: number) => void }>
   >([]);
   async function changeSelect(
     value: number,

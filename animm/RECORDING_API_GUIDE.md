@@ -403,6 +403,20 @@ await page.EvaluateExpressionAsync("window.stopRiveAnimation()");
 
 ## Best Practices
 
+### GIF Duration Precision
+
+The GIF recording system now ensures exact duration matching:
+
+- **Frame Delay Calculation**: Each frame's delay is calculated as `totalDuration / totalFrames` to ensure the sum equals exactly the requested duration
+- **Frame Count**: The system calculates the exact number of frames needed based on duration and FPS
+- **Precise Timing**: The GIF will play for exactly the specified duration, preventing "weird animation" issues
+
+**Example**: For a 1000ms GIF at 10 FPS:
+
+- Total frames: 10 frames
+- Frame delay: 100ms per frame
+- Total duration: 10 × 100ms = 1000ms (exact)
+
 ### Why PuppeteerSharp?
 
 PuppeteerSharp offers several advantages over WebDriver for this use case:

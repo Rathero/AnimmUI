@@ -16,9 +16,23 @@ export default function RecordingTestPage() {
 
   const testConfigs: RecordingConfig[] = [
     {
+      exportId: 'test-gif-precise-1s',
+      duration: 1000, // 1 second - exact duration test
+      fps: 10,
+      format: 'gif',
+      quality: 10,
+    },
+    {
       exportId: 'test-gif-1',
       duration: 3000, // 3 seconds
       fps: 10,
+      format: 'gif',
+      quality: 10,
+    },
+    {
+      exportId: 'test-gif-high-fps',
+      duration: 2000, // 2 seconds with high FPS
+      fps: 30,
       format: 'gif',
       quality: 10,
     },
@@ -65,7 +79,7 @@ export default function RecordingTestPage() {
 
       if (result.success) {
         console.log(
-          `Recording completed: ${result.size} bytes, ${result.duration}ms`
+          `Recording completed: ${result.size} bytes, requested: ${config.duration}ms, actual: ${result.duration}ms`
         );
 
         // Optionally save to API

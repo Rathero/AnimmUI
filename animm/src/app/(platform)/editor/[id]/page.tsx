@@ -92,7 +92,7 @@ export default function Editor() {
   }
 
   const [functionsToSetBoolean, setFunctionsToSetBoolean] = useState<
-    Array<{ x: Number; f: (x: boolean) => void }>
+    Array<{ x: number; f: (x: boolean) => void }>
   >([]);
   // Reusable function to update variable values state (kept for compatibility)
   const updateGeneratedAnimationVariable = (
@@ -115,7 +115,7 @@ export default function Editor() {
   }
 
   const [functionsToSetNumbers, setFunctionsToSetNumbers] = useState<
-    Array<{ x: Number; f: (x: number) => void }>
+    Array<{ x: number; f: (x: number) => void }>
   >([]);
   async function changeSelect(
     value: number,
@@ -129,7 +129,7 @@ export default function Editor() {
     updateGeneratedAnimationVariable(variableToModify.id, value);
   }
   const [functionsToSetStrings, setFunctionsToSetStrings] = useState<
-    Array<{ x: Number; f: (x: string) => void }>
+    Array<{ x: number; f: (x: string) => void }>
   >([]);
   async function changeText(text: string, variableToModify: TemplateVariable) {
     functionsToSetStrings.forEach(x => {

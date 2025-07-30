@@ -134,7 +134,10 @@ class MediaRecorder {
 
       // Set up GIF event handlers
       this.gifRecorder.on('finished', (blob: Blob) => {
-        console.log('GIF recording finished');
+        const actualDuration = this.frameCount * frameDelay;
+        console.log(
+          `GIF recording finished: ${this.frameCount} frames, ${actualDuration}ms total duration`
+        );
         this.isRecording = false;
 
         blob
@@ -171,15 +174,23 @@ class MediaRecorder {
         console.log(`GIF rendering progress: ${progress * 100}%`);
       });
 
+      // Calculate frame delay for GIF (total duration divided by number of frames)
+      const totalFrames = Math.ceil((config.duration / 1000) * config.fps);
+      const frameDelay = Math.round(config.duration / totalFrames);
+
+      console.log(
+        `GIF recording: ${totalFrames} frames, ${frameDelay}ms delay per frame`
+      );
+
       // Start capturing frames
       const frameInterval = 1000 / config.fps;
-      let elapsedTime = 0;
+      let frameIndex = 0;
       let isFirstFrame = true;
 
       this.recordingInterval = setInterval(() => {
-        if (elapsedTime >= config.duration) {
+        if (frameIndex >= totalFrames) {
           console.log(
-            `GIF recording duration reached (${elapsedTime}ms >= ${config.duration}ms), stopping...`
+            `GIF recording frames reached (${frameIndex} >= ${totalFrames}), stopping...`
           );
           this.stopRecording();
           return;
@@ -192,20 +203,17 @@ class MediaRecorder {
         }
 
         try {
-          this.gifRecorder!.addFrame(this.canvas!, { delay: frameInterval });
-          elapsedTime += frameInterval;
+          this.gifRecorder!.addFrame(this.canvas!, { delay: frameDelay });
+          frameIndex++;
           this.frameCount++;
 
           // Update status
           if (this.statusCallback) {
-            const progress = Math.min(
-              (elapsedTime / config.duration) * 100,
-              100
-            );
+            const progress = Math.min((frameIndex / totalFrames) * 100, 100);
             this.statusCallback({
               isRecording: true,
               progress,
-              currentTime: elapsedTime,
+              currentTime: frameIndex * frameDelay,
               totalFrames: this.frameCount,
             });
           }
@@ -214,16 +222,17 @@ class MediaRecorder {
         }
       }, frameInterval);
 
-      // Add timeout to prevent infinite recording
+      // Add timeout to prevent infinite recording (based on actual recording time)
+      const estimatedRecordingTime = totalFrames * frameInterval + 2000; // Add 2 seconds buffer
       this.recordingTimeout = setTimeout(() => {
         if (this.isRecording) {
           console.warn('GIF recording timeout, stopping...');
           this.stopRecording();
         }
-      }, config.duration + 5000);
+      }, estimatedRecordingTime);
 
       console.log(
-        `Started GIF recording: ${config.duration}ms, ${config.fps}fps`
+        `Started GIF recording: ${config.duration}ms, ${config.fps}fps, ${totalFrames} frames, ${frameDelay}ms delay per frame`
       );
     });
   }

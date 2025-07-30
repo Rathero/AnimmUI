@@ -132,7 +132,7 @@ export default function EditorCsv({ template }: { template: Template }) {
   const { createExportBatch } = useExportsService();
   const uploadCsv = () => {
     const lines = csvString.split(/\r\n|\n/);
-    var headerColumns = parseCsvLine(lines[0]);
+    const headerColumns = parseCsvLine(lines[0]);
 
     // Check if "Format" column exists in the CSV
     const formatColumnIndex = headerColumns.findIndex(
@@ -153,7 +153,7 @@ export default function EditorCsv({ template }: { template: Template }) {
       format = template.static ? 'png' : 'mp4';
     }
 
-    let exportBatchRequest: ExportBatchRequest = {
+    const exportBatchRequest: ExportBatchRequest = {
       templateId: template.id,
       userId: 0,
       format: format,
@@ -185,7 +185,7 @@ export default function EditorCsv({ template }: { template: Template }) {
 
     lines.forEach((line, i) => {
       if (i != 0) {
-        let columns = parseCsvLine(line);
+        const columns = parseCsvLine(line);
 
         // Determine resize value
         let resize = false;
@@ -194,7 +194,7 @@ export default function EditorCsv({ template }: { template: Template }) {
           resize = resizeValue === '1';
         }
 
-        var batchDefinition: BatchDefinitions = {
+        const batchDefinition: BatchDefinitions = {
           resolutions: [
             {
               name: columns[0],
