@@ -37,10 +37,10 @@ export default function CampaignCard({
 
   return (
     <Card
-      className="flex flex-row w-full h-36 overflow-hidden transition-shadow hover:shadow-md hover:shadow-slate-500/10 cursor-pointer"
+      className="flex flex-col w-full h-auto min-h-[144px] overflow-hidden transition-shadow hover:shadow-md hover:shadow-slate-500/10 cursor-pointer"
       onClick={onClick}
     >
-      <CardHeader className="p-0 w-72 h-full">
+      <CardHeader className="p-0 h-32 flex-shrink-0">
         <div className="relative w-full h-full">
           <Image
             src={previewImage}
@@ -51,17 +51,17 @@ export default function CampaignCard({
           />
         </div>
       </CardHeader>
-      <CardContent className="w-full p-4 ps-6 h-full">
-        <div className="flex justify-between gap-6">
-          <div>
-            <h2 className="font-medium">{campaign}</h2>
-            <p className="text-sm line-clamp-2 text-muted-foreground">
+      <CardContent className="flex-1 p-4">
+        <div className="flex justify-between items-start gap-4">
+          <div className="flex-1 min-w-0">
+            <h2 className="font-medium text-sm line-clamp-1">{campaign}</h2>
+            <p className="text-xs line-clamp-2 text-muted-foreground mt-1">
               {totalExports} total exports • {finishedExports} completed
             </p>
           </div>
-          <div>
-            <div className="rounded-md border border-border p-2">
-              <FolderOpen className="w-5 h-5 text-muted-foreground/70" />
+          <div className="flex-shrink-0">
+            <div className="rounded-md border border-border p-1.5">
+              <FolderOpen className="w-4 h-4 text-muted-foreground/70" />
             </div>
           </div>
         </div>

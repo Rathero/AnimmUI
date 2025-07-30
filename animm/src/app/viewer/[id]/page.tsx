@@ -13,6 +13,7 @@ import RiveComp from '@/components/editor/rive-component';
 import useTemplatesService from '@/app/services/TemplatesService';
 import Script from 'next/script';
 import { VariableStringSetter } from '@/components/editor/variable-string-setter';
+import { gifRecorder, GifRecordingConfig } from '@/lib/gif-recorder';
 
 export default function Viewer() {
   const params = useParams<{ id: string }>();
@@ -114,6 +115,66 @@ export default function Viewer() {
   const artBoard = urlParams.get('artboard');
   // Bleed size: 3mm = ~12px at 96dpi
   const bleedPx = isPdf ? 12 : 0;
+
+  // Expose global function for .NET to call
+  useEffect(() => {
+    // Make the GIF recording function available globally
+    (window as any).startGifRecording = async (config: GifRecordingConfig) => {
+      try {
+        console.log('Starting GIF recording from .NET:', config);
+        const result = await gifRecorder.startRecording(config);
+
+        if (result.success && result.data) {
+          // Send the GIF data back to .NET via a custom event
+          const event = new CustomEvent('gifRecordingComplete', {
+            detail: {
+              exportId: config.exportId,
+              success: true,
+              data: result.data,
+            },
+          });
+          window.dispatchEvent(event);
+        } else {
+          // Send error back to .NET
+          const event = new CustomEvent('gifRecordingComplete', {
+            detail: {
+              exportId: config.exportId,
+              success: false,
+              error: result.error,
+            },
+          });
+          window.dispatchEvent(event);
+        }
+
+        return result;
+      } catch (error) {
+        console.error('Error in GIF recording:', error);
+        const event = new CustomEvent('gifRecordingComplete', {
+          detail: {
+            exportId: config.exportId,
+            success: false,
+            error: error instanceof Error ? error.message : 'Unknown error',
+          },
+        });
+        window.dispatchEvent(event);
+        return {
+          success: false,
+          error: error instanceof Error ? error.message : 'Unknown error',
+        };
+      }
+    };
+
+    // Also expose a function to check if recording is in progress
+    (window as any).isGifRecording = () => {
+      return gifRecorder.isCurrentlyRecording();
+    };
+
+    // Cleanup function
+    return () => {
+      delete (window as any).startGifRecording;
+      delete (window as any).isGifRecording;
+    };
+  }, []);
 
   return (
     <>
