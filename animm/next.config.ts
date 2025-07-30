@@ -7,7 +7,12 @@ const nextConfig: NextConfig = {
         protocol: 'https',
         hostname: '**', // Allow all hostnames
       },
+      {
+        protocol: 'http',
+        hostname: '**', // Allow all hostnames
+      },
     ],
+    unoptimized: true, // Disable Next.js image optimization for external images
   },
   eslint: {
     ignoreDuringBuilds: true,
