@@ -170,18 +170,22 @@ export default function EditorCsv({ template }: { template: Template }) {
 
     // Remove the first 3 columns (name, width, height), format column, and resize column if they exist
     let variableColumns = headerColumns.slice(3);
+
+    // Collect indices to remove (format and resize columns)
+    const indicesToRemove: number[] = [];
     if (hasFormatColumn && formatColumnIndex >= 3) {
-      // Remove the format column from variable columns since it's handled separately
-      variableColumns = variableColumns.filter(
-        (_, index) => index !== formatColumnIndex - 3
-      );
+      indicesToRemove.push(formatColumnIndex - 3);
     }
     if (hasResizeColumn && resizeColumnIndex >= 3) {
-      // Remove the resize column from variable columns since it's handled separately
-      variableColumns = variableColumns.filter(
-        (_, index) => index !== resizeColumnIndex - 3
-      );
+      indicesToRemove.push(resizeColumnIndex - 3);
     }
+
+    // Remove columns in descending order to avoid index shifting
+    indicesToRemove
+      .sort((a, b) => b - a)
+      .forEach(index => {
+        variableColumns.splice(index, 1);
+      });
 
     lines.forEach((line, i) => {
       if (i != 0) {
@@ -208,18 +212,22 @@ export default function EditorCsv({ template }: { template: Template }) {
 
         // Process variable columns (skip format and resize columns)
         let variableData = columns.slice(3);
+
+        // Collect indices to remove (format and resize columns)
+        const dataIndicesToRemove: number[] = [];
         if (hasFormatColumn && formatColumnIndex >= 3) {
-          // Remove the format column from variable data
-          variableData = variableData.filter(
-            (_, index) => index !== formatColumnIndex - 3
-          );
+          dataIndicesToRemove.push(formatColumnIndex - 3);
         }
         if (hasResizeColumn && resizeColumnIndex >= 3) {
-          // Remove the resize column from variable data
-          variableData = variableData.filter(
-            (_, index) => index !== resizeColumnIndex - 3
-          );
+          dataIndicesToRemove.push(resizeColumnIndex - 3);
         }
+
+        // Remove columns in descending order to avoid index shifting
+        dataIndicesToRemove
+          .sort((a, b) => b - a)
+          .forEach(index => {
+            variableData.splice(index, 1);
+          });
 
         variableData.forEach((column, y) => {
           batchDefinition.variables.push({
