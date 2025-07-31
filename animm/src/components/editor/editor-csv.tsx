@@ -52,7 +52,7 @@ export default function EditorCsv({ template }: { template: Template }) {
   const variablesToMatch: Array<{ id: number; name: string }> = [];
   template.modules.forEach(module => {
     module.variables.forEach(variable => {
-      variablesToMatch.push({ id: variable.id, name: variable.name });
+      variablesToMatch.push({ id: variable.id, name: variable.value });
     });
     module.images.forEach((variable, i) => {
       variablesToMatch.push({ id: variable.id, name: 'imagen' + i });
@@ -70,10 +70,10 @@ export default function EditorCsv({ template }: { template: Template }) {
     template.modules.forEach(module => {
       module.variables.forEach(variable => {
         variables.push({
-          key: variable.name,
+          key: variable.value,
           value: variable.defaultValue,
         });
-        variablesToMatch.push(variable.name);
+        variablesToMatch.push(variable.value);
       });
       module.images.forEach((variable, i) => {
         variables.push({
