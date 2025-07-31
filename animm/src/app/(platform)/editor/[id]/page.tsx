@@ -49,6 +49,7 @@ import { toast } from 'sonner';
 import { EditorCheckbox } from '@/components/editor/editor-checkbox';
 import React from 'react';
 import { VariableStringSetter } from '@/components/editor/variable-string-setter';
+import { LoadingSpinner } from '@/components/ui/loading-spinner';
 
 export default function Editor() {
   const params = useParams<{ id: string }>();
@@ -57,6 +58,7 @@ export default function Editor() {
   const [generatedAnimation, setGeneratedAnimation] = useState<
     GeneratedAnimation | undefined
   >(undefined);
+  const [isLoading, setIsLoading] = useState(true);
 
   const [artBoard, setArtBoard] = useState<string>('');
   const [assets, setAssets] = useState<Array<FileAsset>>([]);
@@ -142,56 +144,63 @@ export default function Editor() {
   }
   const { get } = useTemplatesService();
   async function initializeTemplate() {
-    const template = await get(params.id);
-    setTemplate(template);
-    if (template) {
-      // No longer need to initialize variable values state since we read directly from inputs
+    setIsLoading(true);
+    try {
+      const template = await get(params.id);
+      setTemplate(template);
+      if (template) {
+        // No longer need to initialize variable values state since we read directly from inputs
 
-      if (
-        template?.Result.templateCompositions &&
-        template.Result.templateCompositions.length > 0
-      ) {
-        const composition = template?.Result.templateCompositions[0];
-        setArtBoard(template?.Result.templateCompositions[0].name);
-        setCurrentHeight(composition.templateResolutions[0].height);
-        setCurrentWidth(composition.templateResolutions[0].width);
-      }
-      const newGeneratedAnimation: GeneratedAnimation = {
-        baseTemplate: template.Result,
-        baseTemplateId: template.Result.id,
-        image: template.Result.thumbnail,
-        name: '',
-        folder: '',
-        status: GeneratedAnimationStatusEnum.NoStatus,
-        modules: [],
-        id: 0,
-      };
-      template.Result.modules.forEach(module => {
-        const newModuleToAdd: GeneratedModule = {
-          baseModule: module,
-          baseModuleId: module.id,
-          file: module.file,
-          images: [],
-          variables: [],
-          moduleType: module.moduleType,
+        if (
+          template?.Result.templateCompositions &&
+          template.Result.templateCompositions.length > 0
+        ) {
+          const composition = template?.Result.templateCompositions[0];
+          setArtBoard(template?.Result.templateCompositions[0].name);
+          setCurrentHeight(composition.templateResolutions[0].height);
+          setCurrentWidth(composition.templateResolutions[0].width);
+        }
+        const newGeneratedAnimation: GeneratedAnimation = {
+          baseTemplate: template.Result,
+          baseTemplateId: template.Result.id,
+          image: template.Result.thumbnail,
+          name: '',
+          folder: '',
+          status: GeneratedAnimationStatusEnum.NoStatus,
+          modules: [],
+          id: 0,
         };
-        module.images.forEach(image => {
-          newModuleToAdd.images.push({
-            image: '',
-            templateImage: image,
-            tepmlateImageId: image.id,
+        template.Result.modules.forEach(module => {
+          const newModuleToAdd: GeneratedModule = {
+            baseModule: module,
+            baseModuleId: module.id,
+            file: module.file,
+            images: [],
+            variables: [],
+            moduleType: module.moduleType,
+          };
+          module.images.forEach(image => {
+            newModuleToAdd.images.push({
+              image: '',
+              templateImage: image,
+              tepmlateImageId: image.id,
+            });
           });
-        });
-        module.variables.forEach(variable => {
-          newModuleToAdd.variables.push({
-            value: '',
-            templateVariable: variable,
-            tepmlateVariableId: variable.id,
+          module.variables.forEach(variable => {
+            newModuleToAdd.variables.push({
+              value: '',
+              templateVariable: variable,
+              tepmlateVariableId: variable.id,
+            });
           });
+          newGeneratedAnimation.modules.push(newModuleToAdd);
         });
-        newGeneratedAnimation.modules.push(newModuleToAdd);
-      });
-      setGeneratedAnimation(newGeneratedAnimation);
+        setGeneratedAnimation(newGeneratedAnimation);
+      }
+    } catch (error) {
+      console.error('Error fetching template:', error);
+    } finally {
+      setIsLoading(false);
     }
   }
 
@@ -284,7 +293,16 @@ export default function Editor() {
 
   // EventListener to Deactivate Zoom Pan to be able to Resize
   const [isResizing, setIsResizing] = useState(false);
+
+  // Initialize template on component mount
   useEffect(() => {
+    initializeTemplate();
+  }, []);
+
+  // Set up event listeners after template is loaded
+  useEffect(() => {
+    if (!template) return; // Wait for template to be loaded
+
     const mainCanvas = document.getElementById('MainCanvas');
     if (!mainCanvas) return;
 
@@ -299,10 +317,12 @@ export default function Editor() {
     document.body.addEventListener('mousemove', handleMouseEvent);
     mainCanvas.addEventListener('mousedown', handleMouseEvent);
 
-    initializeTemplate();
-    mainCanvas.removeEventListener('mousedown', handleMouseEvent);
-    mainCanvas.removeEventListener('mousemove', handleMouseEvent);
-  }, []);
+    // Cleanup function
+    return () => {
+      mainCanvas.removeEventListener('mousedown', handleMouseEvent);
+      document.body.removeEventListener('mousemove', handleMouseEvent);
+    };
+  }, [template]); // Re-run when template changes
 
   const generateUrl = async () => {
     if (template) {
@@ -403,6 +423,14 @@ export default function Editor() {
       setIsExportingJpeg(false);
     }
   };
+
+  if (isLoading) {
+    return (
+      <div className="w-full h-full flex items-center justify-center bg-[#f7f8fa]">
+        <LoadingSpinner size="lg" />
+      </div>
+    );
+  }
 
   return (
     <div className="w-full h-full flex flex-col bg-[#f7f8fa]">
