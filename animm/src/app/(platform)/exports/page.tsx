@@ -11,6 +11,7 @@ import BreadcrumbNavigation from '@/components/breadcrumb-navigation';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft, Search, Download, FolderOpen } from 'lucide-react';
 import { Input } from '@/components/ui/input';
+import { LoadingSpinner } from '@/components/ui/loading-spinner';
 import {
   buildFolderStructure,
   getExportsForPath,
@@ -309,31 +310,35 @@ export default function ExportsPage() {
           </div>
         ) : (
           // Campaign cards view
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+          <>
             {isLoading ? (
-              <div className="text-center py-8 text-muted-foreground">
-                Loading campaigns...
+              <div className="flex-1 flex items-center justify-center">
+                <LoadingSpinner size="lg" />
               </div>
             ) : filteredCampaigns.length === 0 ? (
-              <div className="text-center py-8 text-muted-foreground">
-                No campaigns found. Create some exports to see them grouped by
-                campaign.
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+                <div className="text-center py-8 text-muted-foreground">
+                  No campaigns found. Create some exports to see them grouped by
+                  campaign.
+                </div>
               </div>
             ) : (
-              filteredCampaigns.map(([campaign, batches]) => (
-                <CampaignCard
-                  key={campaign}
-                  campaign={campaign}
-                  exportBatches={batches}
-                  onClick={() => {
-                    setSelectedCampaign(campaign);
-                    setCurrentFolderPath([]); // Reset to root folder
-                    setSearchQuery(''); // Clear search
-                  }}
-                />
-              ))
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+                {filteredCampaigns.map(([campaign, batches]) => (
+                  <CampaignCard
+                    key={campaign}
+                    campaign={campaign}
+                    exportBatches={batches}
+                    onClick={() => {
+                      setSelectedCampaign(campaign);
+                      setCurrentFolderPath([]); // Reset to root folder
+                      setSearchQuery(''); // Clear search
+                    }}
+                  />
+                ))}
+              </div>
             )}
-          </div>
+          </>
         )}
       </div>
     </div>

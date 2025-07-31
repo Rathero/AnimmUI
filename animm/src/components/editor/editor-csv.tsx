@@ -341,6 +341,7 @@ export default function EditorCsv({ template }: { template: Template }) {
               Upload CSV
             </Button>
           </div>
+          {/*
           <div className="w-full grid grid-cols-2 gap-4 p-4">
             {columnsCsvToMatch.length > 0 && (
               <>
@@ -403,7 +404,7 @@ export default function EditorCsv({ template }: { template: Template }) {
               </>
             )}
           </div>
-
+*/}
           <DialogFooter>
             <Button type="submit" onClick={uploadCsv}>
               Export

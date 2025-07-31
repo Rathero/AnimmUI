@@ -5,20 +5,43 @@ import CollectionCard from '@/components/collection-card';
 import { ApiCollections } from '@/types/collections';
 import { useEffect, useState } from 'react';
 import useCollectionsService from '@/app/services/CollectionsService';
+import { LoadingSpinner } from '@/components/ui/loading-spinner';
 
 export default function CollectionsPage() {
   const [collections, setCollections] = useState<ApiCollections | undefined>(
     undefined
   );
+  const [isLoading, setIsLoading] = useState(true);
   const { getAll } = useCollectionsService();
 
   const fetchCollections = async () => {
-    const coll = await getAll();
-    setCollections(coll);
+    setIsLoading(true);
+    try {
+      const coll = await getAll();
+      setCollections(coll);
+    } catch (error) {
+      console.error('Error fetching collections:', error);
+    } finally {
+      setIsLoading(false);
+    }
   };
   useEffect(() => {
     fetchCollections();
   }, []);
+
+  if (isLoading) {
+    return (
+      <div className="h-full flex flex-col gap-4">
+        <HeaderPage
+          title="Library"
+          desc="Here we will display your Collections"
+        />
+        <div className="flex-1 flex items-center justify-center">
+          <LoadingSpinner size="lg" />
+        </div>
+      </div>
+    );
+  }
 
   if (!collections) return <></>;
   return (
