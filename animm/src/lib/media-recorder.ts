@@ -174,45 +174,47 @@ class MediaRecorder {
 
     if (this.recorder) {
       this.recorder.stopRecording(() => {
-        const blob = this.recorder!.getBlob();
-        const recordedFormat = blob.type.includes('webm') ? 'webm' : 'mp4';
+        setTimeout(() => {
+          const blob = this.recorder!.getBlob();
+          const recordedFormat = blob.type.includes('webm') ? 'webm' : 'mp4';
 
-        blob
-          .arrayBuffer()
-          .then(buffer => {
-            const uint8Array = new Uint8Array(buffer);
-            const result: RecordingResult = {
-              success: true,
-              data: uint8Array,
-              format: recordedFormat,
-              size: uint8Array.length,
-              duration: Date.now() - this.startTime,
-            };
-            console.log(
-              `${recordedFormat.toUpperCase()} created successfully, size: ${
-                uint8Array.length
-              } bytes. Ready to send to backend.`
-            );
-
-            if (this.resolvePromise) {
-              this.resolvePromise(result);
-            }
-          })
-          .catch(error => {
-            console.error(`Error processing blob:`, error);
-            if (this.resolvePromise) {
-              this.resolvePromise({
-                success: false,
-                error: error.message,
+          blob
+            .arrayBuffer()
+            .then(buffer => {
+              const uint8Array = new Uint8Array(buffer);
+              const result: RecordingResult = {
+                success: true,
+                data: uint8Array,
                 format: recordedFormat,
-                size: 0,
+                size: uint8Array.length,
                 duration: Date.now() - this.startTime,
-              });
-            }
-          })
-          .finally(() => {
-            this.cleanup();
-          });
+              };
+              console.log(
+                `${recordedFormat.toUpperCase()} created successfully, size: ${
+                  uint8Array.length
+                } bytes. Ready to send to backend.`
+              );
+
+              if (this.resolvePromise) {
+                this.resolvePromise(result);
+              }
+            })
+            .catch(error => {
+              console.error(`Error processing blob:`, error);
+              if (this.resolvePromise) {
+                this.resolvePromise({
+                  success: false,
+                  error: error.message,
+                  format: recordedFormat,
+                  size: 0,
+                  duration: Date.now() - this.startTime,
+                });
+              }
+            })
+            .finally(() => {
+              this.cleanup();
+            });
+        }, 1000); // 500ms delay is usually sufficient.
       });
     }
   }
