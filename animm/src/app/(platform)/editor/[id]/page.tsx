@@ -495,7 +495,7 @@ export default function Editor() {
             <Collapsible key={mod.id} defaultOpen className="mb-4">
               <CollapsibleTrigger className="w-full">
                 <div className="flex items-center gap-2 text-sm font-medium py-2 px-2 rounded hover:bg-muted transition-colors border">
-                  <span>Section {String(idx + 1).padStart(2, '0')}</span>
+                  <span>Variables</span>
                   <ChevronDown className="ml-auto h-4 transition-transform group-data-[state=open]/collapsible:rotate-180" />
                 </div>
               </CollapsibleTrigger>
