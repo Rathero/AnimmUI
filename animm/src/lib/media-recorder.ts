@@ -1,12 +1,11 @@
 import RecordRTC from 'recordrtc';
-import GIF from 'gif.js';
 
 export interface RecordingConfig {
   exportId: string;
   duration: number; // in milliseconds
   fps: number;
   format: 'gif' | 'webm' | 'mp4';
-  quality?: number; // 1-30 for GIF, 0-1 for video
+  quality?: number; // 0-1 for video
   width?: number;
   height?: number;
   bitrate?: number; // for video formats
@@ -16,7 +15,7 @@ export interface RecordingResult {
   success: boolean;
   data?: Uint8Array;
   error?: string;
-  format: string;
+  format: string; // Will be 'webm' or 'mp4' from the recorder
   size: number;
   duration: number;
 }
@@ -31,14 +30,12 @@ export interface RecordingStatus {
 class MediaRecorder {
   private isRecording = false;
   private recorder: RecordRTC | null = null;
-  private gifRecorder: GIF | null = null;
   private canvas: HTMLCanvasElement | null = null;
   private recordingInterval: NodeJS.Timeout | null = null;
   private recordingTimeout: NodeJS.Timeout | null = null;
   private resolvePromise: ((result: RecordingResult) => void) | null = null;
   private statusCallback: ((status: RecordingStatus) => void) | null = null;
   private startTime: number = 0;
-  private frameCount: number = 0;
 
   async startRecording(
     config: RecordingConfig,
@@ -71,21 +68,11 @@ class MediaRecorder {
       };
     }
 
-    // Optimize canvas for frequent readback operations (prevents performance warnings)
-    const ctx = this.canvas.getContext('2d');
-    if (ctx) {
-      // @ts-ignore - willReadFrequently is a newer attribute
-      ctx.willReadFrequently = true;
-    }
-
-    // Ensure Rive animation is stopped and ready to start
+    // Prepare Rive animation
     await this.prepareRiveAnimation();
 
-    if (config.format === 'gif') {
-      return this.startGifRecording(config);
-    } else {
-      return this.startVideoRecording(config);
-    }
+    // Always record as a video stream for best performance
+    return this.startVideoStreamRecording(config);
   }
 
   private async prepareRiveAnimation(): Promise<void> {
@@ -96,12 +83,8 @@ class MediaRecorder {
       typeof riveInstance.play === 'function'
     ) {
       try {
-        // Stop the animation first to ensure it's at the beginning
         riveInstance.stop();
-
-        // Wait a small amount of time to ensure the stop command is processed
-        await new Promise(resolve => setTimeout(resolve, 100));
-
+        await new Promise(resolve => setTimeout(resolve, 100)); // Ensure stop is processed
         console.log('Rive animation prepared and stopped');
       } catch (error) {
         console.warn('Could not prepare Rive animation:', error);
@@ -121,122 +104,7 @@ class MediaRecorder {
     }
   }
 
-  private async startGifRecording(
-    config: RecordingConfig
-  ): Promise<RecordingResult> {
-    return new Promise(resolve => {
-      this.resolvePromise = resolve;
-      this.isRecording = true;
-      this.startTime = Date.now();
-      this.frameCount = 0;
-
-      // Create new GIF instance
-      this.gifRecorder = new GIF({
-        workers: 2,
-        quality: config.quality || 10,
-        width: config.width || this.canvas!.width,
-        height: config.height || this.canvas!.height,
-        workerScript: '/gif.worker.js',
-      });
-
-      // Set up GIF event handlers
-      this.gifRecorder.on('finished', (blob: Blob) => {
-        console.log(
-          `GIF recording finished: ${this.frameCount} frames captured`
-        );
-        this.isRecording = false;
-
-        blob
-          .arrayBuffer()
-          .then(buffer => {
-            const uint8Array = new Uint8Array(buffer);
-            const result: RecordingResult = {
-              success: true,
-              data: uint8Array,
-              format: 'gif',
-              size: uint8Array.length,
-              duration: config.duration,
-            };
-            console.log(
-              `GIF created successfully, size: ${uint8Array.length} bytes`
-            );
-            resolve(result);
-            this.cleanup();
-          })
-          .catch(error => {
-            console.error('Error converting GIF blob to array buffer:', error);
-            resolve({
-              success: false,
-              error: error.message,
-              format: 'gif',
-              size: 0,
-              duration: config.duration,
-            });
-            this.cleanup();
-          });
-      });
-
-      this.gifRecorder.on('progress', (progress: number) => {
-        console.log(`GIF rendering progress: ${progress * 100}%`);
-      });
-
-      // Calculate precise frame timing
-      const totalFrames = Math.ceil((config.duration / 1000) * config.fps);
-      const frameDelay = Math.round(config.duration / totalFrames);
-      const frameInterval = 1000 / config.fps;
-
-      console.log(
-        `Starting GIF recording: ${config.duration}ms, ${config.fps}fps, ${totalFrames} frames, ${frameDelay}ms delay per frame`
-      );
-
-      // Start Rive animation
-      this.startRiveAnimation();
-
-      // Use setInterval for precise frame timing instead of requestAnimationFrame
-      let frameIndex = 0;
-      this.recordingInterval = setInterval(() => {
-        if (!this.isRecording || frameIndex >= totalFrames) {
-          console.log(
-            `GIF recording complete: ${frameIndex} frames captured (target: ${totalFrames})`
-          );
-          this.stopRecording();
-          return;
-        }
-
-        try {
-          // Add frame with precise delay
-          this.gifRecorder!.addFrame(this.canvas!, { delay: frameDelay });
-          frameIndex++;
-          this.frameCount++;
-
-          // Update status
-          if (this.statusCallback) {
-            const progress = Math.min((frameIndex / totalFrames) * 100, 100);
-            this.statusCallback({
-              isRecording: true,
-              progress,
-              currentTime: frameIndex * frameDelay,
-              totalFrames: this.frameCount,
-            });
-          }
-        } catch (error) {
-          console.error('Error capturing GIF frame:', error);
-          this.stopRecording();
-        }
-      }, frameInterval);
-
-      // Add timeout to prevent infinite recording
-      const estimatedRecordingTime = totalFrames * frameInterval + 2000; // Add 2 seconds buffer
-      this.recordingTimeout = setTimeout(() => {
-        if (this.isRecording) {
-          console.warn('GIF recording timeout, stopping...');
-          this.stopRecording();
-        }
-      }, estimatedRecordingTime);
-    });
-  }
-
-  private async startVideoRecording(
+  private async startVideoStreamRecording(
     config: RecordingConfig
   ): Promise<RecordingResult> {
     return new Promise(resolve => {
@@ -245,69 +113,38 @@ class MediaRecorder {
       this.startTime = Date.now();
 
       try {
-        // Get canvas stream
+        // Get canvas stream at the target FPS
         const stream = this.canvas!.captureStream(config.fps);
 
-        // Configure recorder options
+        // Configure recorder options for high-quality WEBM
         const recorderOptions: any = {
-          type: config.format === 'webm' ? 'video' : 'video',
-          mimeType:
-            config.format === 'webm' ? 'video/webm;codecs=vp9' : 'video/mp4',
+          type: 'video',
+          mimeType: 'video/webm;codecs=vp9', // VP9 is a high-quality codec
           frameRate: config.fps,
-          quality: config.quality || 0.8,
+          quality: config.quality || 1, // Default to high quality
+          disableLogs: true,
         };
 
         if (config.bitrate) {
           recorderOptions.videoBitsPerSecond = config.bitrate;
         }
 
-        // Create recorder
         this.recorder = new RecordRTC(stream, recorderOptions);
-
-        // Start recording
+        this.startRiveAnimation();
         this.recorder.startRecording();
 
-        // Start Rive animation immediately after recording starts
-        this.startRiveAnimation();
-
-        // Set up status updates
-        let elapsedTime = 0;
-        this.recordingInterval = setInterval(() => {
-          elapsedTime = Date.now() - this.startTime;
-
-          if (elapsedTime >= config.duration) {
-            console.log(
-              `Video recording duration reached (${elapsedTime}ms >= ${config.duration}ms), stopping...`
-            );
-            this.stopRecording();
-            return;
-          }
-
-          // Update status
-          if (this.statusCallback) {
-            const progress = Math.min(
-              (elapsedTime / config.duration) * 100,
-              100
-            );
-            this.statusCallback({
-              isRecording: true,
-              progress,
-              currentTime: elapsedTime,
-              totalFrames: Math.floor((elapsedTime / 1000) * config.fps),
-            });
-          }
-        }, 100); // Update status every 100ms
-
-        // Add timeout
+        // Timeout to stop recording automatically
         this.recordingTimeout = setTimeout(() => {
           if (this.isRecording) {
-            console.warn('Video recording timeout, stopping...');
+            console.log(
+              `Recording duration reached (${config.duration}ms), stopping...`
+            );
             this.stopRecording();
           }
-        }, config.duration + 5000);
+        }, config.duration);
 
         console.log(
-          `Started video recording: ${config.duration}ms, ${config.fps}fps, format: ${config.format}`
+          `Started video stream recording: ${config.duration}ms, ${config.fps}fps`
         );
       } catch (error) {
         console.error('Error starting video recording:', error);
@@ -317,9 +154,9 @@ class MediaRecorder {
             error instanceof Error
               ? error.message
               : 'Failed to start video recording',
-          format: config.format,
+          format: 'webm',
           size: 0,
-          duration: config.duration,
+          duration: 0,
         });
         this.cleanup();
       }
@@ -328,145 +165,78 @@ class MediaRecorder {
 
   stopRecording(): void {
     if (!this.isRecording) {
-      console.log('Recording already stopped');
       return;
     }
 
     console.log('Stopping recording...');
+    this.isRecording = false; // Prevent race conditions
+    this.clearTimers();
 
-    // Clear intervals and timeouts
-    if (this.recordingInterval) {
-      clearInterval(this.recordingInterval);
-      this.recordingInterval = null;
+    if (this.recorder) {
+      this.recorder.stopRecording(() => {
+        const blob = this.recorder!.getBlob();
+        const recordedFormat = blob.type.includes('webm') ? 'webm' : 'mp4';
+
+        blob
+          .arrayBuffer()
+          .then(buffer => {
+            const uint8Array = new Uint8Array(buffer);
+            const result: RecordingResult = {
+              success: true,
+              data: uint8Array,
+              format: recordedFormat,
+              size: uint8Array.length,
+              duration: Date.now() - this.startTime,
+            };
+            console.log(
+              `${recordedFormat.toUpperCase()} created successfully, size: ${
+                uint8Array.length
+              } bytes. Ready to send to backend.`
+            );
+
+            if (this.resolvePromise) {
+              this.resolvePromise(result);
+            }
+          })
+          .catch(error => {
+            console.error(`Error processing blob:`, error);
+            if (this.resolvePromise) {
+              this.resolvePromise({
+                success: false,
+                error: error.message,
+                format: recordedFormat,
+                size: 0,
+                duration: Date.now() - this.startTime,
+              });
+            }
+          })
+          .finally(() => {
+            this.cleanup();
+          });
+      });
     }
+  }
 
+  private clearTimers(): void {
     if (this.recordingTimeout) {
       clearTimeout(this.recordingTimeout);
       this.recordingTimeout = null;
     }
-
-    this.isRecording = false;
-
-    // Handle different recording types
-    if (this.gifRecorder) {
-      try {
-        console.log('Rendering GIF...');
-        this.gifRecorder.render();
-      } catch (error) {
-        console.error('Error rendering GIF:', error);
-        if (this.resolvePromise) {
-          this.resolvePromise({
-            success: false,
-            error:
-              error instanceof Error ? error.message : 'GIF rendering failed',
-            format: 'gif',
-            size: 0,
-            duration: Date.now() - this.startTime,
-          });
-          this.resolvePromise = null;
-        }
-      }
-    } else if (this.recorder) {
-      try {
-        this.recorder.stopRecording(() => {
-          const blob = this.recorder!.getBlob();
-          const format = blob.type.includes('webm') ? 'webm' : 'mp4';
-
-          blob
-            .arrayBuffer()
-            .then(buffer => {
-              const uint8Array = new Uint8Array(buffer);
-              const result: RecordingResult = {
-                success: true,
-                data: uint8Array,
-                format,
-                size: uint8Array.length,
-                duration: Date.now() - this.startTime,
-              };
-              console.log(
-                `${format.toUpperCase()} created successfully, size: ${
-                  uint8Array.length
-                } bytes`
-              );
-
-              if (this.resolvePromise) {
-                this.resolvePromise(result);
-                this.resolvePromise = null;
-              }
-              this.cleanup();
-            })
-            .catch(error => {
-              console.error(
-                `Error converting ${format} blob to array buffer:`,
-                error
-              );
-              if (this.resolvePromise) {
-                this.resolvePromise({
-                  success: false,
-                  error: error.message,
-                  format,
-                  size: 0,
-                  duration: Date.now() - this.startTime,
-                });
-                this.resolvePromise = null;
-              }
-              this.cleanup();
-            });
-        });
-      } catch (error) {
-        console.error('Error stopping video recording:', error);
-        if (this.resolvePromise) {
-          this.resolvePromise({
-            success: false,
-            error:
-              error instanceof Error ? error.message : 'Video recording failed',
-            format: 'unknown',
-            size: 0,
-            duration: Date.now() - this.startTime,
-          });
-          this.resolvePromise = null;
-        }
-        this.cleanup();
-      }
+    if (this.recordingInterval) {
+      clearInterval(this.recordingInterval);
+      this.recordingInterval = null;
     }
   }
 
   private cleanup(): void {
-    if (this.recordingTimeout) {
-      clearTimeout(this.recordingTimeout);
-      this.recordingTimeout = null;
+    this.clearTimers();
+    if (this.recorder) {
+      this.recorder.destroy();
+      this.recorder = null;
     }
-    if (this.recordingInterval) {
-      clearInterval(this.recordingInterval);
-      this.recordingInterval = null;
-    }
-    this.recorder = null;
-    this.gifRecorder = null;
     this.canvas = null;
     this.statusCallback = null;
-  }
-
-  isCurrentlyRecording(): boolean {
-    return this.isRecording;
-  }
-
-  getCurrentStatus(): RecordingStatus {
-    if (!this.isRecording) {
-      return {
-        isRecording: false,
-        progress: 0,
-        currentTime: 0,
-        totalFrames: 0,
-      };
-    }
-
-    const currentTime = Date.now() - this.startTime;
-    return {
-      isRecording: true,
-      progress: 0, // Will be calculated by the recording process
-      currentTime,
-      totalFrames: this.frameCount,
-    };
+    this.resolvePromise = null;
   }
 }
 

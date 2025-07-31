@@ -180,27 +180,27 @@ export default function Viewer() {
         return errorResult;
       }
     };
-
+    /*
     // Function to check if recording is in progress
     (window as any).isRecording = () => {
       return (
-        mediaRecorder.isCurrentlyRecording() ||
+        mediaRecorder.() ||
         (window as any).__RECORDING_IN_PROGRESS__
       );
     };
-
+*/
     // Function to get the recording result (for .NET to poll)
     (window as any).getRecordingResult = () => {
       return (window as any).__RECORDING_RESULT__;
     };
-
+    /*
     // Function to get the current recording status
     (window as any).getRecordingStatus = () => {
       return (
         (window as any).__RECORDING_STATUS__ || mediaRecorder.getCurrentStatus()
       );
     };
-
+*/
     // Function to stop recording manually
     (window as any).stopRecording = () => {
       mediaRecorder.stopRecording();
@@ -329,6 +329,7 @@ export default function Viewer() {
                   setAssetsParent={setAssets}
                   setRiveStatesParent={setRiveStates}
                   autoplay={shouldAutoplay} // Don't autoplay if recording is expected
+                  format={shouldAutoplay ? 'gif' : 'webm'}
                 />
               )}
           </div>
@@ -344,6 +345,7 @@ export default function Viewer() {
                 setRiveStatesParent={setRiveStates}
                 autoplay={shouldAutoplay} // Don't autoplay if recording is expected
                 artboard={artBoard || ''}
+                format={shouldAutoplay ? 'gif' : 'webm'}
               />
             )}
           {template?.Result &&
