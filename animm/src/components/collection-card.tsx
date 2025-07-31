@@ -33,11 +33,6 @@ export default function CollectionCard({ collection }: CollectionCardProps) {
               {collection.description}
             </p>
           </div>
-          <div>
-            <div className="rounded-md border border-border p-2">
-              <GalleryVertical className="w-5 h-5 text-muted-foreground/70" />
-            </div>
-          </div>
         </div>
       </CardContent>
     </Card>

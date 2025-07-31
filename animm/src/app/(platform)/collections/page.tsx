@@ -33,7 +33,7 @@ export default function CollectionsPage() {
     return (
       <div className="h-full flex flex-col gap-4">
         <HeaderPage
-          title="Library"
+          title="Projects"
           desc="Here we will display your Collections"
         />
         <div className="flex-1 flex items-center justify-center">
@@ -47,7 +47,7 @@ export default function CollectionsPage() {
   return (
     <div className="h-full flex flex-col gap-4">
       <HeaderPage
-        title="Library"
+        title="Projects"
         desc="Here we will display your Collections"
       />
       <div className="w-full grid grid-cols-1 lg:grid-cols-2 gap-4 p-4">

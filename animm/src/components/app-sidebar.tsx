@@ -3,6 +3,7 @@
 import { Link2, GalleryVertical } from 'lucide-react';
 import { NavUser } from './sideBar/nav-user';
 import Link from 'next/link';
+import Image from 'next/image';
 import { usePathname } from 'next/navigation';
 
 import {
@@ -11,6 +12,7 @@ import {
   SidebarGroup,
   SidebarGroupContent,
   SidebarFooter,
+  SidebarHeader,
   SidebarMenu,
   SidebarMenuButton,
   SidebarRail,
@@ -20,7 +22,7 @@ import {
 // Menu items.
 const items = [
   {
-    title: 'Collections',
+    title: 'Projects',
     url: '/collections',
     icon: GalleryVertical,
   },
@@ -41,9 +43,17 @@ export function AppSidebar() {
 
   return (
     <Sidebar collapsible="icon">
-      {/*<SidebarHeader>
-        <TeamSwitcher teams={teams} />
-      </SidebarHeader>*/}
+      <SidebarHeader>
+        <div className="flex items-center justify-start pt-4">
+          <Image
+            src={'/Logo Animm.png'}
+            alt="Animm Logo"
+            width={120}
+            height={40}
+            className="object-contain"
+          />
+        </div>
+      </SidebarHeader>
       <SidebarContent>
         <SidebarGroup>
           <SidebarGroupContent>
