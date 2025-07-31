@@ -4,7 +4,6 @@ import { Template } from './collections';
 export interface ExportBatchRequest {
   id: number;
   templateId: number;
-  format: string;
   userId: number;
   batchDefinitions: BatchDefinitions[];
   campaign: string;
@@ -19,6 +18,7 @@ export interface Resolutions {
   height: number;
   name: string;
   resize: boolean;
+  format: string;
 }
 export interface Variables {
   key: string;

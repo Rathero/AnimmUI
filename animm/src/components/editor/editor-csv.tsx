@@ -140,23 +140,9 @@ export default function EditorCsv({ template }: { template: Template }) {
     );
     const hasFormatColumn = formatColumnIndex !== -1;
 
-    // Determine format: from CSV column if exists, otherwise from template
-    let format = 'png'; // default fallback
-    if (hasFormatColumn && lines.length > 1) {
-      const firstRow = parseCsvLine(lines[1]);
-      const formatValue = firstRow[formatColumnIndex]?.trim().toLowerCase();
-      if (formatValue) {
-        format = formatValue;
-      }
-    } else {
-      // Use template default: png for static, mp4 for non-static
-      format = template.static ? 'png' : 'mp4';
-    }
-
     const exportBatchRequest: ExportBatchRequest = {
       templateId: template.id,
       userId: 0,
-      format: format,
       id: 0,
       batchDefinitions: [],
       campaign: campaign,
@@ -191,6 +177,18 @@ export default function EditorCsv({ template }: { template: Template }) {
       if (i != 0) {
         const columns = parseCsvLine(line);
 
+        // Determine format for this specific row: from CSV column if exists, otherwise from template
+        let format = 'png'; // default fallback
+        if (hasFormatColumn) {
+          const formatValue = columns[formatColumnIndex]?.trim().toLowerCase();
+          if (formatValue) {
+            format = formatValue;
+          }
+        } else {
+          // Use template default: png for static, mp4 for non-static
+          format = template.static ? 'png' : 'mp4';
+        }
+
         // Determine resize value
         let resize = false;
         if (hasResizeColumn) {
@@ -205,6 +203,7 @@ export default function EditorCsv({ template }: { template: Template }) {
               width: Number.parseInt(columns[1]),
               height: Number.parseInt(columns[2]),
               resize: resize,
+              format: format,
             },
           ],
           variables: [],
