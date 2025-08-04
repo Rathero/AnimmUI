@@ -117,6 +117,7 @@ export default function Viewer() {
   const shouldAutoplay = urlParams.get('autoplay') === 'true';
   const isPdf = urlParams.get('pdf') === 'true';
   const artBoard = urlParams.get('artboard');
+  const format = urlParams.get('format') ?? '';
   // Bleed size: 3mm = ~12px at 96dpi
   const bleedPx = isPdf ? 12 : 0;
 
@@ -329,7 +330,7 @@ export default function Viewer() {
                   setAssetsParent={setAssets}
                   setRiveStatesParent={setRiveStates}
                   autoplay={shouldAutoplay} // Don't autoplay if recording is expected
-                  format={shouldAutoplay ? 'gif' : 'webm'}
+                  format={format}
                 />
               )}
           </div>
@@ -345,7 +346,7 @@ export default function Viewer() {
                 setRiveStatesParent={setRiveStates}
                 autoplay={shouldAutoplay} // Don't autoplay if recording is expected
                 artboard={artBoard || ''}
-                format={shouldAutoplay ? 'gif' : 'webm'}
+                format={format}
               />
             )}
           {template?.Result &&

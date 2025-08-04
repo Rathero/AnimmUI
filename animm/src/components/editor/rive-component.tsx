@@ -27,7 +27,7 @@ export default function RiveComp({
   autoplay?: boolean;
   artboard?: string;
   onStateChange?: () => void;
-  format?: 'gif' | 'webm' | 'mp4';
+  format?: string;
 }) {
   const [assets, setAssets] = useState<Array<FileAsset>>([]);
   const setRiveInstance = useRiveStore(state => state.setRiveInstance);
