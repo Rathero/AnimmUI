@@ -1,5 +1,4 @@
 'use client';
-import { HeaderPage } from '@/components/header-page';
 import { useEffect, useState } from 'react';
 import useExportsService from '@/app/services/ExportsService';
 import { Export, ExportBatch } from '@/types/exports';
@@ -12,6 +11,7 @@ import { Button } from '@/components/ui/button';
 import { ArrowLeft, Search, Download, FolderOpen } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { LoadingSpinner } from '@/components/ui/loading-spinner';
+import { platformStore } from '@/stores/platformStore';
 import {
   buildFolderStructure,
   getExportsForPath,
@@ -32,6 +32,14 @@ export default function ExportsPage() {
   });
 
   const { getAll } = useExportsService();
+  const { setPageTitle } = platformStore(state => state);
+
+  // Set page title
+  useEffect(() => {
+    setPageTitle('Exports');
+    return () => setPageTitle(undefined);
+  }, [setPageTitle]);
+
   const fetchExports = async () => {
     setIsLoading(true);
     try {
@@ -223,124 +231,121 @@ export default function ExportsPage() {
 
   return (
     <div className="h-full flex flex-col gap-4">
-      <HeaderPage title="Exports" />
-      <div className="w-full p-4 flex flex-col gap-4">
-        {selectedCampaign ? (
-          // Campaign detail view
-          <div className="flex gap-6">
-            {/* Folder Navigation Sidebar */}
-            <div className="w-64 flex-shrink-0">
-              <div className="sticky top-4">
-                <FolderNavigation
-                  folderStructure={folderStructure}
-                  currentPath={currentFolderPath}
-                  onPathChange={handleFolderPathChange}
-                  onToggleFolder={handleFolderToggle}
-                />
-              </div>
+      {selectedCampaign ? (
+        // Campaign detail view
+        <div className="flex gap-6">
+          {/* Folder Navigation Sidebar */}
+          <div className="w-64 flex-shrink-0">
+            <div className="sticky top-4">
+              <FolderNavigation
+                folderStructure={folderStructure}
+                currentPath={currentFolderPath}
+                onPathChange={handleFolderPathChange}
+                onToggleFolder={handleFolderToggle}
+              />
             </div>
+          </div>
 
-            {/* Main Content */}
-            <div className="flex-1 flex flex-col gap-4">
-              {/* Header */}
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-4">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => {
-                      setSelectedCampaign(null);
-                      setCurrentFolderPath([]);
-                      setSearchQuery('');
-                    }}
-                  >
-                    <ArrowLeft className="w-4 h-4 mr-2" />
-                    Back to Campaigns
-                  </Button>
-                  <h2 className="text-xl font-semibold">{selectedCampaign}</h2>
-                </div>
+          {/* Main Content */}
+          <div className="flex-1 flex flex-col gap-4">
+            {/* Header */}
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-4">
                 <Button
                   variant="outline"
                   size="sm"
-                  onClick={() =>
-                    handleDownloadAllAsZip(
-                      getCurrentFolderExports(selectedCampaign)
-                    )
-                  }
+                  onClick={() => {
+                    setSelectedCampaign(null);
+                    setCurrentFolderPath([]);
+                    setSearchQuery('');
+                  }}
                 >
-                  <Download className="w-4 h-4 mr-2" />
-                  Export as ZIP
+                  <ArrowLeft className="w-4 h-4 mr-2" />
+                  Back to Campaigns
                 </Button>
+                <h2 className="text-xl font-semibold">{selectedCampaign}</h2>
               </div>
-
-              {/* Breadcrumb Navigation */}
-              <BreadcrumbNavigation
-                breadcrumbs={getBreadcrumbPath(currentFolderPath)}
-                onPathChange={handleFolderPathChange}
-              />
-
-              {/* Search */}
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
-                <Input
-                  placeholder="Search exports..."
-                  value={searchQuery}
-                  onChange={e => setSearchQuery(e.target.value)}
-                  className="pl-10"
-                />
-              </div>
-
-              {/* Cards Grid */}
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-4">
-                {getFilteredExports(selectedCampaign).map(exportItem => (
-                  <ExportCard key={exportItem.id} exportItem={exportItem} />
-                ))}
-              </div>
-
-              {getFilteredExports(selectedCampaign).length === 0 && (
-                <div className="text-center py-8 text-muted-foreground">
-                  {searchQuery
-                    ? 'No exports found matching your search.'
-                    : currentFolderPath.length > 0
-                    ? 'No exports found in this folder.'
-                    : 'No exports found for this campaign.'}
-                </div>
-              )}
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() =>
+                  handleDownloadAllAsZip(
+                    getCurrentFolderExports(selectedCampaign)
+                  )
+                }
+              >
+                <Download className="w-4 h-4 mr-2" />
+                Export as ZIP
+              </Button>
             </div>
-          </div>
-        ) : (
-          // Campaign cards view
-          <>
-            {isLoading ? (
-              <div className="flex-1 flex items-center justify-center">
-                <LoadingSpinner size="lg" />
-              </div>
-            ) : filteredCampaigns.length === 0 ? (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-                <div className="text-center py-8 text-muted-foreground">
-                  No campaigns found. Create some exports to see them grouped by
-                  campaign.
-                </div>
-              </div>
-            ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-                {filteredCampaigns.map(([campaign, batches]) => (
-                  <CampaignCard
-                    key={campaign}
-                    campaign={campaign}
-                    exportBatches={batches}
-                    onClick={() => {
-                      setSelectedCampaign(campaign);
-                      setCurrentFolderPath([]); // Reset to root folder
-                      setSearchQuery(''); // Clear search
-                    }}
-                  />
-                ))}
+
+            {/* Breadcrumb Navigation */}
+            <BreadcrumbNavigation
+              breadcrumbs={getBreadcrumbPath(currentFolderPath)}
+              onPathChange={handleFolderPathChange}
+            />
+
+            {/* Search */}
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
+              <Input
+                placeholder="Search exports..."
+                value={searchQuery}
+                onChange={e => setSearchQuery(e.target.value)}
+                className="pl-10"
+              />
+            </div>
+
+            {/* Cards Grid */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-4">
+              {getFilteredExports(selectedCampaign).map(exportItem => (
+                <ExportCard key={exportItem.id} exportItem={exportItem} />
+              ))}
+            </div>
+
+            {getFilteredExports(selectedCampaign).length === 0 && (
+              <div className="text-center py-8 text-muted-foreground">
+                {searchQuery
+                  ? 'No exports found matching your search.'
+                  : currentFolderPath.length > 0
+                  ? 'No exports found in this folder.'
+                  : 'No exports found for this campaign.'}
               </div>
             )}
-          </>
-        )}
-      </div>
+          </div>
+        </div>
+      ) : (
+        // Campaign cards view
+        <>
+          {isLoading ? (
+            <div className="flex-1 flex items-center justify-center">
+              <LoadingSpinner size="lg" />
+            </div>
+          ) : filteredCampaigns.length === 0 ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+              <div className="text-center py-8 text-muted-foreground">
+                No campaigns found. Create some exports to see them grouped by
+                campaign.
+              </div>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+              {filteredCampaigns.map(([campaign, batches]) => (
+                <CampaignCard
+                  key={campaign}
+                  campaign={campaign}
+                  exportBatches={batches}
+                  onClick={() => {
+                    setSelectedCampaign(campaign);
+                    setCurrentFolderPath([]); // Reset to root folder
+                    setSearchQuery(''); // Clear search
+                  }}
+                />
+              ))}
+            </div>
+          )}
+        </>
+      )}
     </div>
   );
 }
