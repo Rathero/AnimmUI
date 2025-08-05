@@ -230,7 +230,7 @@ export default function ExportsPage() {
   };
 
   return (
-    <div className="h-full flex flex-col gap-4">
+    <div className="h-full flex flex-col gap-4 p-4">
       {selectedCampaign ? (
         // Campaign detail view
         <div className="flex gap-6">
@@ -322,11 +322,9 @@ export default function ExportsPage() {
               <LoadingSpinner size="lg" />
             </div>
           ) : filteredCampaigns.length === 0 ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-              <div className="text-center py-8 text-muted-foreground">
-                No campaigns found. Create some exports to see them grouped by
-                campaign.
-              </div>
+            <div className="text-center py-8 text-muted-foreground">
+              No campaigns found. Create some exports to see them grouped by
+              campaign.
             </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
