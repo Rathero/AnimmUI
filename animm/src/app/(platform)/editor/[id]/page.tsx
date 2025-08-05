@@ -30,6 +30,7 @@ import {
   TemplateVariable,
   TemplateVariableTypeEnum,
   TemplateComposition,
+  TemplateImage,
 } from '@/types/collections';
 import {
   ChevronDown,
@@ -47,6 +48,7 @@ import {
   FileText,
   Download,
   ChevronRight,
+  Settings,
 } from 'lucide-react';
 import EditorImages from '@/components/editor/editor-images';
 import RiveComp from '@/components/editor/rive-component';
@@ -79,6 +81,61 @@ export default function Editor() {
   const [activeTab, setActiveTab] = useState('text');
   const [isEditMode, setIsEditMode] = useState(true);
   const [isCsvDialogOpen, setIsCsvDialogOpen] = useState(false);
+  const [selectedSection, setSelectedSection] = useState<string>('');
+
+  // Get all unique sections from all modules
+  const getAllSections = () => {
+    if (!template?.Result?.modules) return [];
+    const sections = new Set<string>();
+    template.Result.modules.forEach(module => {
+      module.variables.forEach(variable => {
+        const sectionName = variable.section || 'Variables';
+        sections.add(sectionName);
+      });
+    });
+    return Array.from(sections);
+  };
+
+  // Get variables for a specific section and tab
+  const getVariablesForSection = (section: string, tab: string) => {
+    if (!template?.Result?.modules) return [];
+    const variables: TemplateVariable[] = [];
+    template.Result.modules.forEach(module => {
+      module.variables.forEach(variable => {
+        const variableSection = variable.section || 'Variables';
+        if (variableSection === section) {
+          if (
+            tab === 'text' &&
+            (variable.type === TemplateVariableTypeEnum.TextArea ||
+              variable.type === TemplateVariableTypeEnum.Input)
+          ) {
+            variables.push(variable);
+          } else if (
+            tab === 'triggers' &&
+            (variable.type === TemplateVariableTypeEnum.Selector ||
+              variable.type === TemplateVariableTypeEnum.Boolean)
+          ) {
+            variables.push(variable);
+          }
+        }
+      });
+    });
+    return variables;
+  };
+
+  // Get images for a specific section
+  const getImagesForSection = (section: string) => {
+    if (!template?.Result?.modules) return [];
+    const images: TemplateImage[] = [];
+    template.Result.modules.forEach(module => {
+      module.images.forEach(image => {
+        // Note: Images don't have a section attribute, so we'll show all images for now
+        // You might need to add section info to images if needed
+        images.push(image);
+      });
+    });
+    return images;
+  };
 
   const [artBoard, setArtBoard] = useState<string>('');
   const [assets, setAssets] = useState<Array<FileAsset>>([]);
@@ -455,6 +512,7 @@ export default function Editor() {
   const tabs = [
     { id: 'text', icon: Type, label: 'Text' },
     { id: 'image', icon: ImageIcon, label: 'Image' },
+    { id: 'triggers', icon: Settings, label: 'Triggers' },
   ];
 
   return (
@@ -485,10 +543,10 @@ export default function Editor() {
             <Download className="mr-2 h-4 w-4" />
             Export
           </Button>
-          <Button size="sm">
+          {/* <Button size="sm">
             <Save className="mr-2 h-4 w-4" />
             Save Project
-          </Button>
+          </Button> */}
         </div>
       </div>
 
@@ -526,61 +584,92 @@ export default function Editor() {
                 </Button>
               </div>
 
-              {/* Variables */}
-              {template?.Result.modules.map((mod: Module, idx: number) => (
-                <div key={mod.id} className="space-y-3">
-                  <div className="text-sm font-medium text-gray-700">
-                    Section {String(idx + 1).padStart(2, '0')}
-                  </div>
-                  <div className="space-y-3 pl-3">
-                    {mod.variables.map((v: TemplateVariable, vIdx: number) => (
-                      <div key={v.id} className="space-y-2">
-                        {v.type === TemplateVariableTypeEnum.TextArea && (
-                          <EditorText variable={v} changeText={changeText} />
-                        )}
-                        {v.type === TemplateVariableTypeEnum.Selector && (
-                          <EditorSelect
-                            variable={v}
-                            changeInput={changeSelect}
-                          />
-                        )}
-                        {v.type === TemplateVariableTypeEnum.Boolean && (
-                          <EditorCheckbox
-                            variable={v}
-                            changeCheckbox={changeCheckbox}
-                          />
-                        )}
-                      </div>
+              {/* Section Selector */}
+              {template?.Result?.modules && getAllSections().length > 1 && (
+                <div className="mb-4">
+                  <label className="text-sm font-medium text-gray-700 mb-2 block">
+                    Section
+                  </label>
+                  <select
+                    value={selectedSection}
+                    onChange={e => setSelectedSection(e.target.value)}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  >
+                    {getAllSections().map((section, index) => (
+                      <option key={section} value={section}>
+                        {section}
+                      </option>
                     ))}
-                  </div>
+                  </select>
                 </div>
-              ))}
+              )}
 
-              {/* Bottom Controls */}
-              <div className="pt-4 border-t mt-auto">
-                <div className="flex items-center gap-2">
-                  <button
-                    onClick={() => setIsEditMode(true)}
-                    className={`px-3 py-1 text-sm font-medium transition-colors ${
-                      isEditMode
-                        ? 'text-blue-600 border-b-2 border-blue-600'
-                        : 'text-gray-500 hover:text-gray-700'
-                    }`}
-                  >
-                    Edit
-                  </button>
-                  <button
-                    onClick={() => setIsEditMode(false)}
-                    className={`px-3 py-1 text-sm font-medium transition-colors ${
-                      !isEditMode
-                        ? 'text-blue-600 border-b-2 border-blue-600'
-                        : 'text-gray-500 hover:text-gray-700'
-                    }`}
-                  >
-                    Preview
-                  </button>
-                </div>
-              </div>
+              {/* Variables */}
+              {template?.Result?.modules &&
+                template.Result.modules.length > 0 && (
+                  <div className="space-y-3">
+                    <div className="text-sm font-medium text-gray-700">
+                      {selectedSection || getAllSections()[0] || 'Section'}
+                    </div>
+                    <div className="space-y-3 pl-3">
+                      {/* Text Variables */}
+                      {activeTab === 'text' &&
+                        getVariablesForSection(
+                          selectedSection || getAllSections()[0],
+                          'text'
+                        ).map((v: TemplateVariable, vIdx: number) => (
+                          <div key={v.id} className="space-y-2">
+                            {v.type === TemplateVariableTypeEnum.TextArea && (
+                              <EditorText
+                                variable={v}
+                                changeText={changeText}
+                              />
+                            )}
+                            {v.type === TemplateVariableTypeEnum.Input && (
+                              <EditorText
+                                variable={v}
+                                changeText={changeText}
+                              />
+                            )}
+                          </div>
+                        ))}
+
+                      {/* Image Variables */}
+                      {activeTab === 'image' &&
+                        getImagesForSection(
+                          selectedSection || getAllSections()[0]
+                        ).map((image: TemplateImage, imgIdx: number) => (
+                          <div key={image.id} className="space-y-2">
+                            <div className="text-sm text-gray-500">
+                              Image {imgIdx + 1}: {image.image || 'No image'}
+                            </div>
+                          </div>
+                        ))}
+
+                      {/* Trigger Variables */}
+                      {activeTab === 'triggers' &&
+                        getVariablesForSection(
+                          selectedSection || getAllSections()[0],
+                          'triggers'
+                        ).map((v: TemplateVariable, vIdx: number) => (
+                          <div key={v.id} className="space-y-2">
+                            {v.type === TemplateVariableTypeEnum.Selector && (
+                              <EditorSelect
+                                variable={v}
+                                changeInput={changeSelect}
+                              />
+                            )}
+                            {v.type === TemplateVariableTypeEnum.Boolean && (
+                              <EditorCheckbox
+                                variable={v}
+                                changeCheckbox={changeCheckbox}
+                              />
+                            )}
+                          </div>
+                        ))}
+                    </div>
+                  </div>
+                )}
             </div>
           </div>
         </div>
@@ -597,6 +686,32 @@ export default function Editor() {
                 <span className="text-sm font-medium text-gray-700">
                   {currentWidth}x{currentHeight}
                 </span>
+              </div>
+
+              {/* Edit/Preview Controls - Bottom Left */}
+              <div className="absolute bottom-4 left-4 z-10">
+                <div className="flex items-center gap-2 bg-white rounded-lg shadow-md px-3 py-2">
+                  <button
+                    onClick={() => setIsEditMode(true)}
+                    className={`px-3 py-1 text-sm font-medium transition-colors rounded ${
+                      isEditMode
+                        ? 'text-blue-600 bg-blue-50'
+                        : 'text-gray-500 hover:text-gray-700'
+                    }`}
+                  >
+                    Edit
+                  </button>
+                  <button
+                    onClick={() => setIsEditMode(false)}
+                    className={`px-3 py-1 text-sm font-medium transition-colors rounded ${
+                      !isEditMode
+                        ? 'text-blue-600 bg-blue-50'
+                        : 'text-gray-500 hover:text-gray-700'
+                    }`}
+                  >
+                    Preview
+                  </button>
+                </div>
               </div>
 
               <TransformWrapper
