@@ -137,6 +137,52 @@ export default function Editor() {
     return images;
   };
 
+  // Check if a tab has any content
+  const hasTabContent = (tabId: string) => {
+    if (!template?.Result?.modules) return false;
+
+    if (tabId === 'image') {
+      return template.Result.modules.some(module => module.images.length > 0);
+    }
+
+    return template.Result.modules.some(module =>
+      module.variables.some(variable => {
+        if (tabId === 'text') {
+          return (
+            variable.type === TemplateVariableTypeEnum.TextArea ||
+            variable.type === TemplateVariableTypeEnum.Input
+          );
+        } else if (tabId === 'triggers') {
+          return (
+            variable.type === TemplateVariableTypeEnum.Selector ||
+            variable.type === TemplateVariableTypeEnum.Boolean
+          );
+        }
+        return false;
+      })
+    );
+  };
+
+  // Get available tabs based on content
+  const getAvailableTabs = () => {
+    const allTabs = [
+      { id: 'text', icon: Type, label: 'Text' },
+      { id: 'image', icon: ImageIcon, label: 'Image' },
+      { id: 'triggers', icon: Settings, label: 'Triggers' },
+    ];
+
+    return allTabs.filter(tab => hasTabContent(tab.id));
+  };
+
+  const tabs = getAvailableTabs();
+
+  // Ensure activeTab is valid
+  useEffect(() => {
+    if (tabs.length > 0 && !tabs.find(tab => tab.id === activeTab)) {
+      setActiveTab(tabs[0].id);
+    }
+  }, [tabs, activeTab]);
+
   const [artBoard, setArtBoard] = useState<string>('');
   const [assets, setAssets] = useState<Array<FileAsset>>([]);
   const [rivesStates, setRiveStates] = useState<Rive[]>([]);
@@ -508,12 +554,6 @@ export default function Editor() {
       </div>
     );
   }
-
-  const tabs = [
-    { id: 'text', icon: Type, label: 'Text' },
-    { id: 'image', icon: ImageIcon, label: 'Image' },
-    { id: 'triggers', icon: Settings, label: 'Triggers' },
-  ];
 
   return (
     <div className="w-full h-full flex flex-col bg-[#f7f8fa]">
