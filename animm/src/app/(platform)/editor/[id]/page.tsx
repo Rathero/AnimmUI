@@ -553,11 +553,11 @@ export default function Editor() {
       {/* Main Content */}
       <div className="flex flex-1 min-h-0">
         {/* Left Sidebar: Variables */}
-        <div className="w-[320px] bg-white border-r flex flex-col overflow-y-auto">
+        <div className="w-[320px] bg-white border-r flex flex-col">
           {/* Content Area */}
-          <div className="flex-1 flex">
-            {/* Vertical Tabs */}
-            <div className="w-16 border-r bg-gray-50">
+          <div className="flex flex-1 min-h-0">
+            {/* Vertical Tabs - Fixed */}
+            <div className="w-16 border-r bg-gray-50 flex-shrink-0">
               {tabs.map(tab => (
                 <button
                   key={tab.id}
@@ -574,102 +574,104 @@ export default function Editor() {
               ))}
             </div>
 
-            {/* Content Area */}
-            <div className="flex-1 p-4 space-y-4 overflow-y-auto">
-              {/* CSV Import */}
-              <div className="mb-4">
-                <Button variant="outline" size="sm" className="w-full">
-                  <Upload className="mr-2 h-4 w-4" />
-                  Import CSV...
-                </Button>
-              </div>
-
-              {/* Section Selector */}
-              {template?.Result?.modules && getAllSections().length > 1 && (
+            {/* Content Area - Scrollable */}
+            <div className="flex-1 flex flex-col overflow-hidden">
+              <div className="flex-1 p-4 space-y-4 overflow-y-auto">
+                {/* CSV Import */}
                 <div className="mb-4">
-                  <label className="text-sm font-medium text-gray-700 mb-2 block">
-                    Section
-                  </label>
-                  <select
-                    value={selectedSection}
-                    onChange={e => setSelectedSection(e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  >
-                    {getAllSections().map((section, index) => (
-                      <option key={section} value={section}>
-                        {section}
-                      </option>
-                    ))}
-                  </select>
+                  <Button variant="outline" size="sm" className="w-full">
+                    <Upload className="mr-2 h-4 w-4" />
+                    Import CSV...
+                  </Button>
                 </div>
-              )}
 
-              {/* Variables */}
-              {template?.Result?.modules &&
-                template.Result.modules.length > 0 && (
-                  <div className="space-y-3">
-                    <div className="text-sm font-medium text-gray-700">
-                      {selectedSection || getAllSections()[0] || 'Section'}
-                    </div>
-                    <div className="space-y-3 pl-3">
-                      {/* Text Variables */}
-                      {activeTab === 'text' &&
-                        getVariablesForSection(
-                          selectedSection || getAllSections()[0],
-                          'text'
-                        ).map((v: TemplateVariable, vIdx: number) => (
-                          <div key={v.id} className="space-y-2">
-                            {v.type === TemplateVariableTypeEnum.TextArea && (
-                              <EditorText
-                                variable={v}
-                                changeText={changeText}
-                              />
-                            )}
-                            {v.type === TemplateVariableTypeEnum.Input && (
-                              <EditorText
-                                variable={v}
-                                changeText={changeText}
-                              />
-                            )}
-                          </div>
-                        ))}
-
-                      {/* Image Variables */}
-                      {activeTab === 'image' &&
-                        getImagesForSection(
-                          selectedSection || getAllSections()[0]
-                        ).map((image: TemplateImage, imgIdx: number) => (
-                          <div key={image.id} className="space-y-2">
-                            <div className="text-sm text-gray-500">
-                              Image {imgIdx + 1}: {image.image || 'No image'}
-                            </div>
-                          </div>
-                        ))}
-
-                      {/* Trigger Variables */}
-                      {activeTab === 'triggers' &&
-                        getVariablesForSection(
-                          selectedSection || getAllSections()[0],
-                          'triggers'
-                        ).map((v: TemplateVariable, vIdx: number) => (
-                          <div key={v.id} className="space-y-2">
-                            {v.type === TemplateVariableTypeEnum.Selector && (
-                              <EditorSelect
-                                variable={v}
-                                changeInput={changeSelect}
-                              />
-                            )}
-                            {v.type === TemplateVariableTypeEnum.Boolean && (
-                              <EditorCheckbox
-                                variable={v}
-                                changeCheckbox={changeCheckbox}
-                              />
-                            )}
-                          </div>
-                        ))}
-                    </div>
+                {/* Section Selector */}
+                {template?.Result?.modules && getAllSections().length > 1 && (
+                  <div className="mb-4">
+                    <label className="text-sm font-medium text-gray-700 mb-2 block">
+                      Section
+                    </label>
+                    <select
+                      value={selectedSection}
+                      onChange={e => setSelectedSection(e.target.value)}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    >
+                      {getAllSections().map((section, index) => (
+                        <option key={section} value={section}>
+                          {section}
+                        </option>
+                      ))}
+                    </select>
                   </div>
                 )}
+
+                {/* Variables */}
+                {template?.Result?.modules &&
+                  template.Result.modules.length > 0 && (
+                    <div className="space-y-3">
+                      <div className="text-sm font-medium text-gray-700">
+                        {selectedSection || getAllSections()[0] || 'Section'}
+                      </div>
+                      <div className="space-y-3 pl-3">
+                        {/* Text Variables */}
+                        {activeTab === 'text' &&
+                          getVariablesForSection(
+                            selectedSection || getAllSections()[0],
+                            'text'
+                          ).map((v: TemplateVariable, vIdx: number) => (
+                            <div key={v.id} className="space-y-2">
+                              {v.type === TemplateVariableTypeEnum.TextArea && (
+                                <EditorText
+                                  variable={v}
+                                  changeText={changeText}
+                                />
+                              )}
+                              {v.type === TemplateVariableTypeEnum.Input && (
+                                <EditorText
+                                  variable={v}
+                                  changeText={changeText}
+                                />
+                              )}
+                            </div>
+                          ))}
+
+                        {/* Image Variables */}
+                        {activeTab === 'image' &&
+                          getImagesForSection(
+                            selectedSection || getAllSections()[0]
+                          ).map((image: TemplateImage, imgIdx: number) => (
+                            <div key={image.id} className="space-y-2">
+                              <div className="text-sm text-gray-500">
+                                Image {imgIdx + 1}: {image.image || 'No image'}
+                              </div>
+                            </div>
+                          ))}
+
+                        {/* Trigger Variables */}
+                        {activeTab === 'triggers' &&
+                          getVariablesForSection(
+                            selectedSection || getAllSections()[0],
+                            'triggers'
+                          ).map((v: TemplateVariable, vIdx: number) => (
+                            <div key={v.id} className="space-y-2">
+                              {v.type === TemplateVariableTypeEnum.Selector && (
+                                <EditorSelect
+                                  variable={v}
+                                  changeInput={changeSelect}
+                                />
+                              )}
+                              {v.type === TemplateVariableTypeEnum.Boolean && (
+                                <EditorCheckbox
+                                  variable={v}
+                                  changeCheckbox={changeCheckbox}
+                                />
+                              )}
+                            </div>
+                          ))}
+                      </div>
+                    </div>
+                  )}
+              </div>
             </div>
           </div>
         </div>
