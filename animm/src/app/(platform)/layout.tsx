@@ -34,9 +34,7 @@ export default function RootLayout({
                   <HeaderTitle />
                 </div>
               </header>
-              <div className="h-[calc(100vh-64px)] w-full p-4 pt-2 relative">
-                {children}
-              </div>
+              <div className="flex-1 min-h-0 overflow-auto">{children}</div>
             </SidebarInset>
           </LoginChecker>
         </SidebarProvider>

@@ -21,9 +21,11 @@ interface TemplateCardProps {
 }
 
 export default function TemplateCard({ template }: TemplateCardProps) {
-  template.thumbnail === ''
-    ? (template.thumbnail = '/img/placeholder.svg')
-    : '';
+  // Ensure thumbnail has a valid value
+  const thumbnailSrc =
+    template.thumbnail && template.thumbnail !== ''
+      ? template.thumbnail
+      : '/img/placeholder.svg';
 
   const handleMouseEnter = (e: { target: any }) => {
     const vid = e.target;
@@ -43,15 +45,17 @@ export default function TemplateCard({ template }: TemplateCardProps) {
       <Link href={'/editor/' + template.id} className="cursor-pointer">
         <CardHeader className="p-0">
           <div className="relative w-full h-44">
-            <video
-              className="absolute size-full object-cover transition-opacity opacity-0 hover:!opacity-100 z-10"
-              onMouseEnter={handleMouseEnter}
-              onMouseLeave={handleMouseLeave}
-            >
-              <source src={template.video} type="video/mp4" />
-            </video>
+            {template.video && template.video !== '' && (
+              <video
+                className="absolute size-full object-cover transition-opacity opacity-0 hover:!opacity-100 z-10"
+                onMouseEnter={handleMouseEnter}
+                onMouseLeave={handleMouseLeave}
+              >
+                <source src={template.video} type="video/mp4" />
+              </video>
+            )}
             <Image
-              src={template.thumbnail}
+              src={thumbnailSrc}
               alt="Template cover"
               priority
               fill

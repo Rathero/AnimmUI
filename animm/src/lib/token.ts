@@ -6,7 +6,11 @@ export const useToken = () => {
   );
 
   const isValidToken = () => {
-    return authenticationResponse != undefined && !isTokenExpired();
+    const hasResponse = authenticationResponse != undefined;
+    const isExpired = isTokenExpired();
+    const isValid = hasResponse && !isExpired;
+
+    return isValid;
   };
 
   const isTokenExpired = () => {
@@ -14,7 +18,9 @@ export const useToken = () => {
     const refreshTokenExpiryTimestamp =
       getRefreshTokenExpiryTimestamp() + 60 * 1000;
     const currentTimestamp = Date.now();
-    return refreshTokenExpiryTimestamp <= currentTimestamp;
+    const expired = refreshTokenExpiryTimestamp <= currentTimestamp;
+
+    return expired;
   };
 
   const getRefreshTokenExpiryTimestamp = () =>

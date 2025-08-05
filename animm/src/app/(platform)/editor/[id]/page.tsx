@@ -223,8 +223,6 @@ export default function Editor() {
     setValueWidth(width);
     setValueHeight(height);
     setArtBoard(artBoard);
-    width = Number.parseInt(width.toString()) + 1;
-    height = Number.parseInt(height.toString()) + 1;
     const mainCan: any = document.querySelector('#MainCanvas');
     if (mainCan) {
       mainCan.style.width = width + 'px';
