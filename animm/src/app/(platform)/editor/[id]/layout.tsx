@@ -26,9 +26,7 @@ export default function RootLayout({
         <SidebarProvider>
           <LoginChecker>
             <SidebarInset>
-              <div className="h-[calc(100vh-64px)] w-full p-4 pt-0 relative">
-                {children}
-              </div>
+              <div className="h-screen w-full relative">{children}</div>
             </SidebarInset>
           </LoginChecker>
         </SidebarProvider>

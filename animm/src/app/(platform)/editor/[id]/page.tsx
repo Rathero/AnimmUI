@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState, useRef } from 'react';
-import { useParams } from 'next/navigation';
+import { useParams, useRouter } from 'next/navigation';
 import { FileAsset, decodeImage, Rive } from '@rive-app/react-webgl2';
 import {
   useRive,
@@ -31,7 +31,7 @@ import {
   TemplateVariableTypeEnum,
   TemplateComposition,
 } from '@/types/collections';
-import { ChevronDown, LinkIcon, Loader2 } from 'lucide-react';
+import { ChevronDown, LinkIcon, Loader2, ArrowLeft } from 'lucide-react';
 import EditorImages from '@/components/editor/editor-images';
 import RiveComp from '@/components/editor/rive-component';
 import EditorUrl from '@/components/editor/editor-url';
@@ -53,6 +53,7 @@ import { LoadingSpinner } from '@/components/ui/loading-spinner';
 
 export default function Editor() {
   const params = useParams<{ id: string }>();
+  const router = useRouter();
 
   const [template, setTemplate] = useState<ApiTemplate | undefined>(undefined);
   const [generatedAnimation, setGeneratedAnimation] = useState<
@@ -437,6 +438,15 @@ export default function Editor() {
       {/* Top Bar */}
       <div className="flex items-center justify-between px-8 py-4 border-b bg-white shadow-sm z-10">
         <div className="flex items-center gap-4">
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => router.back()}
+            className="flex items-center gap-2"
+          >
+            <ArrowLeft className="w-4 h-4" />
+            Back
+          </Button>
           <span className="text-xs text-muted-foreground">
             <span className="font-semibold text-base">Campaña:</span>{' '}
             {template?.Result.name}
@@ -490,35 +500,37 @@ export default function Editor() {
       {/* Main Content */}
       <div className="flex flex-1 min-h-0">
         {/* Left Sidebar: Variables */}
-        <div className="w-[320px] bg-white border-r flex flex-col p-4 overflow-y-auto min-h-0 max-h-full">
-          {template?.Result.modules.map((mod: Module, idx: number) => (
-            <Collapsible key={mod.id} defaultOpen className="mb-4">
-              <CollapsibleTrigger className="w-full">
-                <div className="flex items-center gap-2 text-sm font-medium py-2 px-2 rounded hover:bg-muted transition-colors border">
-                  <span>Variables</span>
-                  <ChevronDown className="ml-auto h-4 transition-transform group-data-[state=open]/collapsible:rotate-180" />
-                </div>
-              </CollapsibleTrigger>
-              <CollapsibleContent className="space-y-4 pt-2">
-                {mod.variables.map((v: TemplateVariable, vIdx: number) => (
-                  <div key={v.id} className="space-y-1">
-                    {v.type === TemplateVariableTypeEnum.TextArea && (
-                      <EditorText variable={v} changeText={changeText} />
-                    )}
-                    {v.type === TemplateVariableTypeEnum.Selector && (
-                      <EditorSelect variable={v} changeInput={changeSelect} />
-                    )}
-                    {v.type === TemplateVariableTypeEnum.Boolean && (
-                      <EditorCheckbox
-                        variable={v}
-                        changeCheckbox={changeCheckbox}
-                      />
-                    )}
+        <div className="w-[320px] bg-white border-r flex flex-col overflow-y-auto">
+          <div className="p-4 space-y-4">
+            {template?.Result.modules.map((mod: Module, idx: number) => (
+              <Collapsible key={mod.id} defaultOpen className="mb-4">
+                <CollapsibleTrigger className="w-full">
+                  <div className="flex items-center gap-2 text-sm font-medium py-2 px-2 rounded hover:bg-muted transition-colors border">
+                    <span>Variables</span>
+                    <ChevronDown className="ml-auto h-4 transition-transform group-data-[state=open]/collapsible:rotate-180" />
                   </div>
-                ))}
-              </CollapsibleContent>
-            </Collapsible>
-          ))}
+                </CollapsibleTrigger>
+                <CollapsibleContent className="space-y-4 pt-2">
+                  {mod.variables.map((v: TemplateVariable, vIdx: number) => (
+                    <div key={v.id} className="space-y-1">
+                      {v.type === TemplateVariableTypeEnum.TextArea && (
+                        <EditorText variable={v} changeText={changeText} />
+                      )}
+                      {v.type === TemplateVariableTypeEnum.Selector && (
+                        <EditorSelect variable={v} changeInput={changeSelect} />
+                      )}
+                      {v.type === TemplateVariableTypeEnum.Boolean && (
+                        <EditorCheckbox
+                          variable={v}
+                          changeCheckbox={changeCheckbox}
+                        />
+                      )}
+                    </div>
+                  ))}
+                </CollapsibleContent>
+              </Collapsible>
+            ))}
+          </div>
         </div>
         {/* Center: Preview/Canvas */}
         <div className="flex-1 flex flex-col items-center justify-center min-w-0">
@@ -591,15 +603,17 @@ export default function Editor() {
           </div>
         </div>
         {/* Right Sidebar: Compositions/Resolutions */}
-        <div className="w-[320px] bg-white border-l flex flex-col p-4 overflow-y-auto min-h-0 max-h-full">
-          <div className="text-sm font-semibold mb-2">Formats</div>
-          {template?.Result.templateCompositions &&
-            template.Result.templateCompositions.length > 0 && (
-              <AccordionCompositions
-                compositions={template.Result.templateCompositions}
-                setResolutionFunction={changeresolution}
-              />
-            )}
+        <div className="w-[320px] bg-white border-l flex flex-col overflow-y-auto">
+          <div className="p-4">
+            <div className="text-sm font-semibold mb-2">Formats</div>
+            {template?.Result.templateCompositions &&
+              template.Result.templateCompositions.length > 0 && (
+                <AccordionCompositions
+                  compositions={template.Result.templateCompositions}
+                  setResolutionFunction={changeresolution}
+                />
+              )}
+          </div>
         </div>
       </div>
       {template?.Result &&
