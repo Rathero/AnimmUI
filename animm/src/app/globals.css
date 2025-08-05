@@ -112,7 +112,6 @@ body {
 }
 #MainCanvas {
   padding: 0;
-  overflow: hidden;
 }
 
 .bg-editor {

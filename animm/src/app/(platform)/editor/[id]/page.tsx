@@ -31,7 +31,23 @@ import {
   TemplateVariableTypeEnum,
   TemplateComposition,
 } from '@/types/collections';
-import { ChevronDown, LinkIcon, Loader2, ArrowLeft } from 'lucide-react';
+import {
+  ChevronDown,
+  LinkIcon,
+  Loader2,
+  ArrowLeft,
+  Upload,
+  Save,
+  Type,
+  Image as ImageIcon,
+  Video,
+  Music,
+  Link,
+  Grid3X3,
+  FileText,
+  Download,
+  ChevronRight,
+} from 'lucide-react';
 import EditorImages from '@/components/editor/editor-images';
 import RiveComp from '@/components/editor/rive-component';
 import EditorUrl from '@/components/editor/editor-url';
@@ -60,6 +76,9 @@ export default function Editor() {
     GeneratedAnimation | undefined
   >(undefined);
   const [isLoading, setIsLoading] = useState(true);
+  const [activeTab, setActiveTab] = useState('text');
+  const [isEditMode, setIsEditMode] = useState(true);
+  const [isCsvDialogOpen, setIsCsvDialogOpen] = useState(false);
 
   const [artBoard, setArtBoard] = useState<string>('');
   const [assets, setAssets] = useState<Array<FileAsset>>([]);
@@ -223,6 +242,8 @@ export default function Editor() {
     setValueWidth(width);
     setValueHeight(height);
     setArtBoard(artBoard);
+    width = Number.parseInt(width.toString()) + 1;
+    height = Number.parseInt(height.toString()) + 1;
     const mainCan: any = document.querySelector('#MainCanvas');
     if (mainCan) {
       mainCan.style.width = width + 'px';
@@ -431,117 +452,153 @@ export default function Editor() {
     );
   }
 
+  const tabs = [
+    { id: 'text', icon: Type, label: 'Text' },
+    { id: 'image', icon: ImageIcon, label: 'Image' },
+  ];
+
   return (
     <div className="w-full h-full flex flex-col bg-[#f7f8fa]">
-      {/* Top Bar */}
-      <div className="flex items-center justify-between px-8 py-4 border-b bg-white shadow-sm z-10">
+      {/* Top Header */}
+      <div className="flex items-center justify-between px-6 py-3 border-b bg-white shadow-sm z-10">
         <div className="flex items-center gap-4">
           <Button
             variant="ghost"
             size="sm"
             onClick={() => router.back()}
-            className="flex items-center gap-2"
+            className="p-2 h-auto"
           >
             <ArrowLeft className="w-4 h-4" />
-            Back
           </Button>
-          <span className="text-xs text-muted-foreground">
-            <span className="font-semibold text-base">Campaña:</span>{' '}
-            {template?.Result.name}
-          </span>
         </div>
+
+        <div className="flex-1 flex justify-center">
+          <span className="text-sm font-medium">{template?.Result.name}</span>
+        </div>
+
         <div className="flex items-center gap-2">
-          {template?.Result && (
-            <EditorCsv template={template.Result}></EditorCsv>
-          )}
-          {/* <EditorUrl generateUrlFunction={generateUrlFunction} />
-          <Button className="w-full" onClick={() => generateUrl()}>
-            <LinkIcon />
-            Preview
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setIsCsvDialogOpen(true)}
+          >
+            <Download className="mr-2 h-4 w-4" />
+            Export
           </Button>
-          {!template?.Result.static && (
-            <Button
-              className="w-full"
-              onClick={handleExport}
-              variant="default"
-              disabled={isExporting}
-            >
-              {isExporting ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Exporting...
-                </>
-              ) : (
-                'Export Video'
-              )}
-            </Button>
-          )}
-          {template?.Result.static && (
-            <Button
-              className="w-full"
-              onClick={handleExportJpeg}
-              variant="default"
-              disabled={isExportingJpeg}
-            >
-              {isExportingJpeg ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Exporting...
-                </>
-              ) : (
-                'Export JPEG'
-              )}
-            </Button>
-          )} */}
+          <Button size="sm">
+            <Save className="mr-2 h-4 w-4" />
+            Save Project
+          </Button>
         </div>
       </div>
+
       {/* Main Content */}
       <div className="flex flex-1 min-h-0">
         {/* Left Sidebar: Variables */}
         <div className="w-[320px] bg-white border-r flex flex-col overflow-y-auto">
-          <div className="p-4 space-y-4">
-            {template?.Result.modules.map((mod: Module, idx: number) => (
-              <Collapsible key={mod.id} defaultOpen className="mb-4">
-                <CollapsibleTrigger className="w-full">
-                  <div className="flex items-center gap-2 text-sm font-medium py-2 px-2 rounded hover:bg-muted transition-colors border">
-                    <span>Variables</span>
-                    <ChevronDown className="ml-auto h-4 transition-transform group-data-[state=open]/collapsible:rotate-180" />
+          {/* Content Area */}
+          <div className="flex-1 flex">
+            {/* Vertical Tabs */}
+            <div className="w-16 border-r bg-gray-50">
+              {tabs.map(tab => (
+                <button
+                  key={tab.id}
+                  onClick={() => setActiveTab(tab.id)}
+                  className={`w-full flex flex-col items-center py-4 px-2 text-xs transition-colors ${
+                    activeTab === tab.id
+                      ? 'text-blue-600 bg-blue-50 border-r-2 border-blue-600'
+                      : 'text-gray-500 hover:text-gray-700 hover:bg-gray-100'
+                  }`}
+                >
+                  <tab.icon className="w-5 h-5 mb-1" />
+                  <span>{tab.label}</span>
+                </button>
+              ))}
+            </div>
+
+            {/* Content Area */}
+            <div className="flex-1 p-4 space-y-4 overflow-y-auto">
+              {/* CSV Import */}
+              <div className="mb-4">
+                <Button variant="outline" size="sm" className="w-full">
+                  <Upload className="mr-2 h-4 w-4" />
+                  Import CSV...
+                </Button>
+              </div>
+
+              {/* Variables */}
+              {template?.Result.modules.map((mod: Module, idx: number) => (
+                <div key={mod.id} className="space-y-3">
+                  <div className="text-sm font-medium text-gray-700">
+                    Section {String(idx + 1).padStart(2, '0')}
                   </div>
-                </CollapsibleTrigger>
-                <CollapsibleContent className="space-y-4 pt-2">
-                  {mod.variables.map((v: TemplateVariable, vIdx: number) => (
-                    <div key={v.id} className="space-y-1">
-                      {v.type === TemplateVariableTypeEnum.TextArea && (
-                        <EditorText variable={v} changeText={changeText} />
-                      )}
-                      {v.type === TemplateVariableTypeEnum.Selector && (
-                        <EditorSelect variable={v} changeInput={changeSelect} />
-                      )}
-                      {v.type === TemplateVariableTypeEnum.Boolean && (
-                        <EditorCheckbox
-                          variable={v}
-                          changeCheckbox={changeCheckbox}
-                        />
-                      )}
-                    </div>
-                  ))}
-                </CollapsibleContent>
-              </Collapsible>
-            ))}
+                  <div className="space-y-3 pl-3">
+                    {mod.variables.map((v: TemplateVariable, vIdx: number) => (
+                      <div key={v.id} className="space-y-2">
+                        {v.type === TemplateVariableTypeEnum.TextArea && (
+                          <EditorText variable={v} changeText={changeText} />
+                        )}
+                        {v.type === TemplateVariableTypeEnum.Selector && (
+                          <EditorSelect
+                            variable={v}
+                            changeInput={changeSelect}
+                          />
+                        )}
+                        {v.type === TemplateVariableTypeEnum.Boolean && (
+                          <EditorCheckbox
+                            variable={v}
+                            changeCheckbox={changeCheckbox}
+                          />
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              ))}
+
+              {/* Bottom Controls */}
+              <div className="pt-4 border-t mt-auto">
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={() => setIsEditMode(true)}
+                    className={`px-3 py-1 text-sm font-medium transition-colors ${
+                      isEditMode
+                        ? 'text-blue-600 border-b-2 border-blue-600'
+                        : 'text-gray-500 hover:text-gray-700'
+                    }`}
+                  >
+                    Edit
+                  </button>
+                  <button
+                    onClick={() => setIsEditMode(false)}
+                    className={`px-3 py-1 text-sm font-medium transition-colors ${
+                      !isEditMode
+                        ? 'text-blue-600 border-b-2 border-blue-600'
+                        : 'text-gray-500 hover:text-gray-700'
+                    }`}
+                  >
+                    Preview
+                  </button>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
+
         {/* Center: Preview/Canvas */}
-        <div className="flex-1 flex flex-col items-center justify-center min-w-0">
-          <div className="w-full flex justify-center items-center py-2 text-xs text-muted-foreground">
-            {template?.Result.templateCompositions &&
-              template.Result.templateCompositions.length > 0 && (
-                <span>
-                  {artBoard} {currentWidth}x{currentHeight}
-                </span>
-              )}
-          </div>
-          <div className="w-full h-full overflow-hidden p-4 pt-0">
+        <div className="flex-1 flex flex-col items-center justify-center min-w-0 relative">
+          <div className="w-full h-full overflow-hidden p-4">
             <div className="w-full h-full relative rounded-lg border bg-sidebar bg-editor">
+              {/* Format and Resolution Info */}
+              <div className="absolute top-4 left-4 right-4 flex justify-between items-center z-10">
+                <span className="text-sm font-medium text-gray-700">
+                  {artBoard}
+                </span>
+                <span className="text-sm font-medium text-gray-700">
+                  {currentWidth}x{currentHeight}
+                </span>
+              </div>
+
               <TransformWrapper
                 disabled={isResizing}
                 disablePadding={true}
@@ -600,10 +657,11 @@ export default function Editor() {
             </div>
           </div>
         </div>
-        {/* Right Sidebar: Compositions/Resolutions */}
-        <div className="w-[320px] bg-white border-l flex flex-col overflow-y-auto">
+
+        {/* Right Sidebar: Formats */}
+        <div className="w-[280px] bg-white border-l flex flex-col overflow-y-auto">
           <div className="p-4">
-            <div className="text-sm font-semibold mb-2">Formats</div>
+            <div className="text-sm font-semibold mb-4">Formats</div>
             {template?.Result.templateCompositions &&
               template.Result.templateCompositions.length > 0 && (
                 <AccordionCompositions
@@ -614,6 +672,7 @@ export default function Editor() {
           </div>
         </div>
       </div>
+
       {template?.Result &&
         template?.Result.modules.map(module =>
           module.variables.map(variable => (
@@ -642,6 +701,15 @@ export default function Editor() {
             />
           ))
         )}
+
+      {/* CSV Export Dialog */}
+      {template?.Result && (
+        <EditorCsv
+          template={template.Result}
+          open={isCsvDialogOpen}
+          onOpenChange={setIsCsvDialogOpen}
+        />
+      )}
     </div>
   );
 }

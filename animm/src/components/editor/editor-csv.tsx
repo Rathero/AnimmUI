@@ -43,7 +43,15 @@ function parseCsvLine(line: string): string[] {
   return result;
 }
 
-export default function EditorCsv({ template }: { template: Template }) {
+export default function EditorCsv({
+  template,
+  open,
+  onOpenChange,
+}: {
+  template: Template;
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
+}) {
   const [columnsMatched, setColumnsMatched] = useState<
     KeyValuePair<string, string>[]
   >([]);
@@ -283,14 +291,7 @@ export default function EditorCsv({ template }: { template: Template }) {
   const hiddenFileInput = useRef<HTMLInputElement>(null);
   return (
     <div className="">
-      <Dialog>
-        <DialogTrigger asChild>
-          <Button className="w-full">
-            <LinkIcon />
-            Upload CSV
-          </Button>
-        </DialogTrigger>
-
+      <Dialog open={open} onOpenChange={onOpenChange}>
         <DialogContent className="sm:max-w-[425px]">
           <DialogHeader>
             <DialogTitle>Upload CSV</DialogTitle>
