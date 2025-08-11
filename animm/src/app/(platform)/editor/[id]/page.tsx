@@ -2,8 +2,9 @@
 
 import { useEffect, useState, useRef } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import { FileAsset, decodeImage, Rive } from '@rive-app/react-webgl2';
+import { FileAsset, Rive } from '@rive-app/react-webgl2';
 import {
+  decodeImage,
   useRive,
   useViewModel,
   useViewModelInstanceString,
@@ -186,22 +187,25 @@ export default function Editor() {
   const [artBoard, setArtBoard] = useState<string>('');
   const [assets, setAssets] = useState<Array<FileAsset>>([]);
   const [rivesStates, setRiveStates] = useState<Rive[]>([]);
-  const changeImage = async (url: string, i: number) => {
-    let stringImage = '';
-    if (assets.length > 0) {
-      fetch(url).then(async res => {
-        const array = new Uint8Array(await res.arrayBuffer());
-        stringImage = new TextDecoder().decode(array);
-        if (generatedAnimation) {
-          generatedAnimation.modules.forEach(x => {
-            if (x.images[i]) x.images[i].image = stringImage;
-          });
-          setGeneratedAnimation(generatedAnimation);
-        }
-        const image = await decodeImage(array);
-        (assets[i] as any).setRenderImage(image);
-      });
-    }
+  const changeImage = async (url: string, _i: number, name: string) => {
+    const res = await fetch(url);
+    const arrayBuffer = await res.arrayBuffer();
+    const image = await decodeImage(new Uint8Array(arrayBuffer));
+
+    const baseName = (name || '')
+      .replace(/['"]/g, '')
+      .split('/')
+      .pop()
+      ?.split('.')
+      .shift();
+
+    if (!baseName) return;
+
+    assets.forEach(asset => {
+      if (asset && asset.name === baseName) {
+        (asset as any).setRenderImage(image);
+      }
+    });
   };
   const [playing, setPlaying] = useState(true);
   async function playRive() {
@@ -345,8 +349,6 @@ export default function Editor() {
     setValueWidth(width);
     setValueHeight(height);
     setArtBoard(artBoard);
-    width = Number.parseInt(width.toString()) + 1;
-    height = Number.parseInt(height.toString()) + 1;
     const mainCan: any = document.querySelector('#MainCanvas');
     if (mainCan) {
       mainCan.style.width = width + 'px';
@@ -466,6 +468,7 @@ export default function Editor() {
 
   const [isExporting, setIsExporting] = useState(false);
   const [isExportingJpeg, setIsExportingJpeg] = useState(false);
+  const [isSavingImage, setIsSavingImage] = useState(false);
 
   const handleExport = async () => {
     try {
@@ -578,6 +581,67 @@ export default function Editor() {
           <Button
             variant="outline"
             size="sm"
+            onClick={async () => {
+              setIsSavingImage(true);
+              try {
+                if (rivesStates && rivesStates.length > 0) {
+                  rivesStates.forEach(riveState => {
+                    if (riveState) {
+                      riveState.pause();
+                    }
+                  });
+                  setPlaying(false);
+                }
+
+                const sourceCanvas = document.querySelector(
+                  '#MainCanvas canvas'
+                ) as HTMLCanvasElement;
+                if (!sourceCanvas) {
+                  toast.error('Failed to find canvas element for export.');
+                } else {
+                  const exportCanvas = document.createElement('canvas');
+                  // Use the canvas' internal resolution (max available)
+                  exportCanvas.width = sourceCanvas.width;
+                  exportCanvas.height = sourceCanvas.height;
+                  const ctx = exportCanvas.getContext('2d');
+                  if (!ctx) {
+                    toast.error('Failed to get canvas context for export.');
+                  } else {
+                    ctx.drawImage(sourceCanvas, 0, 0);
+                    exportCanvas.toBlob(blob => {
+                      if (!blob) {
+                        toast.error('PNG export failed.');
+                        return;
+                      }
+                      const url = URL.createObjectURL(blob);
+                      const link = document.createElement('a');
+                      link.href = url;
+                      link.download = `${
+                        template?.Result.name || 'export'
+                      }.png`;
+                      document.body.appendChild(link);
+                      link.click();
+                      document.body.removeChild(link);
+                      URL.revokeObjectURL(url);
+                      toast.success('PNG saved successfully!');
+                    }, 'image/png');
+                  }
+                }
+              } catch (error) {
+                console.error('PNG export error:', error);
+                toast.error('Failed to save PNG.');
+              } finally {
+                setIsSavingImage(false);
+              }
+            }}
+            disabled={isSavingImage}
+          >
+            <Download className="mr-2 h-4 w-4" />
+            Save image
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
             onClick={() => setIsCsvDialogOpen(true)}
           >
             <Download className="mr-2 h-4 w-4" />
@@ -676,16 +740,14 @@ export default function Editor() {
                           ))}
 
                         {/* Image Variables */}
-                        {activeTab === 'image' &&
-                          getImagesForSection(
-                            selectedSection || getAllSections()[0]
-                          ).map((image: TemplateImage, imgIdx: number) => (
-                            <div key={image.id} className="space-y-2">
-                              <div className="text-sm text-gray-500">
-                                Image {imgIdx + 1}: {image.image || 'No image'}
-                              </div>
-                            </div>
-                          ))}
+                        {activeTab === 'image' && (
+                          <EditorImages
+                            images={getImagesForSection(
+                              selectedSection || getAllSections()[0]
+                            )}
+                            changeImageParent={changeImage}
+                          />
+                        )}
 
                         {/* Trigger Variables */}
                         {activeTab === 'triggers' &&

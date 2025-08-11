@@ -5,6 +5,7 @@ import { ApiCollections } from '@/types/collections';
 import { useEffect, useState } from 'react';
 import useCollectionsService from '@/app/services/CollectionsService';
 import { LoadingSpinner } from '@/components/ui/loading-spinner';
+import { ContentWrapper } from '@/components/ui/content-wrapper';
 import { platformStore } from '@/stores/platformStore';
 
 export default function CollectionsPage() {
@@ -38,27 +39,33 @@ export default function CollectionsPage() {
 
   if (isLoading) {
     return (
-      <div className="flex-1 flex items-center justify-center">
-        <LoadingSpinner size="lg" />
-      </div>
+      <ContentWrapper>
+        <div className="flex-1 flex items-center justify-center">
+          <LoadingSpinner size="lg" />
+        </div>
+      </ContentWrapper>
     );
   }
 
   if (!collections) {
     return (
-      <div className="flex-1 flex items-center justify-center">
-        No collections found
-      </div>
+      <ContentWrapper>
+        <div className="flex-1 flex items-center justify-center">
+          No collections found
+        </div>
+      </ContentWrapper>
     );
   }
 
   return (
-    <div className="w-full grid grid-cols-1 lg:grid-cols-2 gap-4 p-4">
-      {collections.Result.map(collection => (
-        <Link href={'collections/' + collection.id} key={collection.id}>
-          <CollectionCard collection={collection} />
-        </Link>
-      ))}
-    </div>
+    <ContentWrapper>
+      <div className="w-full grid grid-cols-1 lg:grid-cols-2 gap-4">
+        {collections.Result.map(collection => (
+          <Link href={'collections/' + collection.id} key={collection.id}>
+            <CollectionCard collection={collection} />
+          </Link>
+        ))}
+      </div>
+    </ContentWrapper>
   );
 }

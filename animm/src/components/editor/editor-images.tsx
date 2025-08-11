@@ -32,7 +32,7 @@ export default function EditorImages({
   changeImageParent,
 }: {
   images: TemplateImage[];
-  changeImageParent: (url: string, i: number) => void;
+  changeImageParent: (url: string, i: number, name: string) => void;
 }) {
   const [imgSrc, setImgSrc] = useState<string[]>([]);
   const [originalSrc, setOriginalSrc] = useState<string[]>([]);
@@ -70,7 +70,6 @@ export default function EditorImages({
 
   function onSelectFile(e: React.ChangeEvent<HTMLInputElement>, index: number) {
     if (e.target.files && e.target.files.length > 0) {
-      setCrop(undefined);
       const reader = new FileReader();
       reader.addEventListener('load', () => {
         const newImgSrc = [...imgSrc];
@@ -79,7 +78,7 @@ export default function EditorImages({
         const newOriginalSrc = [...originalSrc];
         newOriginalSrc[index] = newImgSrc[index];
         setOriginalSrc(newOriginalSrc);
-        changeImageParent(newImgSrc[index], index);
+        changeImageParent(newImgSrc[index], index, images[index].image);
       });
       reader.readAsDataURL(e.target.files[0]);
     }
@@ -132,7 +131,7 @@ export default function EditorImages({
     const newImgSrc = [...imgSrc];
     newImgSrc[index] = URL.createObjectURL(blob);
     setImgSrc(newImgSrc);
-    changeImageParent(newImgSrc[index], index);
+    changeImageParent(newImgSrc[index], index, images[index].image);
   }
 
   return (
@@ -197,7 +196,7 @@ export default function EditorImages({
                       <div className="grid grid-cols-3 gap-1.5">
                         <TooltipProvider>
                           <Tooltip>
-                            <TooltipTrigger asChild>
+                            <TooltipTrigger disabled asChild>
                               <Button
                                 size="sm"
                                 variant="secondary"

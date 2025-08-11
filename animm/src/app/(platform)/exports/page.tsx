@@ -11,6 +11,7 @@ import { Button } from '@/components/ui/button';
 import { ArrowLeft, Search, Download, FolderOpen } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { LoadingSpinner } from '@/components/ui/loading-spinner';
+import { ContentWrapper } from '@/components/ui/content-wrapper';
 import { platformStore } from '@/stores/platformStore';
 import {
   buildFolderStructure,
@@ -230,7 +231,7 @@ export default function ExportsPage() {
   };
 
   return (
-    <div className="h-full flex flex-col gap-4 p-4">
+    <ContentWrapper>
       {selectedCampaign ? (
         // Campaign detail view
         <div className="flex gap-6">
@@ -344,6 +345,6 @@ export default function ExportsPage() {
           )}
         </>
       )}
-    </div>
+    </ContentWrapper>
   );
 }

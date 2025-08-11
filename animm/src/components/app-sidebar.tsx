@@ -1,8 +1,6 @@
 'use client';
 
 import {
-  Link2,
-  GalleryVertical,
   ChevronDown,
   ChevronRight,
   BarChart3,
@@ -10,6 +8,7 @@ import {
   FolderOpen,
   Download,
   Database,
+  Building2,
 } from 'lucide-react';
 import { NavUser } from './sideBar/nav-user';
 import Link from 'next/link';
@@ -54,7 +53,7 @@ export function AppSidebar() {
     };
 
     fetchCollections();
-  }, [getAll]);
+  }, []);
 
   return (
     <Sidebar collapsible="icon">
@@ -80,7 +79,7 @@ export function AppSidebar() {
                   className="w-full justify-between"
                 >
                   <div className="flex items-center gap-2">
-                    <GalleryVertical className="w-4 h-4" />
+                    <FolderOpen className="w-4 h-4" />
                     <span>Projects</span>
                   </div>
                   {isProjectsExpanded ? (
@@ -119,6 +118,19 @@ export function AppSidebar() {
                   )}
                 </div>
               )}
+
+              {/* Backoffice */}
+              <SidebarMenuItem>
+                <SidebarMenuButton
+                  asChild
+                  isActive={pathname === '/backoffice'}
+                >
+                  <Link href="/backoffice">
+                    <Building2 className="w-4 h-4" />
+                    <span>Backoffice</span>
+                  </Link>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
 
               {/* Brand Assets */}
               <SidebarMenuItem>
