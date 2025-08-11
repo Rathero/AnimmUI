@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
 import { FileAsset, Rive } from '@rive-app/react-webgl2';
+import { getBaseNameFromPath, replaceRiveImageFromUrl } from '@/lib/rive-image';
 
 import {
   ApiTemplate,
@@ -73,6 +74,14 @@ export default function Viewer() {
         typeof window !== 'undefined' ? window.location.search : '';
       const params = new URLSearchParams(queryString);
       params.forEach((value, key) => {
+        // Handle image replacement params like imgX where X is the template image id
+        const imgMatch = key.match(/^img(\d+)$/i);
+        if (imgMatch) {
+          const imageId = parseInt(imgMatch[1], 10);
+          replaceImageById(imageId, value);
+          return;
+        }
+
         const variableToModify = template.Result.modules
           .flatMap(module => module.variables)
           .find(variable => variable.id === Number.parseInt(key));
@@ -97,6 +106,23 @@ export default function Viewer() {
       });
     }
   }, [template, rivesStates]);
+
+  // Replace a template image by id with the provided URL in the loaded Rive assets
+  const replaceImageById = async (imageId: number, imageUrl: string) => {
+    if (!template) return;
+    // Find the template image by id across modules
+    const templateImage = template.Result.modules
+      .flatMap(m => m.images)
+      .find(img => img.id === imageId);
+    if (!templateImage) return;
+
+    // Derive the Rive asset base name from the template image string
+    const baseName = getBaseNameFromPath(templateImage.image || '');
+    if (!baseName) return;
+
+    // Update the matching Rive asset(s)
+    await replaceRiveImageFromUrl(assets, baseName, imageUrl);
+  };
 
   const [functionsToSetNumbers, setFunctionsToSetNumbers] = useState<
     Array<{ x: number; f: (x: number) => void }>

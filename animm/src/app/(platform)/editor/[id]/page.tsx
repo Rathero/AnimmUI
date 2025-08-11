@@ -4,7 +4,6 @@ import { useEffect, useState, useRef } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { FileAsset, Rive } from '@rive-app/react-webgl2';
 import {
-  decodeImage,
   useRive,
   useViewModel,
   useViewModelInstanceString,
@@ -12,6 +11,7 @@ import {
   useViewModelInstanceNumber,
   useViewModelInstanceBoolean,
 } from '@rive-app/react-webgl2';
+import { getBaseNameFromPath, replaceRiveImageFromUrl } from '@/lib/rive-image';
 import {
   Collapsible,
   CollapsibleContent,
@@ -188,24 +188,9 @@ export default function Editor() {
   const [assets, setAssets] = useState<Array<FileAsset>>([]);
   const [rivesStates, setRiveStates] = useState<Rive[]>([]);
   const changeImage = async (url: string, _i: number, name: string) => {
-    const res = await fetch(url);
-    const arrayBuffer = await res.arrayBuffer();
-    const image = await decodeImage(new Uint8Array(arrayBuffer));
-
-    const baseName = (name || '')
-      .replace(/['"]/g, '')
-      .split('/')
-      .pop()
-      ?.split('.')
-      .shift();
-
+    const baseName = getBaseNameFromPath(name);
     if (!baseName) return;
-
-    assets.forEach(asset => {
-      if (asset && asset.name === baseName) {
-        (asset as any).setRenderImage(image);
-      }
-    });
+    await replaceRiveImageFromUrl(assets, baseName, url);
   };
   const [playing, setPlaying] = useState(true);
   async function playRive() {
