@@ -36,12 +36,38 @@ export function AppSidebar() {
   const pathname = usePathname();
   const [collections, setCollections] = useState<Collection[]>([]);
   const [isProjectsExpanded, setIsProjectsExpanded] = useState(true);
+  const [expandedSubProjects, setExpandedSubProjects] = useState<Set<number>>(
+    new Set()
+  );
   const [isLoading, setIsLoading] = useState(true);
   const { getAll } = useCollectionsService();
 
   const { authenticationResponse, setAuthenticationResponse } = platformStore(
     state => state
   );
+
+  // Sub-projects for Road To Icons
+  const roadToIconsSubProjects = [
+    { code: 'es_ES', name: 'Spanish' },
+    { code: 'it_IT', name: 'Italian' },
+    { code: 'cs_CZ', name: 'Czech' },
+    { code: 'fr_FR', name: 'French' },
+  ];
+
+  const toggleSubProjects = (collectionId: number) => {
+    const newExpanded = new Set(expandedSubProjects);
+    if (newExpanded.has(collectionId)) {
+      newExpanded.delete(collectionId);
+    } else {
+      newExpanded.add(collectionId);
+    }
+    setExpandedSubProjects(newExpanded);
+  };
+
+  const isRoadToIconsProject = (collectionName: string) => {
+    return collectionName.toLowerCase().includes('road to icons');
+  };
+
   useEffect(() => {
     const fetchCollections = async () => {
       try {
@@ -125,14 +151,75 @@ export function AppSidebar() {
                     collections.map(collection => {
                       const isActive =
                         pathname === `/collections/${collection.id}`;
+                      const isRoadToIcons = isRoadToIconsProject(
+                        collection.name
+                      );
+                      const hasSubProjects = isRoadToIcons;
+                      const isSubProjectsExpanded = expandedSubProjects.has(
+                        collection.id
+                      );
+
                       return (
-                        <SidebarMenuItem key={collection.id}>
-                          <SidebarMenuButton asChild isActive={isActive}>
-                            <Link href={`/collections/${collection.id}`}>
-                              <span className="text-sm">{collection.name}</span>
-                            </Link>
-                          </SidebarMenuButton>
-                        </SidebarMenuItem>
+                        <div key={collection.id}>
+                          <SidebarMenuItem>
+                            <SidebarMenuButton
+                              asChild
+                              isActive={isActive}
+                              className={
+                                hasSubProjects ? 'w-full justify-between' : ''
+                              }
+                            >
+                              {hasSubProjects ? (
+                                <div
+                                  className="flex items-center justify-between w-full cursor-pointer"
+                                  onClick={() =>
+                                    toggleSubProjects(collection.id)
+                                  }
+                                >
+                                  <Link
+                                    href={`/collections/${collection.id}`}
+                                    className="flex-1"
+                                  >
+                                    <span className="text-sm">
+                                      {collection.name}
+                                    </span>
+                                  </Link>
+                                  {isSubProjectsExpanded ? (
+                                    <ChevronDown className="w-4 h-4" />
+                                  ) : (
+                                    <ChevronRight className="w-4 h-4" />
+                                  )}
+                                </div>
+                              ) : (
+                                <Link href={`/collections/${collection.id}`}>
+                                  <span className="text-sm">
+                                    {collection.name}
+                                  </span>
+                                </Link>
+                              )}
+                            </SidebarMenuButton>
+                          </SidebarMenuItem>
+
+                          {/* Sub-projects for Road To Icons */}
+                          {hasSubProjects && isSubProjectsExpanded && (
+                            <div className="ml-6 space-y-1">
+                              {roadToIconsSubProjects.map(subProject => (
+                                <SidebarMenuItem key={subProject.code}>
+                                  <SidebarMenuButton asChild>
+                                    <Link
+                                      href={`/collections/${collection.id}/${subProject.code}`}
+                                    >
+                                      <ChevronRight className="w-3 h-3 mr-2" />
+                                      <span className="text-sm">
+                                        {subProject.code}
+                                      </span>
+                                    </Link>
+                                  </SidebarMenuButton>
+                                </SidebarMenuItem>
+                              ))}
+                            </div>
+                          )}
+                        </div>
                       );
                     })
                   )}
