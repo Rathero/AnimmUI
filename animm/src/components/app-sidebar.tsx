@@ -30,6 +30,7 @@ import {
   SidebarRail,
   SidebarMenuItem,
 } from '@/components/ui/sidebar';
+import { platformStore } from '@/stores/platformStore';
 
 export function AppSidebar() {
   const pathname = usePathname();
@@ -38,6 +39,9 @@ export function AppSidebar() {
   const [isLoading, setIsLoading] = useState(true);
   const { getAll } = useCollectionsService();
 
+  const { authenticationResponse, setAuthenticationResponse } = platformStore(
+    state => state
+  );
   useEffect(() => {
     const fetchCollections = async () => {
       try {
@@ -58,15 +62,31 @@ export function AppSidebar() {
   return (
     <Sidebar collapsible="icon">
       <SidebarHeader>
-        <div className="flex items-center justify-start pt-4">
-          <Image
-            src={'/Logo Animm.png'}
-            alt="Animm Logo"
-            width={120}
-            height={40}
-            className="object-contain"
-          />
-        </div>
+        {authenticationResponse?.id != 8 && (
+          <div className="flex items-center justify-start pt-4">
+            <Image
+              src={'/Logo Animm.png'}
+              alt="Animm Logo"
+              width={120}
+              height={40}
+              className="object-contain"
+            />
+          </div>
+        )}
+        {authenticationResponse?.id == 8 && (
+          <>
+            <div className="flex items-center justify-start pt-4">
+              <Image
+                src={authenticationResponse?.picture}
+                alt="Riot Projects"
+                width={40}
+                height={80}
+                className="object-contain"
+              />
+              <h1 className="text-xl font-semibold ml-5">Riot Projects</h1>
+            </div>
+          </>
+        )}
       </SidebarHeader>
       <SidebarContent>
         <SidebarGroup>
@@ -118,19 +138,6 @@ export function AppSidebar() {
                   )}
                 </div>
               )}
-
-              {/* Backoffice */}
-              <SidebarMenuItem>
-                <SidebarMenuButton
-                  asChild
-                  isActive={pathname === '/backoffice'}
-                >
-                  <Link href="/backoffice">
-                    <Building2 className="w-4 h-4" />
-                    <span>Backoffice</span>
-                  </Link>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
 
               {/* Brand Assets */}
               <SidebarMenuItem>
