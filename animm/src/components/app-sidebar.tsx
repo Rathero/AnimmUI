@@ -13,7 +13,7 @@ import {
 import { NavUser } from './sideBar/nav-user';
 import Link from 'next/link';
 import Image from 'next/image';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import { useState, useEffect } from 'react';
 import useCollectionsService from '@/app/services/CollectionsService';
 import { Collection } from '@/types/collections';
@@ -34,11 +34,20 @@ import { platformStore } from '@/stores/platformStore';
 
 export function AppSidebar() {
   const pathname = usePathname();
+  const router = useRouter();
   const [collections, setCollections] = useState<Collection[]>([]);
   const [isProjectsExpanded, setIsProjectsExpanded] = useState(true);
   const [expandedSubProjects, setExpandedSubProjects] = useState<Set<number>>(
     new Set()
   );
+  const [expandedFormatProjects, setExpandedFormatProjects] = useState<
+    Set<string>
+  >(new Set());
+  const [selectedProject, setSelectedProject] = useState<{
+    collectionId: number;
+    locale?: string;
+    format?: string;
+  } | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const { getAll } = useCollectionsService();
 
@@ -54,6 +63,13 @@ export function AppSidebar() {
     { code: 'fr_FR', name: 'French' },
   ];
 
+  // Format sub-projects for each locale
+  const formatSubProjects = [
+    { code: '16x9', name: 'Landscape' },
+    { code: '9x16', name: 'Portrait' },
+    { code: '1x1', name: 'Square' },
+  ];
+
   const toggleSubProjects = (collectionId: number) => {
     const newExpanded = new Set(expandedSubProjects);
     if (newExpanded.has(collectionId)) {
@@ -62,6 +78,37 @@ export function AppSidebar() {
       newExpanded.add(collectionId);
     }
     setExpandedSubProjects(newExpanded);
+  };
+
+  const toggleFormatProjects = (localeCode: string) => {
+    setExpandedFormatProjects(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(localeCode)) {
+        newSet.delete(localeCode);
+      } else {
+        newSet.add(localeCode);
+      }
+      return newSet;
+    });
+  };
+
+  const handleProjectClick = (
+    collectionId: number,
+    locale?: string,
+    format?: string
+  ) => {
+    setSelectedProject({ collectionId, locale, format });
+
+    // Navigate to the collection page with the selected project
+    if (locale && format) {
+      router.push(
+        `/collections/${collectionId}?locale=${locale}&format=${format}&tab=video`
+      );
+    } else if (locale) {
+      router.push(`/collections/${collectionId}?locale=${locale}&tab=video`);
+    } else {
+      router.push(`/collections/${collectionId}`);
+    }
   };
 
   const isRoadToIconsProject = (collectionName: string) => {
@@ -176,14 +223,9 @@ export function AppSidebar() {
                                     toggleSubProjects(collection.id)
                                   }
                                 >
-                                  <Link
-                                    href={`/collections/${collection.id}`}
-                                    className="flex-1"
-                                  >
-                                    <span className="text-sm">
-                                      {collection.name}
-                                    </span>
-                                  </Link>
+                                  <span className="text-sm">
+                                    {collection.name}
+                                  </span>
                                   {isSubProjectsExpanded ? (
                                     <ChevronDown className="w-4 h-4" />
                                   ) : (
@@ -203,20 +245,90 @@ export function AppSidebar() {
                           {/* Sub-projects for Road To Icons */}
                           {hasSubProjects && isSubProjectsExpanded && (
                             <div className="ml-6 space-y-1">
-                              {roadToIconsSubProjects.map(subProject => (
-                                <SidebarMenuItem key={subProject.code}>
-                                  <SidebarMenuButton asChild>
-                                    <Link
-                                      href={`/collections/${collection.id}/${subProject.code}`}
-                                    >
-                                      <ChevronRight className="w-3 h-3 mr-2" />
-                                      <span className="text-sm">
-                                        {subProject.code}
-                                      </span>
-                                    </Link>
-                                  </SidebarMenuButton>
-                                </SidebarMenuItem>
-                              ))}
+                              {roadToIconsSubProjects.map(subProject => {
+                                const isFormatProjectsExpanded =
+                                  expandedFormatProjects.has(subProject.code);
+                                const hasFormatSubProjects = true; // All locale projects have format sub-projects
+
+                                return (
+                                  <div key={subProject.code}>
+                                    <SidebarMenuItem>
+                                      <SidebarMenuButton
+                                        className={
+                                          hasFormatSubProjects
+                                            ? 'w-full justify-between'
+                                            : ''
+                                        }
+                                      >
+                                        {hasFormatSubProjects ? (
+                                          <div
+                                            className="flex items-center justify-between w-full cursor-pointer"
+                                            onClick={() =>
+                                              toggleFormatProjects(
+                                                subProject.code
+                                              )
+                                            }
+                                          >
+                                            <span className="text-sm">
+                                              {subProject.code}
+                                            </span>
+                                            {isFormatProjectsExpanded ? (
+                                              <ChevronDown className="w-4 h-4" />
+                                            ) : (
+                                              <ChevronRight className="w-4 h-4" />
+                                            )}
+                                          </div>
+                                        ) : (
+                                          <div
+                                            className="cursor-pointer"
+                                            onClick={() =>
+                                              handleProjectClick(
+                                                collection.id,
+                                                subProject.code
+                                              )
+                                            }
+                                          >
+                                            <span className="text-sm">
+                                              {subProject.code}
+                                            </span>
+                                          </div>
+                                        )}
+                                      </SidebarMenuButton>
+                                    </SidebarMenuItem>
+
+                                    {/* Format sub-projects */}
+                                    {hasFormatSubProjects &&
+                                      isFormatProjectsExpanded && (
+                                        <div className="ml-6 space-y-1">
+                                          {formatSubProjects.map(
+                                            formatProject => (
+                                              <SidebarMenuItem
+                                                key={formatProject.code}
+                                              >
+                                                <SidebarMenuButton>
+                                                  <div
+                                                    className="cursor-pointer"
+                                                    onClick={() =>
+                                                      handleProjectClick(
+                                                        collection.id,
+                                                        subProject.code,
+                                                        formatProject.code
+                                                      )
+                                                    }
+                                                  >
+                                                    <span className="text-sm">
+                                                      {formatProject.code}
+                                                    </span>
+                                                  </div>
+                                                </SidebarMenuButton>
+                                              </SidebarMenuItem>
+                                            )
+                                          )}
+                                        </div>
+                                      )}
+                                  </div>
+                                );
+                              })}
                             </div>
                           )}
                         </div>
