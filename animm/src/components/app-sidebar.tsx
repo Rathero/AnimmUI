@@ -119,19 +119,6 @@ export function AppSidebar() {
                 </div>
               )}
 
-              {/* Backoffice */}
-              <SidebarMenuItem>
-                <SidebarMenuButton
-                  asChild
-                  isActive={pathname === '/backoffice'}
-                >
-                  <Link href="/backoffice">
-                    <Building2 className="w-4 h-4" />
-                    <span>Backoffice</span>
-                  </Link>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-
               {/* Brand Assets */}
               <SidebarMenuItem>
                 <SidebarMenuButton asChild>
