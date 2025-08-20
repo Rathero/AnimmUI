@@ -34,6 +34,7 @@ export default function Viewer() {
     const template = await get(params.id);
     setTemplate(template);
   }
+
   const [functionsToSetBoolean, setFunctionsToSetBoolean] = useState<
     Array<{ x: number; f: (x: boolean) => void }>
   >([]);

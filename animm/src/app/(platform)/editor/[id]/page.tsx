@@ -3,20 +3,8 @@
 import { useEffect, useState, useRef } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { FileAsset, Rive } from '@rive-app/react-webgl2';
-import {
-  useRive,
-  useViewModel,
-  useViewModelInstanceString,
-  useViewModelInstance,
-  useViewModelInstanceNumber,
-  useViewModelInstanceBoolean,
-} from '@rive-app/react-webgl2';
+import { useViewModelInstanceNumber } from '@rive-app/react-webgl2';
 import { getBaseNameFromPath, replaceRiveImageFromUrl } from '@/lib/rive-image';
-import {
-  Collapsible,
-  CollapsibleContent,
-  CollapsibleTrigger,
-} from '@radix-ui/react-collapsible';
 
 import { TransformWrapper, TransformComponent } from 'react-zoom-pan-pinch';
 
@@ -27,33 +15,21 @@ import { EditorSelect } from '@/components/editor/editor-select';
 
 import {
   ApiTemplate,
-  Module,
   TemplateVariable,
   TemplateVariableTypeEnum,
   TemplateComposition,
   TemplateImage,
 } from '@/types/collections';
 import {
-  ChevronDown,
-  LinkIcon,
-  Loader2,
   ArrowLeft,
-  Upload,
-  Save,
   Type,
   Image as ImageIcon,
-  Video,
-  Music,
-  Link,
-  Grid3X3,
-  FileText,
   Download,
-  ChevronRight,
   Settings,
 } from 'lucide-react';
 import EditorImages from '@/components/editor/editor-images';
 import RiveComp from '@/components/editor/rive-component';
-import EditorUrl from '@/components/editor/editor-url';
+
 import {
   GeneratedAnimation,
   GeneratedAnimationStatusEnum,
@@ -61,12 +37,12 @@ import {
 } from '@/types/generatedAnimations';
 import useTemplatesService from '@/app/services/TemplatesService';
 import useGeneratedAnimationService from '@/app/services/GeneratedAnimationsService';
-import EditorResolution from '@/components/editor/editor-resolution';
+
 import EditorCsv from '@/components/editor/editor-csv';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
 import { EditorCheckbox } from '@/components/editor/editor-checkbox';
-import React from 'react';
+
 import { VariableStringSetter } from '@/components/editor/variable-string-setter';
 import { LoadingSpinner } from '@/components/ui/loading-spinner';
 
@@ -231,13 +207,6 @@ export default function Editor() {
   const [functionsToSetBoolean, setFunctionsToSetBoolean] = useState<
     Array<{ x: number; f: (x: boolean) => void }>
   >([]);
-  // Reusable function to update variable values state (kept for compatibility)
-  const updateGeneratedAnimationVariable = (
-    variableId: number,
-    value: string | number | boolean
-  ) => {
-    // This function is kept for compatibility but no longer needed
-  };
 
   async function changeCheckbox(
     value: boolean,
@@ -248,7 +217,6 @@ export default function Editor() {
         x.f(value);
       }
     });
-    updateGeneratedAnimationVariable(variableToModify.id, value);
   }
 
   const [functionsToSetNumbers, setFunctionsToSetNumbers] = useState<
@@ -263,7 +231,6 @@ export default function Editor() {
         x.f(value);
       }
     });
-    updateGeneratedAnimationVariable(variableToModify.id, value);
   }
   const [functionsToSetStrings, setFunctionsToSetStrings] = useState<
     Array<{ x: number; f: (x: string) => void }>
@@ -274,8 +241,6 @@ export default function Editor() {
         x.f(text);
       }
     });
-
-    updateGeneratedAnimationVariable(variableToModify.id, text);
   }
   const { get } = useTemplatesService();
   async function initializeTemplate() {
@@ -417,12 +382,6 @@ export default function Editor() {
     }, 1000);*/
   }
   const { add } = useGeneratedAnimationService();
-  async function generateUrlFunction(name: string) {
-    if (generatedAnimation) {
-      generatedAnimation.name = name;
-      add(generatedAnimation);
-    }
-  }
 
   // EventListener to Deactivate Zoom Pan to be able to Resize
   const [isResizing, setIsResizing] = useState(false);
@@ -457,106 +416,7 @@ export default function Editor() {
     };
   }, [template]); // Re-run when template changes
 
-  const generateUrl = async () => {
-    if (template) {
-      const paramsUrl = new URLSearchParams();
-      template.Result.modules.forEach(module => {
-        module.variables.forEach(variable => {
-          paramsUrl.append(variable.id.toString(), variable.defaultValue || '');
-        });
-      });
-      paramsUrl.append('autoplay', 'true');
-      paramsUrl.append('artboard', artBoard);
-      window.open(
-        '/viewer/' + params.id + '?' + paramsUrl.toString(),
-        '_blank'
-      );
-    }
-  };
-
-  const [isExporting, setIsExporting] = useState(false);
-  const [isExportingJpeg, setIsExportingJpeg] = useState(false);
   const [isSavingImage, setIsSavingImage] = useState(false);
-
-  const handleExport = async () => {
-    try {
-      setIsExporting(true);
-      // Get all variables
-      const variables: Record<string, string> = {};
-      if (template) {
-        template.Result.modules.forEach(module => {
-          module.variables.forEach(variable => {
-            variables[variable.name] = variable.defaultValue || '';
-          });
-        });
-      }
-
-      // Call export API
-      const response = await fetch(
-        'https://animmexport.azurewebsites.net/Export',
-        {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            id: params.id,
-            variables,
-          }),
-        }
-      );
-
-      const data = await response.json();
-
-      if (data.success) {
-        toast.success('Video exported successfully!');
-        // Open the video in a new tab
-        window.open(data.videoUrl, '_blank');
-      } else {
-        toast.error('Failed to export video');
-      }
-    } catch (error) {
-      console.error('Export error:', error);
-      toast.error('Failed to export video');
-    } finally {
-      setIsExporting(false);
-    }
-  };
-
-  const handleExportJpeg = async () => {
-    setIsExportingJpeg(true);
-    try {
-      if (rivesStates && rivesStates.length > 0) {
-        rivesStates.forEach(riveState => {
-          if (riveState) {
-            riveState.pause();
-          }
-        });
-        setPlaying(false);
-      }
-
-      const canvas = document.querySelector(
-        '#MainCanvas canvas'
-      ) as HTMLCanvasElement;
-      if (canvas) {
-        const dataUrl = canvas.toDataURL('image/jpeg', 0.9);
-        const link = document.createElement('a');
-        link.href = dataUrl;
-        link.download = `${template?.Result.name || 'export'}.jpeg`;
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-        toast.success('JPEG exported successfully!');
-      } else {
-        toast.error('Failed to find canvas element for export.');
-      }
-    } catch (error) {
-      console.error('JPEG export error:', error);
-      toast.error('Failed to export JPEG.');
-    } finally {
-      setIsExportingJpeg(false);
-    }
-  };
 
   if (isLoading) {
     return (
