@@ -83,6 +83,7 @@ export default function Editor() {
   const [isEditMode, setIsEditMode] = useState(true);
   const [isCsvDialogOpen, setIsCsvDialogOpen] = useState(false);
   const [selectedSection, setSelectedSection] = useState<string>('');
+  const [artBoard, setArtBoard] = useState<string>('');
 
   // Get all unique sections from all modules
   const getAllSections = () => {
@@ -90,7 +91,8 @@ export default function Editor() {
     const sections = new Set<string>();
     template.Result.modules.forEach(module => {
       module.variables.forEach(variable => {
-        const sectionName = variable.section || 'Variables';
+        let sectionName = variable.section || 'Variables';
+        if (sectionName.startsWith('##')) sectionName = 'Variables';
         sections.add(sectionName);
       });
     });
@@ -104,20 +106,33 @@ export default function Editor() {
     template.Result.modules.forEach(module => {
       module.variables.forEach(variable => {
         const variableSection = variable.section || 'Variables';
-        if (variableSection === section) {
-          if (
-            tab === 'text' &&
-            (variable.type === TemplateVariableTypeEnum.TextArea ||
-              variable.type === TemplateVariableTypeEnum.Input)
-          ) {
-            variables.push(variable);
-          } else if (
-            tab === 'triggers' &&
-            (variable.type === TemplateVariableTypeEnum.Selector ||
-              variable.type === TemplateVariableTypeEnum.Boolean)
-          ) {
-            variables.push(variable);
-          }
+
+        // Check if the current artboard is included in the variable's section
+        const isArtboardInSection =
+          artBoard && variableSection.includes(artBoard);
+
+        // If we have an artboard and it's not in the section, skip this variable
+        if (artBoard && !isArtboardInSection) {
+          return;
+        }
+
+        // If no artboard is set, fall back to the original section-based filtering
+        if (!artBoard && variableSection !== section) {
+          return;
+        }
+
+        if (
+          tab === 'text' &&
+          (variable.type === TemplateVariableTypeEnum.TextArea ||
+            variable.type === TemplateVariableTypeEnum.Input)
+        ) {
+          variables.push(variable);
+        } else if (
+          tab === 'triggers' &&
+          (variable.type === TemplateVariableTypeEnum.Selector ||
+            variable.type === TemplateVariableTypeEnum.Boolean)
+        ) {
+          variables.push(variable);
         }
       });
     });
@@ -132,6 +147,7 @@ export default function Editor() {
       module.images.forEach(image => {
         // Note: Images don't have a section attribute, so we'll show all images for now
         // You might need to add section info to images if needed
+        // For now, we'll show all images since they don't have section filtering
         images.push(image);
       });
     });
@@ -148,6 +164,14 @@ export default function Editor() {
 
     return template.Result.modules.some(module =>
       module.variables.some(variable => {
+        // If we have an artboard, check if it's included in the variable's section
+        if (artBoard) {
+          const variableSection = variable.section || 'Variables';
+          if (!variableSection.includes(artBoard)) {
+            return false;
+          }
+        }
+
         if (tabId === 'text') {
           return (
             variable.type === TemplateVariableTypeEnum.TextArea ||
@@ -184,7 +208,6 @@ export default function Editor() {
     }
   }, [tabs, activeTab]);
 
-  const [artBoard, setArtBoard] = useState<string>('');
   const [assets, setAssets] = useState<Array<FileAsset>>([]);
   const [rivesStates, setRiveStates] = useState<Rive[]>([]);
   const changeImage = async (url: string, _i: number, name: string) => {
