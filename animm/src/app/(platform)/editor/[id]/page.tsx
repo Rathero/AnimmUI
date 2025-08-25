@@ -297,8 +297,19 @@ export default function Editor() {
         ) {
           const composition = template?.Result.templateCompositions[0];
           setArtBoard(template?.Result.templateCompositions[0].name);
-          setCurrentHeight(composition.templateResolutions[0].height);
-          setCurrentWidth(composition.templateResolutions[0].width);
+          const initialWidth = composition.templateResolutions[0].width;
+          const initialHeight = composition.templateResolutions[0].height;
+          setCurrentWidth(initialWidth);
+          setCurrentHeight(initialHeight);
+
+          // Set initial canvas dimensions
+          setTimeout(() => {
+            const mainCanvas = document.getElementById('MainCanvas');
+            if (mainCanvas) {
+              mainCanvas.style.width = initialWidth + 'px';
+              mainCanvas.style.height = initialHeight + 'px';
+            }
+          }, 100);
         }
         const newGeneratedAnimation: GeneratedAnimation = {
           baseTemplate: template.Result,
@@ -362,13 +373,15 @@ export default function Editor() {
     setValueWidth(width);
     setValueHeight(height);
     setArtBoard(artBoard);
+    setCurrentWidth(width);
+    setCurrentHeight(height);
+
     const mainCan: any = document.querySelector('#MainCanvas');
     if (mainCan) {
       mainCan.style.width = width + 'px';
-      setCurrentWidth(width);
       mainCan.style.height = height + 'px';
-      setCurrentHeight(height);
     }
+
     //if (rivesStates && rivesStates[0]) {
     rivesStates[0].reset({
       artboard: artBoard,
@@ -431,6 +444,12 @@ export default function Editor() {
 
   // EventListener to Deactivate Zoom Pan to be able to Resize
   const [isResizing, setIsResizing] = useState(false);
+  const [isCanvasResizing, setIsCanvasResizing] = useState(false);
+  const [resizeStartPos, setResizeStartPos] = useState({ x: 0, y: 0 });
+  const [resizeStartDimensions, setResizeStartDimensions] = useState({
+    width: 0,
+    height: 0,
+  });
 
   // Initialize template on component mount
   useEffect(() => {
@@ -461,6 +480,111 @@ export default function Editor() {
       document.body.removeEventListener('mousemove', handleMouseEvent);
     };
   }, [template]); // Re-run when template changes
+
+  // Canvas resize handlers
+  const handleResizeStart = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsCanvasResizing(true);
+    setResizeStartPos({ x: e.clientX, y: e.clientY });
+
+    // Get the actual current dimensions from the DOM element
+    const mainCanvas = document.getElementById('MainCanvas');
+    const actualWidth = mainCanvas
+      ? parseInt(mainCanvas.style.width) || currentWidth
+      : currentWidth;
+    const actualHeight = mainCanvas
+      ? parseInt(mainCanvas.style.height) || currentHeight
+      : currentHeight;
+
+    setResizeStartDimensions({ width: actualWidth, height: actualHeight });
+
+    console.log('Resize start:', {
+      startPos: { x: e.clientX, y: e.clientY },
+      startDimensions: { width: actualWidth, height: actualHeight },
+      currentState: { width: currentWidth, height: currentHeight },
+    });
+
+    // Add visual feedback
+    document.body.style.cursor = 'se-resize';
+    document.body.style.userSelect = 'none';
+  };
+
+  const handleResizeMove = (e: MouseEvent) => {
+    if (!isCanvasResizing) return;
+
+    const deltaX = e.clientX - resizeStartPos.x;
+    const deltaY = e.clientY - resizeStartPos.y;
+
+    // Add constraints to prevent extreme values
+    const minSize = 200;
+    const maxSize = 4000; // Maximum reasonable size
+
+    // Calculate new dimensions with constraints
+    const newWidth = Math.max(
+      minSize,
+      Math.min(maxSize, resizeStartDimensions.width + deltaX)
+    );
+    const newHeight = Math.max(
+      minSize,
+      Math.min(maxSize, resizeStartDimensions.height + deltaY)
+    );
+
+    // Add step limits to prevent extreme jumps
+    const maxStep = 50; // More conservative step limit for smoother resizing
+    const constrainedWidth = Math.max(
+      resizeStartDimensions.width - maxStep,
+      Math.min(resizeStartDimensions.width + maxStep, newWidth)
+    );
+    const constrainedHeight = Math.max(
+      resizeStartDimensions.height - maxStep,
+      Math.min(resizeStartDimensions.height + maxStep, newHeight)
+    );
+
+    console.log('Resizing canvas:', {
+      newWidth: constrainedWidth,
+      newHeight: constrainedHeight,
+      deltaX,
+      deltaY,
+      originalWidth: resizeStartDimensions.width,
+      originalHeight: resizeStartDimensions.height,
+    });
+
+    setCurrentWidth(constrainedWidth);
+    setCurrentHeight(constrainedHeight);
+
+    const mainCanvas = document.getElementById('MainCanvas');
+    if (mainCanvas) {
+      mainCanvas.style.width = constrainedWidth + 'px';
+      mainCanvas.style.height = constrainedHeight + 'px';
+      console.log(
+        'Canvas dimensions updated:',
+        mainCanvas.style.width,
+        mainCanvas.style.height
+      );
+    }
+  };
+
+  const handleResizeEnd = () => {
+    setIsCanvasResizing(false);
+
+    // Clean up visual feedback
+    document.body.style.cursor = '';
+    document.body.style.userSelect = '';
+  };
+
+  // Add global resize event listeners
+  useEffect(() => {
+    if (isCanvasResizing) {
+      document.addEventListener('mousemove', handleResizeMove);
+      document.addEventListener('mouseup', handleResizeEnd);
+
+      return () => {
+        document.removeEventListener('mousemove', handleResizeMove);
+        document.removeEventListener('mouseup', handleResizeEnd);
+      };
+    }
+  }, [isCanvasResizing, resizeStartPos, resizeStartDimensions]);
 
   const generateUrl = async () => {
     if (template) {
@@ -873,7 +997,7 @@ export default function Editor() {
               </div>
 
               <TransformWrapper
-                disabled={isResizing}
+                disabled={isResizing || isCanvasResizing}
                 disablePadding={true}
                 centerOnInit={true}
                 initialScale={1}
@@ -904,7 +1028,11 @@ export default function Editor() {
                     <TransformComponent wrapperClass="!w-full !h-full">
                       <div
                         id="MainCanvas"
-                        className="h-[1920px] w-[1080px] flex rounded-lg border shadow-md shadow-slate-500/10"
+                        className="flex rounded-lg border shadow-md shadow-slate-500/10 relative"
+                        style={{
+                          width: currentWidth + 'px',
+                          height: currentHeight + 'px',
+                        }}
                       >
                         <div className="size-full">
                           {template &&
@@ -922,6 +1050,19 @@ export default function Editor() {
                               />
                             )}
                         </div>
+
+                        {/* Resize Handle - Bottom Right Corner */}
+                        <div
+                          className="absolute bottom-0 right-0 w-8 h-8 cursor-se-resize z-10"
+                          onMouseDown={handleResizeStart}
+                          style={{
+                            background:
+                              'linear-gradient(135deg, transparent 50%, #000 50%)',
+                            border: '2px solid #000',
+                            borderRadius: '0 0 8px 0',
+                          }}
+                          title="Drag to resize canvas"
+                        />
                       </div>
                     </TransformComponent>
                   </>
