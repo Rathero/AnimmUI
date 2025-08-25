@@ -162,6 +162,10 @@ export default function Editor() {
       return template.Result.modules.some(module => module.images.length > 0);
     }
 
+    if (tabId === 'products') {
+      return template?.Result?.products && template.Result.products.length > 0;
+    }
+
     return template.Result.modules.some(module =>
       module.variables.some(variable => {
         // If we have an artboard, check if it's included in the variable's section
@@ -194,6 +198,7 @@ export default function Editor() {
       { id: 'text', icon: Type, label: 'Text' },
       { id: 'image', icon: ImageIcon, label: 'Image' },
       { id: 'triggers', icon: Settings, label: 'Triggers' },
+      { id: 'products', icon: Grid3X3, label: 'Products' },
     ];
 
     return allTabs.filter(tab => hasTabContent(tab.id));
@@ -778,6 +783,47 @@ export default function Editor() {
                               )}
                             </div>
                           ))}
+
+                        {/* Products Tab */}
+                        {activeTab === 'products' &&
+                          template?.Result?.products && (
+                            <div className="space-y-4">
+                              {/* Products Dropdown */}
+                              <div className="space-y-2">
+                                <label className="text-sm font-medium text-gray-700">
+                                  Products
+                                </label>
+                                <select className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                                  <option value="">Select a product</option>
+                                  {template.Result.products.map(product => (
+                                    <option key={product.id} value={product.id}>
+                                      {product.name}
+                                    </option>
+                                  ))}
+                                </select>
+                              </div>
+
+                              {/* Languages Dropdown */}
+                              {template?.Result?.languages && (
+                                <div className="space-y-2">
+                                  <label className="text-sm font-medium text-gray-700">
+                                    Languages
+                                  </label>
+                                  <select className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                                    <option value="">Select a language</option>
+                                    {template.Result.languages.map(language => (
+                                      <option
+                                        key={language.id}
+                                        value={language.id}
+                                      >
+                                        {language.name}
+                                      </option>
+                                    ))}
+                                  </select>
+                                </div>
+                              )}
+                            </div>
+                          )}
                       </div>
                     </div>
                   )}

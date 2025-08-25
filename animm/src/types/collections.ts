@@ -51,6 +51,16 @@ export interface Tag {
 }
 export interface ApiTemplate extends BaseApiResponse<Template> {}
 
+export interface Product {
+  id: number;
+  name: string;
+}
+
+export interface Language {
+  id: number;
+  name: string;
+}
+
 export interface Template {
   id: number;
   name: string;
@@ -60,6 +70,8 @@ export interface Template {
   video: string;
   static: boolean;
   templateCompositions: TemplateComposition[];
+  products?: Product[];
+  languages?: Language[];
 }
 
 export interface TemplateComposition {
