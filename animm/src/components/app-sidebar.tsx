@@ -57,16 +57,18 @@ export function AppSidebar() {
 
   // Sub-projects for Road To Icons
   const roadToIconsSubProjects = [
-    { code: 'es_ES', name: 'Spanish' },
-    { code: 'it_IT', name: 'Italian' },
-    { code: 'cs_CZ', name: 'Czech' },
-    { code: 'fr_FR', name: 'French' },
+    { code: 'ES', name: 'Spanish' },
+    { code: 'IT', name: 'Italian' },
+    { code: 'PL', name: 'Czech' },
+    { code: 'FR', name: 'French' },
+    { code: 'TR', name: 'French' },
+    { code: 'DE', name: 'French' },
   ];
 
   // Format sub-projects for each locale
   const formatSubProjects = [
     { code: '16x9', name: 'Landscape' },
-    { code: '9x16', name: 'Portrait' },
+    { code: '4x5', name: 'Portrait' },
     { code: '1x1', name: 'Square' },
   ];
 

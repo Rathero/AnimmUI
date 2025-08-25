@@ -22,6 +22,10 @@ export default function page({ params }: { params: Promise<{ id: string }> }) {
     undefined
   );
   const [isLoading, setIsLoading] = useState(true);
+  const [isVideoModalOpen, setIsVideoModalOpen] = useState(false);
+  const [selectedVideo, setSelectedVideo] = useState<any>(null);
+  const [isImageModalOpen, setIsImageModalOpen] = useState(false);
+  const [selectedImage, setSelectedImage] = useState<any>(null);
   const { get } = useCollectionsService();
   const { setPageTitle } = platformStore(state => state);
   const searchParams = useSearchParams();
@@ -30,35 +34,217 @@ export default function page({ params }: { params: Promise<{ id: string }> }) {
   const videoData = [
     {
       id: 1,
-      title: 'EP1 Road to Icons - German',
-      url: 'https://animmfilesv2.blob.core.windows.net/riot/video/EP1_Road to Icons_DE.mp4',
-      locale: 'de_DE',
+      title: 'EP1 Road to Icons - DE',
+      url: 'https://animmfilesv2.blob.core.windows.net/riot/video/16x9/EP1_Road to Icons_DE.mp4',
+      locale: 'DE',
       format: '16x9',
-      thumbnail: '/img/placeholder.svg',
+      thumbnail:
+        'https://animmfilesv2.blob.core.windows.net/riot/video/16x9/thumbnails/EP1_Road to Icons_DE.jpg',
     },
     {
       id: 2,
-      title: 'EP1 Road to Icons - Spanish',
-      url: 'https://animmfilesv2.blob.core.windows.net/riot/video/EP1_Road to Icons_ES.mp4',
-      locale: 'es_ES',
+      title: 'EP1 Road to Icons - ES',
+      url: 'https://animmfilesv2.blob.core.windows.net/riot/video/16x9/EP1_Road to Icons_ES.mp4',
+      locale: 'ES',
       format: '16x9',
-      thumbnail: '/img/placeholder.svg',
+      thumbnail:
+        'https://animmfilesv2.blob.core.windows.net/riot/video/16x9/thumbnails/EP1_Road to Icons_ES.jpg',
     },
     {
       id: 3,
-      title: 'EP1 Road to Icons - Spanish (Duplicate)',
-      url: 'https://animmfilesv2.blob.core.windows.net/riot/video/EP1_Road to Icons_ES.mp4',
-      locale: 'es_ES',
-      format: '9x16',
-      thumbnail: '/img/placeholder.svg',
+      title: 'EP1 Road to Icons - FR',
+      url: 'https://animmfilesv2.blob.core.windows.net/riot/video/16x9/EP1_Road to Icons_FR.mp4',
+      locale: 'FR',
+      format: '16x9',
+      thumbnail:
+        'https://animmfilesv2.blob.core.windows.net/riot/video/16x9/thumbnails/EP1_Road to Icons_FR.jpg',
     },
     {
       id: 4,
-      title: 'EP1 Road to Icons - Italian',
-      url: 'https://animmfilesv2.blob.core.windows.net/riot/video/EP1_Road to Icons_IT.mp4',
-      locale: 'it_IT',
+      title: 'EP1 Road to Icons - IT',
+      url: 'https://animmfilesv2.blob.core.windows.net/riot/video/16x9/EP1_Road to Icons_IT.mp4',
+      locale: 'IT',
+      format: '16x9',
+      thumbnail:
+        'https://animmfilesv2.blob.core.windows.net/riot/video/16x9/thumbnails/EP1_Road to Icons_IT.jpg',
+    },
+    {
+      id: 5,
+      title: 'EP1 Road to Icons - PL',
+      url: 'https://animmfilesv2.blob.core.windows.net/riot/video/16x9/EP1_Road to Icons_PL.mp4',
+      locale: 'PL',
+      format: '16x9',
+      thumbnail:
+        'https://animmfilesv2.blob.core.windows.net/riot/video/16x9/thumbnails/EP1_Road to Icons_PL.jpg',
+    },
+    {
+      id: 6,
+      title: 'EP1 Road to Icons - TR',
+      url: 'https://animmfilesv2.blob.core.windows.net/riot/video/16x9/EP1_Road to Icons_TR.mp4',
+      locale: 'TR',
+      format: '16x9',
+      thumbnail:
+        'https://animmfilesv2.blob.core.windows.net/riot/video/16x9/thumbnails/EP1_Road to Icons_TR.jpg',
+    },
+    {
+      id: 7,
+      title: 'EP1 Road to Icons - DE',
+      url: 'https://animmfilesv2.blob.core.windows.net/riot/video/1x1/EP1_Road to Icons_DE.mp4',
+      locale: 'DE',
       format: '1x1',
-      thumbnail: '/img/placeholder.svg',
+      thumbnail:
+        'https://animmfilesv2.blob.core.windows.net/riot/video/1x1/thumbnails/EP1_Road to Icons_DE.png',
+    },
+    {
+      id: 8,
+      title: 'EP1 Road to Icons - ES',
+      url: 'https://animmfilesv2.blob.core.windows.net/riot/video/1x1/EP1_Road to Icons_ES.mp4',
+      locale: 'ES',
+      format: '1x1',
+      thumbnail:
+        'https://animmfilesv2.blob.core.windows.net/riot/video/1x1/thumbnails/EP1_Road to Icons_ES.png',
+    },
+    {
+      id: 9,
+      title: 'EP1 Road to Icons - FR',
+      url: 'https://animmfilesv2.blob.core.windows.net/riot/video/1x1/EP1_Road to Icons_FR.mp4',
+      locale: 'FR',
+      format: '1x1',
+      thumbnail:
+        'https://animmfilesv2.blob.core.windows.net/riot/video/1x1/thumbnails/EP1_Road to Icons_FR.png',
+    },
+    {
+      id: 10,
+      title: 'EP1 Road to Icons - IT',
+      url: 'https://animmfilesv2.blob.core.windows.net/riot/video/1x1/EP1_Road to Icons_IT.mp4',
+      locale: 'IT',
+      format: '1x1',
+      thumbnail:
+        'https://animmfilesv2.blob.core.windows.net/riot/video/1x1/thumbnails/EP1_Road to Icons_IT.png',
+    },
+    {
+      id: 11,
+      title: 'EP1 Road to Icons - PL',
+      url: 'https://animmfilesv2.blob.core.windows.net/riot/video/1x1/EP1_Road to Icons_PL.mp4',
+      locale: 'PL',
+      format: '1x1',
+      thumbnail:
+        'https://animmfilesv2.blob.core.windows.net/riot/video/1x1/thumbnails/EP1_Road to Icons_PL.png',
+    },
+    {
+      id: 12,
+      title: 'EP1 Road to Icons - TR',
+      url: 'https://animmfilesv2.blob.core.windows.net/riot/video/1x1/EP1_Road to Icons_TR.mp4',
+      locale: 'TR',
+      format: '1x1',
+      thumbnail:
+        'https://animmfilesv2.blob.core.windows.net/riot/video/1x1/thumbnails/EP1_Road to Icons_TR.png',
+    },
+    {
+      id: 13,
+      title: 'EP1 Road to Icons - DE',
+      url: 'https://animmfilesv2.blob.core.windows.net/riot/video/4x5/EP1_Road to Icons_DE.mp4',
+      locale: 'DE',
+      format: '4x5',
+      thumbnail:
+        'https://animmfilesv2.blob.core.windows.net/riot/video/4x5/thumbnails/EP1_Road to Icons_DE.jpg',
+    },
+    {
+      id: 14,
+      title: 'EP1 Road to Icons - ES',
+      url: 'https://animmfilesv2.blob.core.windows.net/riot/video/4x5/EP1_Road to Icons_ES.mp4',
+      locale: 'ES',
+      format: '4x5',
+      thumbnail:
+        'https://animmfilesv2.blob.core.windows.net/riot/video/4x5/thumbnails/EP1_Road to Icons_ES.jpg',
+    },
+    {
+      id: 15,
+      title: 'EP1 Road to Icons - FR',
+      url: 'https://animmfilesv2.blob.core.windows.net/riot/video/4x5/EP1_Road to Icons_FR.mp4',
+      locale: 'FR',
+      format: '4x5',
+      thumbnail:
+        'https://animmfilesv2.blob.core.windows.net/riot/video/4x5/thumbnails/EP1_Road to Icons_FR.jpg',
+    },
+    {
+      id: 16,
+      title: 'EP1 Road to Icons - IT',
+      url: 'https://animmfilesv2.blob.core.windows.net/riot/video/4x5/EP1_Road to Icons_IT.mp4',
+      locale: 'IT',
+      format: '4x5',
+      thumbnail:
+        'https://animmfilesv2.blob.core.windows.net/riot/video/4x5/thumbnails/EP1_Road to Icons_IT.jpg',
+    },
+    {
+      id: 17,
+      title: 'EP1 Road to Icons - PL',
+      url: 'https://animmfilesv2.blob.core.windows.net/riot/video/4x5/EP1_Road to Icons_PL.mp4',
+      locale: 'PL',
+      format: '4x5',
+      thumbnail:
+        'https://animmfilesv2.blob.core.windows.net/riot/video/4x5/thumbnails/EP1_Road to Icons_PL.jpg',
+    },
+    {
+      id: 18,
+      title: 'EP1 Road to Icons - TR',
+      url: 'https://animmfilesv2.blob.core.windows.net/riot/video/4x5/EP1_Road to Icons_TR.mp4',
+      locale: 'TR',
+      format: '4x5',
+      thumbnail:
+        'https://animmfilesv2.blob.core.windows.net/riot/video/4x5/thumbnails/EP1_Road to Icons_TR.jpg',
+    },
+  ];
+
+  // Image data array - easily configurable
+  const imageData = [
+    {
+      id: 1,
+      title: 'EP1 Road to Icons - DE',
+      url: 'https://animmfilesv2.blob.core.windows.net/riot/image/RoadToIcons_Endcard_DE.jpg',
+      locale: 'DE',
+      thumbnail:
+        'https://animmfilesv2.blob.core.windows.net/riot/image/RoadToIcons_Endcard_DE.jpg',
+    },
+    {
+      id: 2,
+      title: 'EP1 Road to Icons - ES',
+      url: 'https://animmfilesv2.blob.core.windows.net/riot/image/RoadToIcons_Endcard_ES.jpg',
+      locale: 'ES',
+      thumbnail:
+        'https://animmfilesv2.blob.core.windows.net/riot/image/RoadToIcons_Endcard_ES.jpg',
+    },
+    {
+      id: 3,
+      title: 'EP1 Road to Icons - FR',
+      url: 'https://animmfilesv2.blob.core.windows.net/riot/image/RoadToIcons_Endcard_FR.jpg',
+      locale: 'FR',
+      thumbnail:
+        'https://animmfilesv2.blob.core.windows.net/riot/image/RoadToIcons_Endcard_FR.jpg',
+    },
+    {
+      id: 4,
+      title: 'EP1 Road to Icons - IT',
+      url: 'https://animmfilesv2.blob.core.windows.net/riot/image/RoadToIcons_Endcard_IT.jpg',
+      locale: 'IT',
+      thumbnail:
+        'https://animmfilesv2.blob.core.windows.net/riot/image/RoadToIcons_Endcard_IT.jpg',
+    },
+    {
+      id: 5,
+      title: 'EP1 Road to Icons - PL',
+      url: 'https://animmfilesv2.blob.core.windows.net/riot/image/RoadToIcons_Endcard_PL.jpg',
+      locale: 'PL',
+      thumbnail:
+        'https://animmfilesv2.blob.core.windows.net/riot/image/RoadToIcons_Endcard_PL.jpg',
+    },
+    {
+      id: 6,
+      title: 'EP1 Road to Icons - TR',
+      url: 'https://animmfilesv2.blob.core.windows.net/riot/image/RoadToIcons_Endcard_TR.jpg',
+      locale: 'TR',
+      thumbnail:
+        'https://animmfilesv2.blob.core.windows.net/riot/image/RoadToIcons_Endcard_TR.jpg',
     },
   ];
 
@@ -106,9 +292,117 @@ export default function page({ params }: { params: Promise<{ id: string }> }) {
     });
   };
 
+  // Get filtered images based on URL parameters
+  const getFilteredImages = () => {
+    const locale = searchParams.get('locale');
+
+    if (!locale) {
+      return imageData; // Show all images if no locale filter
+    }
+
+    return imageData.filter(image => {
+      const matchesLocale = image.locale === locale;
+      return matchesLocale;
+    });
+  };
+
   // Get active tab from URL parameters
   const getActiveTab = () => {
     return searchParams.get('tab') || 'overview';
+  };
+
+  // Video Modal Component
+  const VideoModal = ({
+    isOpen,
+    onClose,
+    video,
+  }: {
+    isOpen: boolean;
+    onClose: () => void;
+    video: any;
+  }) => {
+    if (!isOpen || !video) return null;
+
+    return (
+      <div className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 p-4">
+        <div className="bg-white rounded-lg max-w-4xl w-full max-h-[90vh] overflow-hidden">
+          <div className="flex items-center justify-between p-4 border-b">
+            <h3 className="text-lg font-semibold">{video.title}</h3>
+            <button
+              onClick={onClose}
+              className="text-gray-500 hover:text-gray-700 text-2xl font-bold"
+            >
+              ×
+            </button>
+          </div>
+          <div className="p-4">
+            <video
+              controls
+              className="w-full h-auto max-h-[70vh]"
+              autoPlay
+              src={video.url}
+            >
+              Your browser does not support the video tag.
+            </video>
+            <div className="mt-4 text-sm text-gray-600">
+              <p>
+                <strong>Locale:</strong> {video.locale}
+              </p>
+              <p>
+                <strong>Format:</strong> {video.format}
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
+  // Image Modal Component
+  const ImageModal = ({
+    isOpen,
+    onClose,
+    image,
+  }: {
+    isOpen: boolean;
+    onClose: () => void;
+    image: any;
+  }) => {
+    if (!isOpen || !image) return null;
+
+    return (
+      <div className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 p-4">
+        <div className="bg-white rounded-lg max-w-6xl w-full max-h-[90vh] overflow-hidden">
+          <div className="flex items-center justify-between p-4 border-b">
+            <h3 className="text-lg font-semibold">{image.title}</h3>
+            <button
+              onClick={onClose}
+              className="text-gray-500 hover:text-gray-700 text-2xl font-bold"
+            >
+              ×
+            </button>
+          </div>
+          <div className="p-4 flex justify-center">
+            <img
+              src={image.url}
+              alt={image.title}
+              className="max-w-full max-h-[70vh] object-contain"
+              onError={e => {
+                const target = e.target as HTMLImageElement;
+                target.src = '/img/placeholder.svg';
+              }}
+            />
+          </div>
+          <div className="p-4 border-t">
+            <div className="text-sm text-gray-600">
+              <p>
+                <strong>Locale:</strong> {image.locale}
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
   };
 
   // Special layout for Road to Icons (collection ID 4)
@@ -120,12 +414,10 @@ export default function page({ params }: { params: Promise<{ id: string }> }) {
       <div className="w-full">
         {/* Navigation Tabs */}
         <Tabs defaultValue={activeTab} className="w-full">
-          <TabsList className="grid w-full grid-cols-5">
+          <TabsList className="grid w-full grid-cols-3">
             <TabsTrigger value="overview">Overview</TabsTrigger>
             <TabsTrigger value="video">Video</TabsTrigger>
             <TabsTrigger value="images">Images</TabsTrigger>
-            <TabsTrigger value="exports">Exports</TabsTrigger>
-            <TabsTrigger value="settings">Settings</TabsTrigger>
           </TabsList>
 
           <TabsContent value="overview" className="mt-6">
@@ -142,16 +434,26 @@ export default function page({ params }: { params: Promise<{ id: string }> }) {
 
           <TabsContent value="video" className="mt-6">
             {/* Video Content */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
               {filteredVideos.map(video => (
-                <Card key={video.id} className="overflow-hidden">
-                  <div className="relative h-48 bg-gradient-to-br from-purple-500 to-purple-700 flex items-center justify-center">
-                    <div className="text-center">
-                      <h3 className="text-2xl font-bold text-white mb-2">
-                        {video.title}
-                      </h3>
-                      <div className="w-16 h-1 bg-silver-300 mx-auto rounded-full"></div>
-                    </div>
+                <Card
+                  key={video.id}
+                  className="overflow-hidden cursor-pointer hover:shadow-lg transition-shadow"
+                  onClick={() => {
+                    setSelectedVideo(video);
+                    setIsVideoModalOpen(true);
+                  }}
+                >
+                  <div className="relative h-48">
+                    <img
+                      src={video.thumbnail}
+                      alt={video.title}
+                      className="w-full h-full object-cover"
+                      onError={e => {
+                        const target = e.target as HTMLImageElement;
+                        target.src = '/img/placeholder.svg';
+                      }}
+                    />
                   </div>
                   <CardContent className="p-4">
                     <div className="flex items-center justify-between">
@@ -180,10 +482,51 @@ export default function page({ params }: { params: Promise<{ id: string }> }) {
           </TabsContent>
 
           <TabsContent value="images" className="mt-6">
-            <div className="text-center py-12 text-gray-500">
-              <Image className="w-12 h-12 mx-auto mb-4" />
-              <p>Images content coming soon</p>
+            {/* Images Content */}
+            <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+              {getFilteredImages().map(image => (
+                <Card
+                  key={image.id}
+                  className="overflow-hidden cursor-pointer hover:shadow-lg transition-shadow"
+                  onClick={() => {
+                    setSelectedImage(image);
+                    setIsImageModalOpen(true);
+                  }}
+                >
+                  <div className="relative h-48">
+                    <img
+                      src={image.thumbnail}
+                      alt={image.title}
+                      className="w-full h-full object-cover"
+                      onError={e => {
+                        const target = e.target as HTMLImageElement;
+                        target.src = '/img/placeholder.svg';
+                      }}
+                    />
+                  </div>
+                  <CardContent className="p-4">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <Image className="w-4 h-4 text-gray-500" />
+                        <span className="font-medium">{image.title}</span>
+                      </div>
+                      <MoreVertical className="w-4 h-4 text-gray-500 cursor-pointer" />
+                    </div>
+                    <p className="text-sm text-gray-500 mt-1">Image</p>
+                    <div className="mt-2 text-xs text-gray-400">
+                      <p>Locale: {image.locale}</p>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
             </div>
+
+            {getFilteredImages().length === 0 && (
+              <div className="text-center py-12 text-gray-500">
+                <Image className="w-12 h-12 mx-auto mb-4" />
+                <p>No images found for the selected filters</p>
+              </div>
+            )}
           </TabsContent>
 
           <TabsContent value="exports" className="mt-6">
@@ -200,6 +543,26 @@ export default function page({ params }: { params: Promise<{ id: string }> }) {
             </div>
           </TabsContent>
         </Tabs>
+
+        {/* Video Modal */}
+        <VideoModal
+          isOpen={isVideoModalOpen}
+          onClose={() => {
+            setIsVideoModalOpen(false);
+            setSelectedVideo(null);
+          }}
+          video={selectedVideo}
+        />
+
+        {/* Image Modal */}
+        <ImageModal
+          isOpen={isImageModalOpen}
+          onClose={() => {
+            setIsImageModalOpen(false);
+            setSelectedImage(null);
+          }}
+          image={selectedImage}
+        />
       </div>
     );
   };
