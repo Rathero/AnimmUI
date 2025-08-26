@@ -19,12 +19,12 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
 import { LoadingSpinner } from '@/components/ui/loading-spinner';
 import { platformStore } from '@/stores/platformStore';
 import useCollectionsService from '@/app/services/CollectionsService';
 import useTemplatesService from '@/app/services/TemplatesService';
+import useUsersService from '@/app/services/UsersService';
 import {
   Collection,
   ApiCollections,
@@ -35,6 +35,7 @@ import {
   TemplateVariableTypeEnum,
   ModuleTypeEnum,
 } from '@/types/collections';
+import { User } from '@/types/users';
 import {
   Plus,
   Edit,
@@ -51,19 +52,26 @@ import {
   Music,
   Link,
   Grid,
+  FolderOpen,
 } from 'lucide-react';
+
+type ViewMode = 'collections' | 'templates' | 'modules' | 'variables';
 
 export default function BackofficePage() {
   const [collections, setCollections] = useState<Collection[]>([]);
-  const [templates, setTemplates] = useState<Template[]>([]);
+  const [users, setUsers] = useState<User[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState('collections');
+
+  // Navigation state
+  const [viewMode, setViewMode] = useState<ViewMode>('collections');
   const [selectedCollection, setSelectedCollection] =
     useState<Collection | null>(null);
   const [selectedTemplate, setSelectedTemplate] = useState<Template | null>(
     null
   );
   const [selectedModule, setSelectedModule] = useState<Module | null>(null);
+
+  // Edit state
   const [isEditing, setIsEditing] = useState(false);
   const [editingItem, setEditingItem] = useState<any>(null);
   const [editMode, setEditMode] = useState<
@@ -71,7 +79,7 @@ export default function BackofficePage() {
   >('collection');
 
   const {
-    getAll: getCollections,
+    getAllBackoffice: getAllBackoffice,
     create: createCollection,
     update: updateCollection,
     delete: deleteCollection,
@@ -82,6 +90,7 @@ export default function BackofficePage() {
     update: updateTemplate,
     delete: deleteTemplate,
   } = useTemplatesService();
+  const { getAll: getAllUsers } = useUsersService();
   const { setPageTitle } = platformStore(state => state);
 
   // Set page title
@@ -93,19 +102,12 @@ export default function BackofficePage() {
   const fetchData = async () => {
     setIsLoading(true);
     try {
-      const collectionsData = await getCollections();
+      const [collectionsData, usersData] = await Promise.all([
+        getAllBackoffice(),
+        getAllUsers(),
+      ]);
       setCollections(collectionsData?.Result || []);
-
-      // Use templates from collections data instead of making individual API calls
-      const allTemplates: Template[] = [];
-      for (const collection of collectionsData?.Result || []) {
-        for (const template of collection.templates) {
-          const templateData = await getTemplate(template.id.toString());
-          if (templateData?.Result)
-            allTemplates.push(templateData?.Result || []);
-        }
-      }
-      setTemplates(allTemplates);
+      setUsers(usersData?.Result || []);
     } catch (error) {
       console.error('Error fetching data:', error);
     } finally {
@@ -116,6 +118,32 @@ export default function BackofficePage() {
   useEffect(() => {
     fetchData();
   }, []);
+
+  // Navigation functions
+  const goToCollections = () => {
+    setViewMode('collections');
+    setSelectedCollection(null);
+    setSelectedTemplate(null);
+    setSelectedModule(null);
+  };
+
+  const goToTemplates = (collection: Collection) => {
+    setSelectedCollection(collection);
+    setViewMode('templates');
+    setSelectedTemplate(null);
+    setSelectedModule(null);
+  };
+
+  const goToModules = (template: Template) => {
+    setSelectedTemplate(template);
+    setViewMode('modules');
+    setSelectedModule(null);
+  };
+
+  const goToVariables = (module: Module) => {
+    setSelectedModule(module);
+    setViewMode('variables');
+  };
 
   // Collection Management
   const handleCreateCollection = () => {
@@ -231,9 +259,7 @@ export default function BackofficePage() {
   const handleSaveModule = async () => {
     try {
       // For now, we'll update the template that contains this module
-      const template = templates.find(t =>
-        t.modules?.some(m => m.id === editingItem.id)
-      );
+      const template = selectedTemplate;
       if (template) {
         const updatedModules = template.modules?.map(m =>
           m.id === editingItem.id ? editingItem : m
@@ -255,7 +281,7 @@ export default function BackofficePage() {
   const handleDeleteModule = async (templateId: number, moduleId: number) => {
     if (confirm('Are you sure you want to delete this module?')) {
       try {
-        const template = templates.find(t => t.id === templateId);
+        const template = selectedTemplate;
         if (template) {
           const updatedModules =
             template.modules?.filter(m => m.id !== moduleId) || [];
@@ -294,12 +320,8 @@ export default function BackofficePage() {
   const handleSaveVariable = async () => {
     try {
       // Find the template and module that contains this variable
-      const template = templates.find(t =>
-        t.modules?.some(m => m.variables?.some(v => v.id === editingItem.id))
-      );
-      const module = template?.modules?.find(m =>
-        m.variables?.some(v => v.id === editingItem.id)
-      );
+      const template = selectedTemplate;
+      const module = selectedModule;
 
       if (template && module) {
         const updatedVariables = module.variables?.map(v =>
@@ -331,7 +353,7 @@ export default function BackofficePage() {
   ) => {
     if (confirm('Are you sure you want to delete this variable?')) {
       try {
-        const template = templates.find(t => t.id === templateId);
+        const template = selectedTemplate;
         if (template) {
           const updatedModules =
             template.modules?.map(m =>
@@ -393,21 +415,49 @@ export default function BackofficePage() {
           </div>
         </div>
 
-        {/* Main Content */}
-        <Tabs
-          value={activeTab}
-          onValueChange={setActiveTab}
-          className="space-y-4"
-        >
-          <TabsList>
-            <TabsTrigger value="collections">Collections</TabsTrigger>
-            <TabsTrigger value="templates">Templates</TabsTrigger>
-            <TabsTrigger value="modules">Modules</TabsTrigger>
-            <TabsTrigger value="variables">Variables</TabsTrigger>
-          </TabsList>
+        {/* Breadcrumb Navigation */}
+        <div className="flex items-center gap-2 text-sm text-muted-foreground">
+          <button
+            onClick={goToCollections}
+            className="hover:text-foreground transition-colors"
+          >
+            Collections
+          </button>
+          {selectedCollection && (
+            <>
+              <ChevronRight className="w-4 h-4" />
+              <button
+                onClick={() => goToTemplates(selectedCollection)}
+                className="hover:text-foreground transition-colors"
+              >
+                {selectedCollection.name}
+              </button>
+            </>
+          )}
+          {selectedTemplate && (
+            <>
+              <ChevronRight className="w-4 h-4" />
+              <button
+                onClick={() => goToModules(selectedTemplate)}
+                className="hover:text-foreground transition-colors"
+              >
+                {selectedTemplate.name}
+              </button>
+            </>
+          )}
+          {selectedModule && (
+            <>
+              <ChevronRight className="w-4 h-4" />
+              <span className="text-foreground">
+                {ModuleTypeEnum[selectedModule.moduleType]}
+              </span>
+            </>
+          )}
+        </div>
 
-          {/* Collections Tab */}
-          <TabsContent value="collections" className="space-y-4">
+        {/* Main Content */}
+        {viewMode === 'collections' && (
+          <div className="space-y-4">
             <div className="flex items-center justify-between">
               <h2 className="text-xl font-semibold">Collections</h2>
               <Button onClick={handleCreateCollection}>
@@ -416,30 +466,48 @@ export default function BackofficePage() {
               </Button>
             </div>
 
-            {/* Collections Grid */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               {collections.map(collection => (
                 <Card
                   key={collection.id}
-                  className="hover:shadow-md transition-shadow"
+                  className="hover:shadow-md transition-shadow cursor-pointer"
+                  onClick={() => goToTemplates(collection)}
                 >
                   <CardHeader>
                     <div className="flex items-center justify-between">
-                      <CardTitle className="text-lg">
-                        {collection.name}
-                      </CardTitle>
+                      <div className="flex items-center gap-2">
+                        <CardTitle className="text-lg">
+                          {collection.name}
+                        </CardTitle>
+                        {collection.userId !== 0 &&
+                          users.find(user => user.id === collection.userId) && (
+                            <Badge variant="outline" className="text-xs">
+                              {
+                                users.find(
+                                  user => user.id === collection.userId
+                                )?.email
+                              }
+                            </Badge>
+                          )}
+                      </div>
                       <div className="flex items-center gap-2">
                         <Button
                           variant="ghost"
                           size="sm"
-                          onClick={() => handleEditCollection(collection)}
+                          onClick={e => {
+                            e.stopPropagation();
+                            handleEditCollection(collection);
+                          }}
                         >
                           <Edit className="w-4 h-4" />
                         </Button>
                         <Button
                           variant="ghost"
                           size="sm"
-                          onClick={() => handleDeleteCollection(collection.id)}
+                          onClick={e => {
+                            e.stopPropagation();
+                            handleDeleteCollection(collection.id);
+                          }}
                         >
                           <Trash2 className="w-4 h-4" />
                         </Button>
@@ -457,15 +525,14 @@ export default function BackofficePage() {
                           {collection.templates?.length || 0}
                         </Badge>
                       </div>
-                      <div className="flex items-center justify-between text-sm">
-                        <span className="text-muted-foreground">ID:</span>
-                        <span className="font-mono">{collection.id}</span>
-                      </div>
                       <Button
                         variant="outline"
                         size="sm"
                         className="w-full mt-2"
-                        onClick={() => handleCreateTemplate(collection.id)}
+                        onClick={e => {
+                          e.stopPropagation();
+                          handleCreateTemplate(collection.id);
+                        }}
                       >
                         <Plus className="w-4 h-4 mr-2" />
                         Add Template
@@ -475,296 +542,270 @@ export default function BackofficePage() {
                 </Card>
               ))}
             </div>
-          </TabsContent>
+          </div>
+        )}
 
-          {/* Templates Tab */}
-          <TabsContent value="templates" className="space-y-4">
+        {viewMode === 'templates' && selectedCollection && (
+          <div className="space-y-4">
             <div className="flex items-center justify-between">
-              <h2 className="text-xl font-semibold">Templates</h2>
+              <div className="flex items-center gap-4">
+                <Button variant="outline" size="sm" onClick={goToCollections}>
+                  <ArrowLeft className="w-4 h-4 mr-2" />
+                  Back to Collections
+                </Button>
+                <h2 className="text-xl font-semibold">
+                  Templates in {selectedCollection.name}
+                </h2>
+              </div>
+              <Button
+                onClick={() => handleCreateTemplate(selectedCollection.id)}
+              >
+                <Plus className="w-4 h-4 mr-2" />
+                New Template
+              </Button>
             </div>
 
-            {/* Templates by Collection */}
-            {collections.map(collection => (
-              <Card key={collection.id} className="space-y-4">
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <span>{collection.name}</span>
-                    <Badge variant="outline">
-                      {collection.templates?.length || 0} templates
-                    </Badge>
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  {collection.templates && collection.templates.length > 0 ? (
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                      {collection.templates.map(template => (
-                        <Card
-                          key={template.id}
-                          className="hover:shadow-md transition-shadow"
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {selectedCollection.templates?.map(template => (
+                <Card
+                  key={template.id}
+                  className="hover:shadow-md transition-shadow cursor-pointer"
+                  onClick={() => goToModules(template)}
+                >
+                  <CardHeader>
+                    <div className="flex items-center justify-between">
+                      <CardTitle className="text-lg">{template.name}</CardTitle>
+                      <div className="flex items-center gap-2">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={e => {
+                            e.stopPropagation();
+                            handleEditTemplate(template);
+                          }}
                         >
-                          <CardHeader>
-                            <div className="flex items-center justify-between">
-                              <CardTitle className="text-base">
-                                {template.name}
-                              </CardTitle>
-                              <div className="flex items-center gap-2">
-                                <Button
-                                  variant="ghost"
-                                  size="sm"
-                                  onClick={() => handleEditTemplate(template)}
-                                >
-                                  <Edit className="w-4 h-4" />
-                                </Button>
-                                <Button
-                                  variant="ghost"
-                                  size="sm"
-                                  onClick={() =>
-                                    handleDeleteTemplate(template.id)
-                                  }
-                                >
-                                  <Trash2 className="w-4 h-4" />
-                                </Button>
-                              </div>
-                            </div>
-                            <CardDescription>
-                              Template ID: {template.id}
-                            </CardDescription>
-                          </CardHeader>
-                          <CardContent>
-                            <div className="space-y-2">
-                              <div className="flex items-center justify-between text-sm">
-                                <span className="text-muted-foreground">
-                                  Modules:
-                                </span>
-                                <Badge variant="secondary">
-                                  {template.modules?.length || 0}
-                                </Badge>
-                              </div>
-                              <Button
-                                variant="outline"
-                                size="sm"
-                                className="w-full"
-                                onClick={() => handleCreateModule(template.id)}
-                              >
-                                <Plus className="w-4 h-4 mr-2" />
-                                Add Module
-                              </Button>
-                            </div>
-                          </CardContent>
-                        </Card>
-                      ))}
-                    </div>
-                  ) : (
-                    <div className="text-center py-4 text-muted-foreground">
-                      No templates in this collection
-                    </div>
-                  )}
-                </CardContent>
-              </Card>
-            ))}
-          </TabsContent>
-
-          {/* Modules Tab */}
-          <TabsContent value="modules" className="space-y-4">
-            <div className="flex items-center justify-between">
-              <h2 className="text-xl font-semibold">Modules</h2>
-            </div>
-
-            {/* Modules by Template */}
-            {templates.map(template => (
-              <Card key={template.id} className="space-y-4">
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <span>{template.name}</span>
-                    <Badge variant="outline">
-                      {template.modules?.length || 0} modules
-                    </Badge>
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  {template.modules && template.modules.length > 0 ? (
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                      {template.modules.map(module => (
-                        <Card
-                          key={module.id}
-                          className="hover:shadow-md transition-shadow"
+                          <Edit className="w-4 h-4" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={e => {
+                            e.stopPropagation();
+                            handleDeleteTemplate(template.id);
+                          }}
                         >
-                          <CardHeader>
-                            <div className="flex items-center justify-between">
-                              <CardTitle className="text-base">
-                                {ModuleTypeEnum[module.moduleType]}
-                              </CardTitle>
-                              <div className="flex items-center gap-2">
-                                <Button
-                                  variant="ghost"
-                                  size="sm"
-                                  onClick={() => handleEditModule(module)}
-                                >
-                                  <Edit className="w-4 h-4" />
-                                </Button>
-                                <Button
-                                  variant="ghost"
-                                  size="sm"
-                                  onClick={() =>
-                                    handleDeleteModule(template.id, module.id)
-                                  }
-                                >
-                                  <Trash2 className="w-4 h-4" />
-                                </Button>
-                              </div>
-                            </div>
-                            <CardDescription>
-                              Module ID: {module.id}
-                            </CardDescription>
-                          </CardHeader>
-                          <CardContent>
-                            <div className="space-y-2">
-                              <div className="flex items-center justify-between text-sm">
-                                <span className="text-muted-foreground">
-                                  Variables:
-                                </span>
-                                <Badge variant="secondary">
-                                  {module.variables?.length || 0}
-                                </Badge>
-                              </div>
-                              <Button
-                                variant="outline"
-                                size="sm"
-                                className="w-full"
-                                onClick={() => handleCreateVariable(module.id)}
-                              >
-                                <Plus className="w-4 h-4 mr-2" />
-                                Add Variable
-                              </Button>
-                            </div>
-                          </CardContent>
-                        </Card>
-                      ))}
+                          <Trash2 className="w-4 h-4" />
+                        </Button>
+                      </div>
                     </div>
-                  ) : (
-                    <div className="text-center py-4 text-muted-foreground">
-                      No modules in this template
-                    </div>
-                  )}
-                </CardContent>
-              </Card>
-            ))}
-          </TabsContent>
-
-          {/* Variables Tab */}
-          <TabsContent value="variables" className="space-y-4">
-            <div className="flex items-center justify-between">
-              <h2 className="text-xl font-semibold">Variables</h2>
-            </div>
-
-            {/* Variables by Module */}
-            {templates.map(
-              template =>
-                template.modules &&
-                template.modules.length > 0 && (
-                  <Card key={template.id} className="space-y-4">
-                    <CardHeader>
-                      <CardTitle className="flex items-center gap-2">
-                        <span>{template.name}</span>
-                        <Badge variant="outline">
-                          {template.modules.reduce(
-                            (acc, module) =>
-                              acc + (module.variables?.length || 0),
-                            0
-                          )}{' '}
-                          variables
+                    <CardDescription>
+                      Template ID: {template.id}
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-2">
+                      <div className="flex items-center justify-between text-sm">
+                        <span className="text-muted-foreground">Modules:</span>
+                        <Badge variant="secondary">
+                          {template.modules?.length || 0}
                         </Badge>
+                      </div>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="w-full"
+                        onClick={e => {
+                          e.stopPropagation();
+                          handleCreateModule(template.id);
+                        }}
+                      >
+                        <Plus className="w-4 h-4 mr-2" />
+                        Add Module
+                      </Button>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {viewMode === 'modules' && selectedTemplate && (
+          <div className="space-y-4">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-4">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => goToTemplates(selectedCollection!)}
+                >
+                  <ArrowLeft className="w-4 h-4 mr-2" />
+                  Back to Templates
+                </Button>
+                <h2 className="text-xl font-semibold">
+                  Modules in {selectedTemplate.name}
+                </h2>
+              </div>
+              <Button onClick={() => handleCreateModule(selectedTemplate.id)}>
+                <Plus className="w-4 h-4 mr-2" />
+                New Module
+              </Button>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {selectedTemplate.modules?.map(module => (
+                <Card
+                  key={module.id}
+                  className="hover:shadow-md transition-shadow cursor-pointer"
+                  onClick={() => goToVariables(module)}
+                >
+                  <CardHeader>
+                    <div className="flex items-center justify-between">
+                      <CardTitle className="text-lg">
+                        {ModuleTypeEnum[module.moduleType]}
                       </CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      {template.modules.map(
-                        module =>
-                          module.variables &&
-                          module.variables.length > 0 && (
-                            <Card key={module.id} className="mb-4">
-                              <CardHeader>
-                                <CardTitle className="text-base">
-                                  {ModuleTypeEnum[module.moduleType]}
-                                </CardTitle>
-                              </CardHeader>
-                              <CardContent>
-                                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                                  {module.variables.map(variable => (
-                                    <Card
-                                      key={variable.id}
-                                      className="hover:shadow-md transition-shadow"
-                                    >
-                                      <CardHeader>
-                                        <div className="flex items-center justify-between">
-                                          <div className="flex items-center gap-2">
-                                            {getVariableTypeIcon(variable.type)}
-                                            <CardTitle className="text-sm">
-                                              {variable.name}
-                                            </CardTitle>
-                                          </div>
-                                          <div className="flex items-center gap-2">
-                                            <Button
-                                              variant="ghost"
-                                              size="sm"
-                                              onClick={() =>
-                                                handleEditVariable(variable)
-                                              }
-                                            >
-                                              <Edit className="w-4 h-4" />
-                                            </Button>
-                                            <Button
-                                              variant="ghost"
-                                              size="sm"
-                                              onClick={() =>
-                                                handleDeleteVariable(
-                                                  template.id,
-                                                  module.id,
-                                                  variable.id
-                                                )
-                                              }
-                                            >
-                                              <Trash2 className="w-4 h-4" />
-                                            </Button>
-                                          </div>
-                                        </div>
-                                        <CardDescription>
-                                          <div className="space-y-1">
-                                            <div className="flex items-center justify-between text-xs">
-                                              <span>Type:</span>
-                                              <Badge variant="outline">
-                                                {variable.type}
-                                              </Badge>
-                                            </div>
-                                            {variable.section && (
-                                              <div className="flex items-center justify-between text-xs">
-                                                <span>Section:</span>
-                                                <span>{variable.section}</span>
-                                              </div>
-                                            )}
-                                            {variable.defaultValue && (
-                                              <div className="flex items-center justify-between text-xs">
-                                                <span>Default:</span>
-                                                <span className="truncate max-w-20">
-                                                  {variable.defaultValue}
-                                                </span>
-                                              </div>
-                                            )}
-                                          </div>
-                                        </CardDescription>
-                                      </CardHeader>
-                                    </Card>
-                                  ))}
-                                </div>
-                              </CardContent>
-                            </Card>
-                          )
-                      )}
-                    </CardContent>
-                  </Card>
-                )
-            )}
-          </TabsContent>
-        </Tabs>
+                      <div className="flex items-center gap-2">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={e => {
+                            e.stopPropagation();
+                            handleEditModule(module);
+                          }}
+                        >
+                          <Edit className="w-4 h-4" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={e => {
+                            e.stopPropagation();
+                            handleDeleteModule(selectedTemplate.id, module.id);
+                          }}
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </Button>
+                      </div>
+                    </div>
+                    <CardDescription>Module ID: {module.id}</CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-2">
+                      <div className="flex items-center justify-between text-sm">
+                        <span className="text-muted-foreground">
+                          Variables:
+                        </span>
+                        <Badge variant="secondary">
+                          {module.variables?.length || 0}
+                        </Badge>
+                      </div>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="w-full"
+                        onClick={e => {
+                          e.stopPropagation();
+                          handleCreateVariable(module.id);
+                        }}
+                      >
+                        <Plus className="w-4 h-4 mr-2" />
+                        Add Variable
+                      </Button>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {viewMode === 'variables' && selectedModule && (
+          <div className="space-y-4">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-4">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => goToModules(selectedTemplate!)}
+                >
+                  <ArrowLeft className="w-4 h-4 mr-2" />
+                  Back to Modules
+                </Button>
+                <h2 className="text-xl font-semibold">
+                  Variables in {ModuleTypeEnum[selectedModule.moduleType]}
+                </h2>
+              </div>
+              <Button onClick={() => handleCreateVariable(selectedModule.id)}>
+                <Plus className="w-4 h-4 mr-2" />
+                New Variable
+              </Button>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {selectedModule.variables?.map(variable => (
+                <Card
+                  key={variable.id}
+                  className="hover:shadow-md transition-shadow"
+                >
+                  <CardHeader>
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        {getVariableTypeIcon(variable.type)}
+                        <CardTitle className="text-lg">
+                          {variable.name}
+                        </CardTitle>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => handleEditVariable(variable)}
+                        >
+                          <Edit className="w-4 h-4" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() =>
+                            handleDeleteVariable(
+                              selectedTemplate!.id,
+                              selectedModule.id,
+                              variable.id
+                            )
+                          }
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </Button>
+                      </div>
+                    </div>
+                    <CardDescription>
+                      <div className="space-y-1">
+                        <div className="flex items-center justify-between text-xs">
+                          <span>Type:</span>
+                          <Badge variant="outline">{variable.type}</Badge>
+                        </div>
+                        {variable.section && (
+                          <div className="flex items-center justify-between text-xs">
+                            <span>Section:</span>
+                            <span>{variable.section}</span>
+                          </div>
+                        )}
+                        {variable.defaultValue && (
+                          <div className="flex items-center justify-between text-xs">
+                            <span>Default:</span>
+                            <span className="truncate max-w-20">
+                              {variable.defaultValue}
+                            </span>
+                          </div>
+                        )}
+                      </div>
+                    </CardDescription>
+                  </CardHeader>
+                </Card>
+              ))}
+            </div>
+          </div>
+        )}
 
         {/* Edit Modal */}
         {isEditing && editingItem && (
@@ -823,6 +864,32 @@ export default function BackofficePage() {
                           })
                         }
                       />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="userId">Assigned User</Label>
+                      <Select
+                        value={editingItem.userId?.toString() || '0'}
+                        onValueChange={value =>
+                          setEditingItem({
+                            ...editingItem,
+                            userId: parseInt(value),
+                          })
+                        }
+                      >
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select a user" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {users.map(user => (
+                            <SelectItem
+                              key={user.id}
+                              value={user.id.toString()}
+                            >
+                              {user.email}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
                     </div>
                   </>
                 )}

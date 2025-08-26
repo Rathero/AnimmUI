@@ -24,6 +24,15 @@ const useCollectionsService = () => {
     }
     return await response.json();
   };
+  const getAllBackoffice = async (): Promise<ApiCollections | undefined> => {
+    const response = await fetch(
+      process.env.NEXT_PUBLIC_API_URL + '/collections/all'
+    );
+    if (!response.ok) {
+      return undefined;
+    }
+    return await response.json();
+  };
 
   const create = async (
     collection: Omit<Collection, 'id'>
@@ -64,6 +73,26 @@ const useCollectionsService = () => {
     return await response.json();
   };
 
+  const updateUserAssignment = async (
+    id: number,
+    userId: number
+  ): Promise<ApiCollection | undefined> => {
+    const response = await fetchWithAuth(
+      process.env.NEXT_PUBLIC_API_URL + '/collections/' + id + '/user',
+      {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ userId }),
+      }
+    );
+    if (!response.ok) {
+      return undefined;
+    }
+    return await response.json();
+  };
+
   const deleteCollection = async (id: number): Promise<boolean> => {
     const response = await fetchWithAuth(
       process.env.NEXT_PUBLIC_API_URL + '/collections/' + id,
@@ -74,7 +103,15 @@ const useCollectionsService = () => {
     return response.ok;
   };
 
-  return { get, getAll, create, update, delete: deleteCollection };
+  return {
+    get,
+    getAll,
+    getAllBackoffice,
+    create,
+    update,
+    updateUserAssignment,
+    delete: deleteCollection,
+  };
 };
 
 export default useCollectionsService;
