@@ -515,6 +515,19 @@ export default function BackofficePage() {
                     </div>
                     <CardDescription>{collection.description}</CardDescription>
                   </CardHeader>
+                  {collection.thumbnail && (
+                    <div className="px-6 py-2">
+                      <img
+                        src={collection.thumbnail}
+                        alt={`${collection.name} thumbnail`}
+                        className="w-full h-32 object-cover rounded-md"
+                        onError={e => {
+                          const target = e.target as HTMLImageElement;
+                          target.style.display = 'none';
+                        }}
+                      />
+                    </div>
+                  )}
                   <CardContent>
                     <div className="space-y-2">
                       <div className="flex items-center justify-between text-sm">
@@ -864,6 +877,24 @@ export default function BackofficePage() {
                           })
                         }
                       />
+                      {editingItem.thumbnail && (
+                        <div className="mt-2">
+                          <Label className="text-sm text-muted-foreground">
+                            Preview:
+                          </Label>
+                          <div className="mt-1">
+                            <img
+                              src={editingItem.thumbnail}
+                              alt="Thumbnail preview"
+                              className="w-full max-w-xs h-32 object-cover rounded-md border"
+                              onError={e => {
+                                const target = e.target as HTMLImageElement;
+                                target.style.display = 'none';
+                              }}
+                            />
+                          </div>
+                        </div>
+                      )}
                     </div>
                     <div className="space-y-2">
                       <Label htmlFor="userId">Assigned User</Label>

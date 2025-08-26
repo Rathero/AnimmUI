@@ -60,7 +60,7 @@ const useCollectionsService = () => {
     const response = await fetchWithAuth(
       process.env.NEXT_PUBLIC_API_URL + '/collections/' + id,
       {
-        method: 'PUT',
+        method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
         },
