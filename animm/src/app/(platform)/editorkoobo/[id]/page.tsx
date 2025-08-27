@@ -19,6 +19,15 @@ export default function EditorKoobo() {
   const [isMuted, setIsMuted] = useState(true);
   const videoRef = useRef<HTMLVideoElement>(null);
 
+  // Inline image preview states
+  const [previewStates, setPreviewStates] = useState<{
+    [key: string]: { isGenerating: boolean; imageUrl: string | null };
+  }>({});
+
+  const [previewPositions, setPreviewPositions] = useState<{
+    [key: string]: { x: number; y: number; width: number; height: number };
+  }>({});
+
   // Video control functions
   const togglePlay = () => {
     if (videoRef.current) {
@@ -56,6 +65,43 @@ export default function EditorKoobo() {
     }
   };
 
+  const openImagePreview = (title: string, type: 'variable' | 'subtitle') => {
+    const key = `${type}-${title}`;
+
+    // Get the position of the clicked element
+    const element = document.querySelector(`[data-preview="${key}"]`);
+    if (element) {
+      const rect = element.getBoundingClientRect();
+      setPreviewPositions(prev => ({
+        ...prev,
+        [key]: {
+          x: rect.right + 8, // 8px margin
+          y: rect.top,
+          width: rect.width,
+          height: rect.height,
+        },
+      }));
+    }
+
+    setPreviewStates(prev => ({
+      ...prev,
+      [key]: { isGenerating: true, imageUrl: null },
+    }));
+
+    // Simulate image generation with 5 second delay
+    setTimeout(() => {
+      setPreviewStates(prev => ({
+        ...prev,
+        [key]: {
+          isGenerating: false,
+          imageUrl: `https://via.placeholder.com/200x150/${
+            type === 'variable' ? '8B5CF6' : '10B981'
+          }/FFFFFF?text=${encodeURIComponent(title)}`,
+        },
+      }));
+    }, 5000);
+  };
+
   const handleTimelineClick = (event: React.MouseEvent<HTMLDivElement>) => {
     if (videoRef.current && videoDuration > 0) {
       const timeline = event.currentTarget;
@@ -74,6 +120,7 @@ export default function EditorKoobo() {
   // Configurable variables array with title, language-specific values, and timestamps
   const configurableVariables = [
     {
+      id: 1,
       title: 'ROAD TO ICONS',
       timestamp: 5, // 5 seconds
       values: {
@@ -86,6 +133,7 @@ export default function EditorKoobo() {
       },
     },
     {
+      id: 2,
       title: 'KWANGDONG FREECS',
       timestamp: 10, // 10 seconds
       values: {
@@ -98,6 +146,7 @@ export default function EditorKoobo() {
       },
     },
     {
+      id: 3,
       title: 'REGIONAL RECORD',
       timestamp: 24, // 24 seconds
       values: {
@@ -114,7 +163,7 @@ export default function EditorKoobo() {
   // Configurable subtitles array with title, start/end timestamps, and language-specific values
   const configurableSubtitles = [
     {
-      title: 'Welcome Message',
+      id: 1,
       startTime: 2,
       endTime: 8,
       values: {
@@ -127,7 +176,7 @@ export default function EditorKoobo() {
       },
     },
     {
-      title: 'Team Introduction',
+      id: 2,
       startTime: 12,
       endTime: 18,
       values: {
@@ -140,7 +189,7 @@ export default function EditorKoobo() {
       },
     },
     {
-      title: 'Achievement Highlight',
+      id: 3,
       startTime: 20,
       endTime: 30,
       values: {
@@ -206,8 +255,7 @@ export default function EditorKoobo() {
             <ArrowLeft className="w-4 h-4" />
           </Button>
           <div className="flex items-center gap-2">
-            <Video className="w-5 h-5 text-blue-600" />
-            <span className="text-lg font-semibold">Editor Koobo</span>
+            <span className="text-lg font-semibold">Editor</span>
           </div>
         </div>
 
@@ -244,11 +292,43 @@ export default function EditorKoobo() {
                   {/* Configurable Variables */}
                   {configurableVariables.map((variable, index) => (
                     <div key={index} className="space-y-2">
-                      <div className="p-3 bg-gray-50 rounded border">
+                      <div
+                        className="p-3 bg-gray-50 rounded border"
+                        data-preview={`variable-${variable.title}`}
+                      >
                         <div className="flex items-center justify-between mb-2">
-                          <label className="text-sm font-medium text-gray-700">
-                            {variable.title}
-                          </label>
+                          <div className="flex items-center gap-2">
+                            <label className="text-sm font-medium text-gray-700">
+                              {variable.title}
+                            </label>
+                            <button
+                              onClick={() =>
+                                openImagePreview(variable.title, 'variable')
+                              }
+                              className="p-1 text-blue-500 hover:text-blue-600 hover:bg-blue-50 rounded transition-colors"
+                              title="Preview image"
+                            >
+                              <svg
+                                className="w-4 h-4"
+                                fill="none"
+                                stroke="currentColor"
+                                viewBox="0 0 24 24"
+                              >
+                                <path
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                  strokeWidth={2}
+                                  d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
+                                />
+                                <path
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                  strokeWidth={2}
+                                  d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
+                                />
+                              </svg>
+                            </button>
+                          </div>
                           <span className="text-xs text-orange-600 font-medium bg-orange-100 px-2 py-1 rounded">
                             {Math.floor(variable.timestamp / 60)}:
                             {(variable.timestamp % 60)
@@ -283,11 +363,40 @@ export default function EditorKoobo() {
                   {/* Configurable Subtitles */}
                   {configurableSubtitles.map((subtitle, index) => (
                     <div key={index} className="space-y-2">
-                      <div className="p-3 bg-gray-50 rounded border">
+                      <div
+                        className="p-3 bg-gray-50 rounded border"
+                        data-preview={`subtitle-${subtitle.id}`}
+                      >
                         <div className="flex items-center justify-between mb-2">
-                          <label className="text-sm font-medium text-gray-700">
-                            {subtitle.title}
-                          </label>
+                          <div className="flex items-center gap-2">
+                            <button
+                              onClick={() =>
+                                openImagePreview(subtitle.id, 'subtitle')
+                              }
+                              className="p-1 text-green-500 hover:text-green-600 hover:bg-green-50 rounded transition-colors"
+                              title="Preview image"
+                            >
+                              <svg
+                                className="w-4 h-4"
+                                fill="none"
+                                stroke="currentColor"
+                                viewBox="0 0 24 24"
+                              >
+                                <path
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                  strokeWidth={2}
+                                  d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
+                                />
+                                <path
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                  strokeWidth={2}
+                                  d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
+                                />
+                              </svg>
+                            </button>
+                          </div>
                           <span className="text-xs text-green-600 font-medium bg-green-100 px-2 py-1 rounded">
                             {Math.floor(subtitle.startTime / 60)}:
                             {(subtitle.startTime % 60)
@@ -306,10 +415,10 @@ export default function EditorKoobo() {
                               ? subtitle.values[
                                   currentVideo.locale as keyof typeof subtitle.values
                                 ]
-                              : subtitle.title
+                              : ''
                           }
                           className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
-                          placeholder={`Enter ${subtitle.title.toLowerCase()}`}
+                          placeholder={`Enter`}
                         />
                       </div>
                     </div>
@@ -415,7 +524,7 @@ export default function EditorKoobo() {
                               }%`,
                               zIndex: 10,
                             }}
-                            title={`${subtitle.title} starts at ${Math.floor(
+                            title={`${subtitle.id} starts at ${Math.floor(
                               subtitle.startTime / 60
                             )}:${(subtitle.startTime % 60)
                               .toString()
@@ -611,6 +720,43 @@ export default function EditorKoobo() {
           </div>
         </div>
       </div>
+
+      {/* Floating Previews - Outside sidebar to avoid overflow issues */}
+      {Object.entries(previewStates).map(([key, previewState]) => {
+        const position = previewPositions[key];
+        if (!position || !previewState) return null;
+
+        return (
+          <div
+            key={key}
+            className="fixed z-[9999] w-24 bg-white rounded border shadow-lg"
+            style={{
+              left: `${position.x}px`,
+              top: `${position.y}px`,
+              height: `${position.height}px`,
+            }}
+          >
+            {previewState.isGenerating ? (
+              <div className="h-full bg-blue-50 rounded border border-blue-200 flex items-center justify-center">
+                <div className="flex flex-col items-center gap-1">
+                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-500"></div>
+                  <span className="text-xs text-blue-600 text-center">
+                    Generating...
+                  </span>
+                </div>
+              </div>
+            ) : previewState.imageUrl ? (
+              <div className="h-full bg-blue-50 rounded border border-blue-200 p-1">
+                <img
+                  src={previewState.imageUrl}
+                  alt={`Preview of ${key}`}
+                  className="w-full h-full object-cover rounded"
+                />
+              </div>
+            ) : null}
+          </div>
+        );
+      })}
     </div>
   );
 }
