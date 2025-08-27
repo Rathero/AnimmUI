@@ -75,7 +75,7 @@ export default function EditorKoobo() {
   const configurableVariables = [
     {
       title: 'ROAD TO ICONS',
-      timestamp: 5, // 15 seconds
+      timestamp: 5, // 5 seconds
       values: {
         DE: 'ROAD TO ICONS',
         ES: 'CAMINO A LOS ÍCONOS',
@@ -87,7 +87,7 @@ export default function EditorKoobo() {
     },
     {
       title: 'KWANGDONG FREECS',
-      timestamp: 10, // 45 seconds
+      timestamp: 10, // 10 seconds
       values: {
         DE: 'KWANGDONG FREECS',
         ES: 'KWANGDONG FREECS',
@@ -99,7 +99,7 @@ export default function EditorKoobo() {
     },
     {
       title: 'REGIONAL RECORD',
-      timestamp: 24, // 90 seconds
+      timestamp: 24, // 24 seconds
       values: {
         DE: 'REGIONAL REKORD',
         ES: 'RÉCORD REGIONAL',
@@ -107,6 +107,49 @@ export default function EditorKoobo() {
         IT: 'RECORD REGIONALE',
         PL: 'REKORD REGIONALNY',
         TR: 'BÖLGESEL REKOR',
+      },
+    },
+  ];
+
+  // Configurable subtitles array with title, start/end timestamps, and language-specific values
+  const configurableSubtitles = [
+    {
+      title: 'Welcome Message',
+      startTime: 2,
+      endTime: 8,
+      values: {
+        DE: 'Willkommen bei Road to Icons',
+        ES: 'Bienvenidos a Camino a los Íconos',
+        FR: 'Bienvenue sur La Route vers les Icônes',
+        IT: 'Benvenuti su La Strada verso le Icone',
+        PL: 'Witamy w Drodze do Ikon',
+        TR: 'İkonlara Giden Yola Hoş Geldiniz',
+      },
+    },
+    {
+      title: 'Team Introduction',
+      startTime: 12,
+      endTime: 18,
+      values: {
+        DE: 'Das ist das Kwangdong Freecs Team',
+        ES: 'Este es el equipo Kwangdong Freecs',
+        FR: "Voici l'équipe Kwangdong Freecs",
+        IT: 'Questa è la squadra Kwangdong Freecs',
+        PL: 'To jest zespół Kwangdong Freecs',
+        TR: 'Bu Kwangdong Freecs takımı',
+      },
+    },
+    {
+      title: 'Achievement Highlight',
+      startTime: 20,
+      endTime: 30,
+      values: {
+        DE: 'Ein neuer regionaler Rekord wurde aufgestellt',
+        ES: 'Se ha establecido un nuevo récord regional',
+        FR: 'Un nouveau record régional a été établi',
+        IT: 'È stato stabilito un nuovo record regionale',
+        PL: 'Ustanowiono nowy rekord regionalny',
+        TR: 'Yeni bir bölgesel rekor kırıldı',
       },
     },
   ];
@@ -192,8 +235,11 @@ export default function EditorKoobo() {
         <div className="w-[320px] bg-white border-r flex flex-col">
           <div className="flex-1 flex flex-col overflow-hidden">
             <div className="flex-1 p-4 space-y-4 overflow-y-auto">
-              {/* Variables */}
+              {/* Variables Section */}
               <div className="space-y-3">
+                <h3 className="text-lg font-semibold text-gray-800 mb-3">
+                  Variables
+                </h3>
                 <div className="space-y-3 pl-3">
                   {/* Configurable Variables */}
                   {configurableVariables.map((variable, index) => (
@@ -221,6 +267,49 @@ export default function EditorKoobo() {
                           }
                           className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                           placeholder={`Enter ${variable.title.toLowerCase()}`}
+                        />
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Subtitles Section */}
+              <div className="space-y-3 mt-6">
+                <h3 className="text-lg font-semibold text-gray-800 mb-3">
+                  Subtitles
+                </h3>
+                <div className="space-y-3 pl-3">
+                  {/* Configurable Subtitles */}
+                  {configurableSubtitles.map((subtitle, index) => (
+                    <div key={index} className="space-y-2">
+                      <div className="p-3 bg-gray-50 rounded border">
+                        <div className="flex items-center justify-between mb-2">
+                          <label className="text-sm font-medium text-gray-700">
+                            {subtitle.title}
+                          </label>
+                          <span className="text-xs text-green-600 font-medium bg-green-100 px-2 py-1 rounded">
+                            {Math.floor(subtitle.startTime / 60)}:
+                            {(subtitle.startTime % 60)
+                              .toString()
+                              .padStart(2, '0')}{' '}
+                            - {Math.floor(subtitle.endTime / 60)}:
+                            {(subtitle.endTime % 60)
+                              .toString()
+                              .padStart(2, '0')}
+                          </span>
+                        </div>
+                        <textarea
+                          rows={2}
+                          defaultValue={
+                            currentVideo
+                              ? subtitle.values[
+                                  currentVideo.locale as keyof typeof subtitle.values
+                                ]
+                              : subtitle.title
+                          }
+                          className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
+                          placeholder={`Enter ${subtitle.title.toLowerCase()}`}
                         />
                       </div>
                     </div>
@@ -281,13 +370,13 @@ export default function EditorKoobo() {
                         onClick={handleTimelineClick}
                         title="Click to jump to specific time"
                       >
-                                                 {/* Progress Bar */}
-                         <div
-                           className="h-full bg-blue-500 rounded-full transition-all duration-100"
-                           style={{
-                             width: `${(currentTime / videoDuration) * 100}%`,
-                           }}
-                         />
+                        {/* Progress Bar */}
+                        <div
+                          className="h-full bg-blue-500 rounded-full transition-all duration-100"
+                          style={{
+                            width: `${(currentTime / videoDuration) * 100}%`,
+                          }}
+                        />
 
                         {/* Variable Dots */}
                         {configurableVariables.map((variable, index) => (
@@ -315,14 +404,40 @@ export default function EditorKoobo() {
                           />
                         ))}
 
-                                                 {/* Current Time Indicator */}
-                         <div
-                           className="absolute top-0 w-3 h-3 bg-blue-500 rounded-full transform -translate-y-0.5"
-                           style={{
-                             left: `${(currentTime / videoDuration) * 100}%`,
-                             zIndex: 15,
-                           }}
-                         />
+                        {/* Subtitle Dots */}
+                        {configurableSubtitles.map((subtitle, index) => (
+                          <div
+                            key={`subtitle-${index}`}
+                            className="absolute top-0 w-3 h-3 bg-green-500 rounded-full transform -translate-y-0.5 cursor-pointer hover:scale-125 transition-transform"
+                            style={{
+                              left: `${
+                                (subtitle.startTime / videoDuration) * 100
+                              }%`,
+                              zIndex: 10,
+                            }}
+                            title={`${subtitle.title} starts at ${Math.floor(
+                              subtitle.startTime / 60
+                            )}:${(subtitle.startTime % 60)
+                              .toString()
+                              .padStart(2, '0')}`}
+                            onClick={e => {
+                              e.stopPropagation(); // Prevent timeline click
+                              if (videoRef.current) {
+                                videoRef.current.currentTime =
+                                  subtitle.startTime;
+                              }
+                            }}
+                          />
+                        ))}
+
+                        {/* Current Time Indicator */}
+                        <div
+                          className="absolute top-0 w-3 h-3 bg-blue-500 rounded-full transform -translate-y-0.5"
+                          style={{
+                            left: `${(currentTime / videoDuration) * 100}%`,
+                            zIndex: 15,
+                          }}
+                        />
                       </div>
 
                       {/* Time Display */}
