@@ -143,6 +143,40 @@ export default function EditorKoobo() {
     }
   };
 
+  const formatTime = (milliseconds: number): string => {
+    const totalSeconds = Math.floor(milliseconds / 1000);
+    const hours = Math.floor(totalSeconds / 3600);
+    const minutes = Math.floor((totalSeconds % 3600) / 60);
+    const seconds = totalSeconds % 60;
+    const ms = milliseconds % 1000; // Show full milliseconds
+
+    return `${hours.toString().padStart(2, '0')}:${minutes
+      .toString()
+      .padStart(2, '0')}:${seconds.toString().padStart(2, '0')},${ms
+      .toString()
+      .padStart(3, '0')}`;
+  };
+
+  const parseTimeString = (timeString: string): number => {
+    // Parse format "00:00:02,000" to milliseconds
+    const match = timeString.match(/^(\d{2}):(\d{2}):(\d{2}),(\d{3})$/);
+    if (!match) {
+      console.warn(
+        `Invalid time format: ${timeString}. Expected format: HH:MM:SS,mmm`
+      );
+      return 0;
+    }
+
+    const [, hours, minutes, seconds, milliseconds] = match;
+    const totalMs =
+      parseInt(hours) * 3600000 +
+      parseInt(minutes) * 60000 +
+      parseInt(seconds) * 1000 +
+      parseInt(milliseconds);
+
+    return totalMs;
+  };
+
   const handleTimelineClick = (event: React.MouseEvent<HTMLDivElement>) => {
     if (videoRef.current && videoDuration > 0) {
       const timeline = event.currentTarget;
@@ -330,12 +364,12 @@ export default function EditorKoobo() {
     setPreviewUrls(initialUrls);
   }, []);
 
-  // Configurable subtitles array with title, start/end timestamps, and language-specific values
+  // Configurable subtitles array with title, start/end timestamps (in "HH:MM:SS,mmm" format), and language-specific values
   const configurableSubtitles = [
     {
       id: 1,
-      startTime: 0,
-      endTime: 8,
+      startTime: '00:00:00,000', // 0 seconds
+      endTime: '00:00:02,000', // 8 seconds
       values: {
         DE: 'Luna ist nicht zu stoppen!',
         ES: '¡Luna es imparable! ',
@@ -347,8 +381,8 @@ export default function EditorKoobo() {
     },
     {
       id: 2,
-      startTime: 12,
-      endTime: 18,
+      startTime: '00:00:02,000', // 12 seconds
+      endTime: '00:00:04,156', // 18 seconds
       values: {
         DE: 'Sie holt sich den Kill.',
         ES: ' se lleva la kill. ',
@@ -360,8 +394,8 @@ export default function EditorKoobo() {
     },
     {
       id: 3,
-      startTime: 20,
-      endTime: 30,
+      startTime: '00:00:04,171', // 20 seconds
+      endTime: '00:00:06,515', // 30 seconds
       values: {
         DE: 'Der Nexus hält nicht mehr stand.',
         ES: ' El Nexo no aguanta más. ',
@@ -373,8 +407,8 @@ export default function EditorKoobo() {
     },
     {
       id: 4,
-      startTime: 20,
-      endTime: 30,
+      startTime: '00:00:06,515', // 25 seconds
+      endTime: '00:00:11,404', // 32 seconds
       values: {
         DE: 'Sieg!',
         ES: ' ¡Victoria!',
@@ -591,14 +625,7 @@ export default function EditorKoobo() {
                             </button>
                           </div>
                           <span className="text-xs text-green-600 font-medium bg-green-100 px-2 py-1 rounded">
-                            {Math.floor(subtitle.startTime / 60)}:
-                            {(subtitle.startTime % 60)
-                              .toString()
-                              .padStart(2, '0')}{' '}
-                            - {Math.floor(subtitle.endTime / 60)}:
-                            {(subtitle.endTime % 60)
-                              .toString()
-                              .padStart(2, '0')}
+                            {subtitle.startTime} - {subtitle.endTime}
                           </span>
                         </div>
                         <textarea
@@ -720,20 +747,19 @@ export default function EditorKoobo() {
                             className="absolute top-0 w-3 h-3 bg-green-500 rounded-full transform -translate-y-0.5 cursor-pointer hover:scale-125 transition-transform"
                             style={{
                               left: `${
-                                (subtitle.startTime / videoDuration) * 100
+                                (parseTimeString(subtitle.startTime) /
+                                  1000 /
+                                  videoDuration) *
+                                100
                               }%`,
                               zIndex: 10,
                             }}
-                            title={`${subtitle.id} starts at ${Math.floor(
-                              subtitle.startTime / 60
-                            )}:${(subtitle.startTime % 60)
-                              .toString()
-                              .padStart(2, '0')}`}
+                            title={`${subtitle.id} starts at ${subtitle.startTime}`}
                             onClick={e => {
                               e.stopPropagation(); // Prevent timeline click
                               if (videoRef.current) {
                                 videoRef.current.currentTime =
-                                  subtitle.startTime;
+                                  parseTimeString(subtitle.startTime) / 1000;
                               }
                             }}
                           />
