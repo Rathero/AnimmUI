@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { useParams, useRouter, useSearchParams } from 'next/navigation';
 import { LoadingSpinner } from '@/components/ui/loading-spinner';
 import { Button } from '@/components/ui/button';
@@ -13,12 +13,69 @@ export default function EditorKoobo() {
   const searchParams = useSearchParams();
   const [isLoading, setIsLoading] = useState(false);
   const [currentVideo, setCurrentVideo] = useState<VideoData | null>(null);
+  const [videoDuration, setVideoDuration] = useState(0);
+  const [currentTime, setCurrentTime] = useState(0);
+  const [isPlaying, setIsPlaying] = useState(false);
+  const [isMuted, setIsMuted] = useState(true);
+  const videoRef = useRef<HTMLVideoElement>(null);
+
+  // Video control functions
+  const togglePlay = () => {
+    if (videoRef.current) {
+      if (isPlaying) {
+        videoRef.current.pause();
+      } else {
+        videoRef.current.play();
+      }
+      setIsPlaying(!isPlaying);
+    }
+  };
+
+  const skipBackward = () => {
+    if (videoRef.current) {
+      videoRef.current.currentTime = Math.max(
+        0,
+        videoRef.current.currentTime - 10
+      );
+    }
+  };
+
+  const skipForward = () => {
+    if (videoRef.current) {
+      videoRef.current.currentTime = Math.min(
+        videoRef.current.duration,
+        videoRef.current.currentTime + 10
+      );
+    }
+  };
+
+  const toggleMute = () => {
+    if (videoRef.current) {
+      videoRef.current.muted = !isMuted;
+      setIsMuted(!isMuted);
+    }
+  };
+
+  const handleTimelineClick = (event: React.MouseEvent<HTMLDivElement>) => {
+    if (videoRef.current && videoDuration > 0) {
+      const timeline = event.currentTarget;
+      const rect = timeline.getBoundingClientRect();
+      const clickX = event.clientX - rect.left;
+      const timelineWidth = rect.width;
+      const clickTime = (clickX / timelineWidth) * videoDuration;
+
+      videoRef.current.currentTime = Math.max(
+        0,
+        Math.min(clickTime, videoDuration)
+      );
+    }
+  };
 
   // Configurable variables array with title, language-specific values, and timestamps
   const configurableVariables = [
     {
       title: 'ROAD TO ICONS',
-      timestamp: 15, // 15 seconds
+      timestamp: 5, // 15 seconds
       values: {
         DE: 'ROAD TO ICONS',
         ES: 'CAMINO A LOS ÍCONOS',
@@ -30,7 +87,7 @@ export default function EditorKoobo() {
     },
     {
       title: 'KWANGDONG FREECS',
-      timestamp: 45, // 45 seconds
+      timestamp: 10, // 45 seconds
       values: {
         DE: 'KWANGDONG FREECS',
         ES: 'KWANGDONG FREECS',
@@ -42,7 +99,7 @@ export default function EditorKoobo() {
     },
     {
       title: 'REGIONAL RECORD',
-      timestamp: 90, // 90 seconds
+      timestamp: 24, // 90 seconds
       values: {
         DE: 'REGIONAL REKORD',
         ES: 'RÉCORD REGIONAL',
@@ -142,9 +199,17 @@ export default function EditorKoobo() {
                   {configurableVariables.map((variable, index) => (
                     <div key={index} className="space-y-2">
                       <div className="p-3 bg-gray-50 rounded border">
-                        <label className="text-sm font-medium text-gray-700 mb-2 block">
-                          {variable.title}
-                        </label>
+                        <div className="flex items-center justify-between mb-2">
+                          <label className="text-sm font-medium text-gray-700">
+                            {variable.title}
+                          </label>
+                          <span className="text-xs text-orange-600 font-medium bg-orange-100 px-2 py-1 rounded">
+                            {Math.floor(variable.timestamp / 60)}:
+                            {(variable.timestamp % 60)
+                              .toString()
+                              .padStart(2, '0')}
+                          </span>
+                        </div>
                         <input
                           type="text"
                           defaultValue={
@@ -184,16 +249,174 @@ export default function EditorKoobo() {
               <div className="w-full h-full flex items-center justify-center p-8">
                 <div className="flex flex-col items-center max-w-2xl w-full">
                   <video
-                    controls
+                    ref={videoRef}
+                    onLoadedMetadata={() => {
+                      if (videoRef.current) {
+                        setVideoDuration(videoRef.current.duration);
+                      }
+                    }}
+                    onTimeUpdate={() => {
+                      if (videoRef.current) {
+                        setCurrentTime(videoRef.current.currentTime);
+                      }
+                    }}
+                    onPlay={() => setIsPlaying(true)}
+                    onPause={() => setIsPlaying(false)}
                     className="w-full max-w-full h-auto rounded-lg shadow-lg"
                     style={{ maxHeight: '60vh' }}
                     autoPlay
                     src={currentVideo.url}
-                    muted={true}
+                    muted={isMuted}
                     poster={currentVideo.thumbnail}
                   >
                     Your browser does not support the video tag.
                   </video>
+
+                  {/* Custom Timeline */}
+                  <div className="w-full mt-4">
+                    <div className="relative">
+                      {/* Timeline Bar */}
+                      <div
+                        className="w-full h-2 bg-gray-300 rounded-full relative cursor-pointer hover:bg-gray-400 transition-colors"
+                        onClick={handleTimelineClick}
+                        title="Click to jump to specific time"
+                      >
+                                                 {/* Progress Bar */}
+                         <div
+                           className="h-full bg-blue-500 rounded-full transition-all duration-100"
+                           style={{
+                             width: `${(currentTime / videoDuration) * 100}%`,
+                           }}
+                         />
+
+                        {/* Variable Dots */}
+                        {configurableVariables.map((variable, index) => (
+                          <div
+                            key={index}
+                            className="absolute top-0 w-3 h-3 bg-orange-500 rounded-full transform -translate-y-0.5 cursor-pointer hover:scale-125 transition-transform"
+                            style={{
+                              left: `${
+                                (variable.timestamp / videoDuration) * 100
+                              }%`,
+                              zIndex: 10,
+                            }}
+                            title={`${variable.title} at ${Math.floor(
+                              variable.timestamp / 60
+                            )}:${(variable.timestamp % 60)
+                              .toString()
+                              .padStart(2, '0')}`}
+                            onClick={e => {
+                              e.stopPropagation(); // Prevent timeline click
+                              if (videoRef.current) {
+                                videoRef.current.currentTime =
+                                  variable.timestamp;
+                              }
+                            }}
+                          />
+                        ))}
+
+                                                 {/* Current Time Indicator */}
+                         <div
+                           className="absolute top-0 w-3 h-3 bg-blue-500 rounded-full transform -translate-y-0.5"
+                           style={{
+                             left: `${(currentTime / videoDuration) * 100}%`,
+                             zIndex: 15,
+                           }}
+                         />
+                      </div>
+
+                      {/* Time Display */}
+                      <div className="flex justify-between text-xs text-gray-600 mt-2">
+                        <span>
+                          {Math.floor(currentTime / 60)}:
+                          {(currentTime % 60).toFixed(0).padStart(2, '0')}
+                        </span>
+                        <span>
+                          {Math.floor(videoDuration / 60)}:
+                          {(videoDuration % 60).toFixed(0).padStart(2, '0')}
+                        </span>
+                      </div>
+                    </div>
+
+                    {/* Custom Video Controls */}
+                    <div className="flex items-center justify-center gap-4 mt-4">
+                      <button
+                        onClick={skipBackward}
+                        className="p-2 rounded-full bg-gray-200 hover:bg-gray-300 transition-colors"
+                        title="Retroceder 10 segundos"
+                      >
+                        <svg
+                          className="w-5 h-5"
+                          fill="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path d="M12 5V1L7 6l5 5V7c3.31 0 6 2.69 6 6s-2.69 6-6 6-6-2.69-6-6H4c0 4.42 3.58 8 8 8s8-3.58 8-8-3.58-8-8-8z" />
+                        </svg>
+                      </button>
+
+                      <button
+                        onClick={togglePlay}
+                        className="p-3 rounded-full bg-blue-500 hover:bg-blue-600 text-white transition-colors"
+                        title={isPlaying ? 'Pausar' : 'Reproducir'}
+                      >
+                        {isPlaying ? (
+                          <svg
+                            className="w-6 h-6"
+                            fill="currentColor"
+                            viewBox="0 0 24 24"
+                          >
+                            <path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z" />
+                          </svg>
+                        ) : (
+                          <svg
+                            className="w-6 h-6"
+                            fill="currentColor"
+                            viewBox="0 0 24 24"
+                          >
+                            <path d="M8 5v14l11-7z" />
+                          </svg>
+                        )}
+                      </button>
+
+                      <button
+                        onClick={skipForward}
+                        className="p-2 rounded-full bg-gray-200 hover:bg-gray-300 transition-colors"
+                        title="Avanzar 10 segundos"
+                      >
+                        <svg
+                          className="w-5 h-5"
+                          fill="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path d="M12 5V1L7 6l5 5V7c3.31 0 6 2.69 6 6s-2.69 6-6 6-6-2.69-6-6H4c0 4.42 3.58 8 8 8s8-3.58 8-8-3.58-8-8-8z" />
+                        </svg>
+                      </button>
+
+                      <button
+                        onClick={toggleMute}
+                        className="p-2 rounded-full bg-gray-200 hover:bg-gray-300 transition-colors"
+                        title={isMuted ? 'Activar sonido' : 'Silenciar'}
+                      >
+                        {isMuted ? (
+                          <svg
+                            className="w-5 h-5"
+                            fill="currentColor"
+                            viewBox="0 0 24 24"
+                          >
+                            <path d="M16.5 12c0-1.77-1.02-3.29-2.5-4.03v2.21l2.45 2.45c.03-.2.05-.41.05-.63zm2.5 0c0 .94-.2 1.82-.54 2.64l1.51 1.51C20.63 14.91 21 13.5 21 12c0-4.28-2.99-7.86-7-8.77v2.06c2.89.86 5 3.54 5 6.71zM4.27 3L3 4.27 7.73 9H3v6h4l5 5v-6.73l4.25 4.25c-.67.52-1.42.93-2.25 1.18v2.06c1.38-.31 2.63-.95 3.69-1.81L19.73 21 21 19.73l-9-9L4.27 3zM12 4L9.91 6.09 12 8.18V4z" />
+                          </svg>
+                        ) : (
+                          <svg
+                            className="w-5 h-5"
+                            fill="currentColor"
+                            viewBox="0 0 24 24"
+                          >
+                            <path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z" />
+                          </svg>
+                        )}
+                      </button>
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
