@@ -28,6 +28,10 @@ export default function EditorKoobo() {
     [key: string]: { x: number; y: number; width: number; height: number };
   }>({});
 
+  const [previewUrls, setPreviewUrls] = useState<{
+    [key: string]: string | null;
+  }>({});
+
   // Video control functions
   const togglePlay = () => {
     if (videoRef.current) {
@@ -68,6 +72,26 @@ export default function EditorKoobo() {
   const openImagePreview = (title: string, type: 'variable' | 'subtitle') => {
     const key = `${type}-${title}`;
 
+    // Check if preview is already open
+    const isPreviewOpen =
+      previewStates[key] &&
+      (previewStates[key].isGenerating || previewStates[key].imageUrl);
+
+    if (isPreviewOpen) {
+      // If preview is open, close it
+      setPreviewStates(prev => {
+        const newStates = { ...prev };
+        delete newStates[key];
+        return newStates;
+      });
+      setPreviewPositions(prev => {
+        const newPositions = { ...prev };
+        delete newPositions[key];
+        return newPositions;
+      });
+      return;
+    }
+
     // Get the position of the clicked element
     const element = document.querySelector(`[data-preview="${key}"]`);
     if (element) {
@@ -83,23 +107,40 @@ export default function EditorKoobo() {
       }));
     }
 
-    setPreviewStates(prev => ({
-      ...prev,
-      [key]: { isGenerating: true, imageUrl: null },
-    }));
+    // Check if we have a configured URL
+    const configuredUrl = previewUrls[key];
 
-    // Simulate image generation with 5 second delay
-    setTimeout(() => {
+    if (configuredUrl) {
+      // If URL exists, show image directly
       setPreviewStates(prev => ({
         ...prev,
-        [key]: {
-          isGenerating: false,
-          imageUrl: `https://via.placeholder.com/200x150/${
-            type === 'variable' ? '8B5CF6' : '10B981'
-          }/FFFFFF?text=${encodeURIComponent(title)}`,
-        },
+        [key]: { isGenerating: false, imageUrl: configuredUrl },
       }));
-    }, 5000);
+    } else {
+      // If no URL, start generating
+      setPreviewStates(prev => ({
+        ...prev,
+        [key]: { isGenerating: true, imageUrl: null },
+      }));
+
+      // Simulate image generation with 5 second delay
+      setTimeout(() => {
+        const newUrl = `https://via.placeholder.com/200x150/${
+          type === 'variable' ? '8B5CF6' : '10B981'
+        }/FFFFFF?text=${encodeURIComponent(title)}`;
+
+        setPreviewStates(prev => ({
+          ...prev,
+          [key]: { isGenerating: false, imageUrl: newUrl },
+        }));
+
+        // Save the new URL
+        setPreviewUrls(prev => ({
+          ...prev,
+          [key]: newUrl,
+        }));
+      }, 5000);
+    }
   };
 
   const handleTimelineClick = (event: React.MouseEvent<HTMLDivElement>) => {
@@ -121,58 +162,187 @@ export default function EditorKoobo() {
   const configurableVariables = [
     {
       id: 1,
-      title: 'ROAD TO ICONS',
+      title: 'ROAD',
       timestamp: 5, // 5 seconds
       values: {
-        DE: 'ROAD TO ICONS',
-        ES: 'CAMINO A LOS ÍCONOS',
-        FR: 'LA ROUTE VERS LES ICÔNES',
-        IT: 'LA STRADA VERSO LE ICONE',
-        PL: 'DROGA DO IKON',
-        TR: 'İKONLARA GİDEN YOL',
+        DE: 'ROAD',
+        ES: 'CAMINO',
+        FR: 'EN ROUTE',
+        IT: 'LA STRADA',
+        PL: 'DROGA',
+        TR: "ICONS'A",
       },
     },
     {
       id: 2,
-      title: 'KWANGDONG FREECS',
-      timestamp: 10, // 10 seconds
+      title: 'TO',
+      timestamp: 5, // 5 seconds
       values: {
-        DE: 'KWANGDONG FREECS',
-        ES: 'KWANGDONG FREECS',
-        FR: 'KWANGDONG FREECS',
-        IT: 'KWANGDONG FREECS',
-        PL: 'KWANGDONG FREECS',
-        TR: 'KWANGDONG FREECS',
+        DE: 'TO',
+        ES: 'AL',
+        FR: 'VERS LES',
+        IT: 'VERSO',
+        PL: 'DO',
+        TR: 'UZANAN',
       },
     },
     {
       id: 3,
-      title: 'REGIONAL RECORD',
+      title: 'ICONS',
+      timestamp: 5, // 5 seconds
+      values: {
+        DE: 'ICONS',
+        ES: 'ICONS',
+        FR: 'ICONS',
+        IT: 'ICONS',
+        PL: 'ICONS',
+        TR: 'YOL',
+      },
+    },
+    {
+      id: 4,
+      title: 'TEAM_LINE',
+      timestamp: 10, // 10 seconds
+      values: {
+        DE: 'MANNSCHAFTSAUFSTELLUNG',
+        ES: 'PLANTILLA',
+        FR: "COMPOSITION DE L'ÉQUIPE",
+        IT: 'FORMAZIONE',
+        PL: 'SKŁAD DRUŻYNY',
+        TR: 'TAKIM KADROSU',
+      },
+    },
+    {
+      id: 5,
+      title: 'REGIONAL_RECORD',
       timestamp: 24, // 24 seconds
       values: {
-        DE: 'REGIONAL REKORD',
-        ES: 'RÉCORD REGIONAL',
-        FR: 'RECORD RÉGIONAL',
-        IT: 'RECORD REGIONALE',
-        PL: 'REKORD REGIONALNY',
-        TR: 'BÖLGESEL REKOR',
+        DE: 'REGIONALER VERLAUF',
+        ES: 'RESULTADOS REGIONALES',
+        FR: 'RÉSULTATS RÉGIONAUX',
+        IT: 'RISULTATI REGIONALI',
+        PL: 'REGIONALNY REKORD',
+        TR: 'LİG PERFORMANSI',
+      },
+    },
+    {
+      id: 6,
+      title: '185',
+      timestamp: 24, // 24 seconds
+      values: {
+        DE: '18:5',
+        ES: '18-5',
+        FR: '18-5',
+        IT: '18-5',
+        PL: '18-5',
+        TR: '18-5',
+      },
+    },
+    {
+      id: 7,
+      title: 'TOP_CHAMPIONS',
+      timestamp: 24, // 24 seconds
+      values: {
+        DE: 'TOP-CHAMPIONS',
+        ES: 'MEJORES CAMPEONES',
+        FR: 'CHAMPIONS LES PLUS JOUÉS',
+        IT: 'CAMPIONI PREFERITI',
+        PL: 'NAJLEPSI BOHATEROWIE',
+        TR: 'SIK SEÇİLENLER',
+      },
+    },
+    {
+      id: 8,
+      title: 'STRONGEST_LANE',
+      timestamp: 24, // 24 seconds
+      values: {
+        DE: 'STÄRKSTE LANE',
+        ES: 'CALLE MÁS FUERTE',
+        FR: 'MEILLEURE VOIE',
+        IT: 'CORSIA PIÙ FORTE',
+        PL: 'NAJSILNIEJSZA ALEJA',
+        TR: 'EN GÜÇLÜ KORİDOR',
+      },
+    },
+    {
+      id: 9,
+      title: 'DRAGON_LANE',
+      timestamp: 24, // 24 seconds
+      values: {
+        DE: 'DRACHEN-LANE',
+        ES: 'CALLE DEL DRAGÓN',
+        FR: 'VOIE DU DRAGON',
+        IT: 'CORSIA DEL DRAGO',
+        PL: 'ALEJA SMOKÓW',
+        TR: 'EJDER KORİDORU',
+      },
+    },
+    {
+      id: 10,
+      title: 'SEED_1',
+      timestamp: 24, // 24 seconds
+      values: {
+        DE: 'PLATZIERUNG NR. 1',
+        ES: 'PRIMER PUESTO',
+        FR: 'SEED #1',
+        IT: '1° POSTO',
+        PL: 'DRUŻYNA NR 1',
+        TR: '1. TAKIM',
+      },
+    },
+    {
+      id: 11,
+      title: 'ICONS_GROUP',
+      timestamp: 24, // 24 seconds
+      values: {
+        DE: 'ICONS-GRUPPENPHASE',
+        ES: 'FASE DE GRUPOS DEL ICONS',
+        FR: 'PHASE DE GROUPE DES ICONS',
+        IT: 'FASE A GIRONI ICONS',
+        PL: 'FAZA GRUPOWA ICONS',
+        TR: 'ICONS GRUP AŞAMASI',
       },
     },
   ];
+
+  // Initialize preview URLs with default values
+  useEffect(() => {
+    const initialUrls: { [key: string]: string } = {};
+
+    // Initialize variable preview URLs
+    configurableVariables.forEach(variable => {
+      const key = `variable-${variable.title}`;
+      initialUrls[
+        key
+      ] = `https://via.placeholder.com/200x150/8B5CF6/FFFFFF?text=${encodeURIComponent(
+        variable.title
+      )}`;
+    });
+
+    // Initialize subtitle preview URLs
+    configurableSubtitles.forEach(subtitle => {
+      const key = `subtitle-${subtitle.id}`;
+      initialUrls[
+        key
+      ] = `https://via.placeholder.com/200x150/10B981/FFFFFF?text=Subtitle ${subtitle.id}`;
+    });
+
+    setPreviewUrls(initialUrls);
+  }, []);
 
   // Configurable subtitles array with title, start/end timestamps, and language-specific values
   const configurableSubtitles = [
     {
       id: 1,
-      startTime: 2,
+      startTime: 0,
       endTime: 8,
       values: {
-        DE: 'Willkommen bei Road to Icons',
-        ES: 'Bienvenidos a Camino a los Íconos',
-        FR: 'Bienvenue sur La Route vers les Icônes',
-        IT: 'Benvenuti su La Strada verso le Icone',
-        PL: 'Witamy w Drodze do Ikon',
-        TR: 'İkonlara Giden Yola Hoş Geldiniz',
+        DE: 'Luna ist nicht zu stoppen!',
+        ES: '¡Luna es imparable! ',
+        FR: 'Luna est inarrêtable !',
+        IT: 'Luna è inarrestabile!',
+        PL: 'Luna jest nie do zatrzymania!',
+        TR: 'Luna durdurulamıyor!',
       },
     },
     {
@@ -180,12 +350,12 @@ export default function EditorKoobo() {
       startTime: 12,
       endTime: 18,
       values: {
-        DE: 'Das ist das Kwangdong Freecs Team',
-        ES: 'Este es el equipo Kwangdong Freecs',
-        FR: "Voici l'équipe Kwangdong Freecs",
-        IT: 'Questa è la squadra Kwangdong Freecs',
-        PL: 'To jest zespół Kwangdong Freecs',
-        TR: 'Bu Kwangdong Freecs takımı',
+        DE: 'Sie holt sich den Kill.',
+        ES: ' se lleva la kill. ',
+        FR: 'Elle prend le kill.',
+        IT: 'Si prende la kill.',
+        PL: 'Zdobywa zabójstwo.',
+        TR: 'Skoru alıyor.',
       },
     },
     {
@@ -193,12 +363,25 @@ export default function EditorKoobo() {
       startTime: 20,
       endTime: 30,
       values: {
-        DE: 'Ein neuer regionaler Rekord wurde aufgestellt',
-        ES: 'Se ha establecido un nuevo récord regional',
-        FR: 'Un nouveau record régional a été établi',
-        IT: 'È stato stabilito un nuovo record regionale',
-        PL: 'Ustanowiono nowy rekord regionalny',
-        TR: 'Yeni bir bölgesel rekor kırıldı',
+        DE: 'Der Nexus hält nicht mehr stand.',
+        ES: ' El Nexo no aguanta más. ',
+        FR: 'Le Nexus ne tiendra plus longtemps.',
+        IT: 'Il Nexus non resiste più.',
+        PL: 'Nexus już tego nie wytrzyma.',
+        TR: 'Nexus artık dayanamıyor.',
+      },
+    },
+    {
+      id: 4,
+      startTime: 20,
+      endTime: 30,
+      values: {
+        DE: 'Sieg!',
+        ES: ' ¡Victoria!',
+        FR: 'Victoire !',
+        IT: 'Vittoria!',
+        PL: 'Zwycięstwo!',
+        TR: 'Zafer!',
       },
     },
   ];
@@ -347,6 +530,13 @@ export default function EditorKoobo() {
                           }
                           className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                           placeholder={`Enter ${variable.title.toLowerCase()}`}
+                          onBlur={() => {
+                            const key = `variable-${variable.title}`;
+                            setPreviewUrls(prev => ({
+                              ...prev,
+                              [key]: null,
+                            }));
+                          }}
                         />
                       </div>
                     </div>
@@ -371,7 +561,10 @@ export default function EditorKoobo() {
                           <div className="flex items-center gap-2">
                             <button
                               onClick={() =>
-                                openImagePreview(subtitle.id, 'subtitle')
+                                openImagePreview(
+                                  subtitle.id.toString(),
+                                  'subtitle'
+                                )
                               }
                               className="p-1 text-green-500 hover:text-green-600 hover:bg-green-50 rounded transition-colors"
                               title="Preview image"
@@ -419,6 +612,13 @@ export default function EditorKoobo() {
                           }
                           className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
                           placeholder={`Enter`}
+                          onBlur={() => {
+                            const key = `subtitle-${subtitle.id}`;
+                            setPreviewUrls(prev => ({
+                              ...prev,
+                              [key]: null,
+                            }));
+                          }}
                         />
                       </div>
                     </div>
