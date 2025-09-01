@@ -143,3 +143,24 @@ body {
     @apply bg-background text-foreground;
   }
 }
+
+video {
+  height: 100% !important;
+  width: 100% !important;
+}
+
+.v_thin {
+  padding-right: 400px;
+  padding-left: 0px !important;
+  padding-bottom: 0px;
+}
+.v_pan {
+  padding-right: 400px;
+  padding-left: 400px;
+  padding-bottom: 0px;
+}
+.v_ver {
+  padding-right: 0px;
+  padding-left: 0px;
+  padding-bottom: 540px;
+}

@@ -62,6 +62,9 @@ export default function Editor() {
   const [isCsvDialogOpen, setIsCsvDialogOpen] = useState(false);
   const [selectedSection, setSelectedSection] = useState<string>('');
   const [artBoard, setArtBoard] = useState<string>('');
+  const [videoSrc, setVideoSrc] = useState<string | null>(
+    'https://animmfilesv2.blob.core.windows.net/video/WL_Video.mp4'
+  );
 
   // Get all unique sections from all modules
   const getAllSections = () => {
@@ -1022,15 +1025,43 @@ export default function Editor() {
                             template.Result.modules.length > 0 &&
                             template.Result.modules[0].file &&
                             artBoard && (
-                              <RiveComp
-                                src={template.Result.modules[0].file}
-                                setAssetsParent={setAssets}
-                                setRiveStatesParent={setRiveStates}
-                                artboard={artBoard}
-                                onStateChange={
-                                  updateAllVariablesAfterResolutionChange
-                                }
-                              />
+                              <>
+                                <RiveComp
+                                  src={template.Result.modules[0].file}
+                                  setAssetsParent={setAssets}
+                                  setRiveStatesParent={setRiveStates}
+                                  artboard={artBoard}
+                                  onStateChange={
+                                    updateAllVariablesAfterResolutionChange
+                                  }
+                                />
+                                {videoSrc && (
+                                  <video
+                                    width={'100%'}
+                                    height={'100%'}
+                                    autoPlay={true}
+                                    muted
+                                    loop={true}
+                                    id="videoBackground"
+                                    className={
+                                      'absolute top-0 -z-10 object-cover ' +
+                                      (currentWidth / currentHeight > 2.3 &&
+                                      currentWidth / currentHeight <= 3
+                                        ? 'v_thin '
+                                        : '') +
+                                      (currentWidth / currentHeight >= 3
+                                        ? 'v_pan '
+                                        : '') +
+                                      (currentWidth / currentHeight <= 0.5
+                                        ? 'v_ver '
+                                        : '') +
+                                      (currentHeight <= 400 ? 'v_thin ' : '')
+                                    }
+                                  >
+                                    <source src={videoSrc} type="video/mp4" />
+                                  </video>
+                                )}
+                              </>
                             )}
                         </div>
 
