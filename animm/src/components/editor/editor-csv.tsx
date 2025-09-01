@@ -163,7 +163,7 @@ export default function EditorCsv({
     const hasResizeColumn = resizeColumnIndex !== -1;
 
     // Remove the first 3 columns (name, width, height), format column, and resize column if they exist
-    let variableColumns = headerColumns.slice(3);
+    const variableColumns = headerColumns.slice(3);
 
     // Collect indices to remove (format and resize columns)
     const indicesToRemove: number[] = [];
@@ -218,7 +218,7 @@ export default function EditorCsv({
         };
 
         // Process variable columns (skip format and resize columns)
-        let variableData = columns.slice(3);
+        const variableData = columns.slice(3);
 
         // Collect indices to remove (format and resize columns)
         const dataIndicesToRemove: number[] = [];
