@@ -1,22 +1,14 @@
 'use client';
 
-import { useEffect, useState, useRef } from 'react';
+import { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { FileAsset, Rive } from '@rive-app/react-webgl2';
 import {
-  useRive,
-  useViewModel,
   useViewModelInstanceString,
-  useViewModelInstance,
   useViewModelInstanceNumber,
   useViewModelInstanceBoolean,
 } from '@rive-app/react-webgl2';
 import { getBaseNameFromPath, replaceRiveImageFromUrl } from '@/lib/rive-image';
-import {
-  Collapsible,
-  CollapsibleContent,
-  CollapsibleTrigger,
-} from '@radix-ui/react-collapsible';
 
 import { TransformWrapper, TransformComponent } from 'react-zoom-pan-pinch';
 
@@ -27,33 +19,21 @@ import { EditorSelect } from '@/components/editor/editor-select';
 
 import {
   ApiTemplate,
-  Module,
   TemplateVariable,
   TemplateVariableTypeEnum,
   TemplateComposition,
   TemplateImage,
 } from '@/types/collections';
 import {
-  ChevronDown,
-  LinkIcon,
-  Loader2,
   ArrowLeft,
-  Upload,
-  Save,
   Type,
   Image as ImageIcon,
-  Video,
-  Music,
-  Link,
   Grid3X3,
-  FileText,
   Download,
-  ChevronRight,
   Settings,
 } from 'lucide-react';
 import EditorImages from '@/components/editor/editor-images';
 import RiveComp from '@/components/editor/rive-component';
-import EditorUrl from '@/components/editor/editor-url';
 import {
   GeneratedAnimation,
   GeneratedAnimationStatusEnum,
@@ -61,12 +41,10 @@ import {
 } from '@/types/generatedAnimations';
 import useTemplatesService from '@/app/services/TemplatesService';
 import useGeneratedAnimationService from '@/app/services/GeneratedAnimationsService';
-import EditorResolution from '@/components/editor/editor-resolution';
 import EditorCsv from '@/components/editor/editor-csv';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
 import { EditorCheckbox } from '@/components/editor/editor-checkbox';
-import React from 'react';
 import { VariableStringSetter } from '@/components/editor/variable-string-setter';
 import { LoadingSpinner } from '@/components/ui/loading-spinner';
 
@@ -112,7 +90,7 @@ export default function Editor() {
           artBoard && variableSection.includes(artBoard);
 
         // If we have an artboard and it's not in the section, skip this variable
-        if (artBoard && !isArtboardInSection) {
+        if (artBoard != 'Template' && !isArtboardInSection) {
           return;
         }
 
@@ -169,7 +147,7 @@ export default function Editor() {
     return template.Result.modules.some(module =>
       module.variables.some(variable => {
         // If we have an artboard, check if it's included in the variable's section
-        if (artBoard) {
+        if (artBoard != 'Template') {
           const variableSection = variable.section || 'Variables';
           if (!variableSection.includes(artBoard)) {
             return false;
@@ -290,16 +268,30 @@ export default function Editor() {
       setTemplate(template);
       if (template) {
         // No longer need to initialize variable values state since we read directly from inputs
-
+        let initialWidth = 1080;
+        let initialHeight = 1080;
         if (
           template?.Result.templateCompositions &&
           template.Result.templateCompositions.length > 0
         ) {
           const composition = template?.Result.templateCompositions[0];
           setArtBoard(template?.Result.templateCompositions[0].name);
-          setCurrentHeight(composition.templateResolutions[0].height);
-          setCurrentWidth(composition.templateResolutions[0].width);
+          initialWidth = composition.templateResolutions[0].width;
+          initialHeight = composition.templateResolutions[0].height;
+        } else {
+          setArtBoard('Template');
         }
+        setCurrentWidth(initialWidth);
+        setCurrentHeight(initialHeight);
+
+        // Set initial canvas dimensions
+        setTimeout(() => {
+          const mainCanvas = document.getElementById('MainCanvas');
+          if (mainCanvas) {
+            mainCanvas.style.width = initialWidth + 'px';
+            mainCanvas.style.height = initialHeight + 'px';
+          }
+        }, 100);
         const newGeneratedAnimation: GeneratedAnimation = {
           baseTemplate: template.Result,
           baseTemplateId: template.Result.id,
@@ -362,13 +354,15 @@ export default function Editor() {
     setValueWidth(width);
     setValueHeight(height);
     setArtBoard(artBoard);
+    setCurrentWidth(width);
+    setCurrentHeight(height);
+
     const mainCan: any = document.querySelector('#MainCanvas');
     if (mainCan) {
       mainCan.style.width = width + 'px';
-      setCurrentWidth(width);
       mainCan.style.height = height + 'px';
-      setCurrentHeight(height);
     }
+
     //if (rivesStates && rivesStates[0]) {
     rivesStates[0].reset({
       artboard: artBoard,
@@ -431,6 +425,12 @@ export default function Editor() {
 
   // EventListener to Deactivate Zoom Pan to be able to Resize
   const [isResizing, setIsResizing] = useState(false);
+  const [isCanvasResizing, setIsCanvasResizing] = useState(false);
+  const [resizeStartPos, setResizeStartPos] = useState({ x: 0, y: 0 });
+  const [resizeStartDimensions, setResizeStartDimensions] = useState({
+    width: 0,
+    height: 0,
+  });
 
   // Initialize template on component mount
   useEffect(() => {
@@ -461,6 +461,111 @@ export default function Editor() {
       document.body.removeEventListener('mousemove', handleMouseEvent);
     };
   }, [template]); // Re-run when template changes
+
+  // Canvas resize handlers
+  const handleResizeStart = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsCanvasResizing(true);
+    setResizeStartPos({ x: e.clientX, y: e.clientY });
+
+    // Get the actual current dimensions from the DOM element
+    const mainCanvas = document.getElementById('MainCanvas');
+    const actualWidth = mainCanvas
+      ? parseInt(mainCanvas.style.width) || currentWidth
+      : currentWidth;
+    const actualHeight = mainCanvas
+      ? parseInt(mainCanvas.style.height) || currentHeight
+      : currentHeight;
+
+    setResizeStartDimensions({ width: actualWidth, height: actualHeight });
+
+    console.log('Resize start:', {
+      startPos: { x: e.clientX, y: e.clientY },
+      startDimensions: { width: actualWidth, height: actualHeight },
+      currentState: { width: currentWidth, height: currentHeight },
+    });
+
+    // Add visual feedback
+    document.body.style.cursor = 'se-resize';
+    document.body.style.userSelect = 'none';
+  };
+
+  const handleResizeMove = (e: MouseEvent) => {
+    if (!isCanvasResizing) return;
+
+    const deltaX = e.clientX - resizeStartPos.x;
+    const deltaY = e.clientY - resizeStartPos.y;
+
+    // Add constraints to prevent extreme values
+    const minSize = 200;
+    const maxSize = 4000; // Maximum reasonable size
+
+    // Calculate new dimensions with constraints
+    const newWidth = Math.max(
+      minSize,
+      Math.min(maxSize, resizeStartDimensions.width + deltaX)
+    );
+    const newHeight = Math.max(
+      minSize,
+      Math.min(maxSize, resizeStartDimensions.height + deltaY)
+    );
+
+    // Add step limits to prevent extreme jumps
+    const maxStep = 500; // More conservative step limit for smoother resizing
+    const constrainedWidth = Math.max(
+      resizeStartDimensions.width - maxStep,
+      Math.min(resizeStartDimensions.width + maxStep, newWidth)
+    );
+    const constrainedHeight = Math.max(
+      resizeStartDimensions.height - maxStep,
+      Math.min(resizeStartDimensions.height + maxStep, newHeight)
+    );
+
+    console.log('Resizing canvas:', {
+      newWidth: constrainedWidth,
+      newHeight: constrainedHeight,
+      deltaX,
+      deltaY,
+      originalWidth: resizeStartDimensions.width,
+      originalHeight: resizeStartDimensions.height,
+    });
+
+    setCurrentWidth(constrainedWidth);
+    setCurrentHeight(constrainedHeight);
+
+    const mainCanvas = document.getElementById('MainCanvas');
+    if (mainCanvas) {
+      mainCanvas.style.width = constrainedWidth + 'px';
+      mainCanvas.style.height = constrainedHeight + 'px';
+      console.log(
+        'Canvas dimensions updated:',
+        mainCanvas.style.width,
+        mainCanvas.style.height
+      );
+    }
+  };
+
+  const handleResizeEnd = () => {
+    setIsCanvasResizing(false);
+
+    // Clean up visual feedback
+    document.body.style.cursor = '';
+    document.body.style.userSelect = '';
+  };
+
+  // Add global resize event listeners
+  useEffect(() => {
+    if (isCanvasResizing) {
+      document.addEventListener('mousemove', handleResizeMove);
+      document.addEventListener('mouseup', handleResizeEnd);
+
+      return () => {
+        document.removeEventListener('mousemove', handleResizeMove);
+        document.removeEventListener('mouseup', handleResizeEnd);
+      };
+    }
+  }, [isCanvasResizing, resizeStartPos, resizeStartDimensions]);
 
   const generateUrl = async () => {
     if (template) {
@@ -674,22 +779,24 @@ export default function Editor() {
           {/* Content Area */}
           <div className="flex flex-1 min-h-0">
             {/* Vertical Tabs - Fixed */}
-            <div className="w-16 border-r bg-gray-50 flex-shrink-0">
-              {tabs.map(tab => (
-                <button
-                  key={tab.id}
-                  onClick={() => setActiveTab(tab.id)}
-                  className={`w-full flex flex-col items-center py-4 px-2 text-xs transition-colors ${
-                    activeTab === tab.id
-                      ? 'text-blue-600 bg-blue-50 border-r-2 border-blue-600'
-                      : 'text-gray-500 hover:text-gray-700 hover:bg-gray-100'
-                  }`}
-                >
-                  <tab.icon className="w-5 h-5 mb-1" />
-                  <span>{tab.label}</span>
-                </button>
-              ))}
-            </div>
+            {tabs && tabs.length > 0 && (
+              <div className="w-16 border-r bg-gray-50 flex-shrink-0">
+                {tabs.map(tab => (
+                  <button
+                    key={tab.id}
+                    onClick={() => setActiveTab(tab.id)}
+                    className={`w-full flex flex-col items-center py-4 px-2 text-xs transition-colors ${
+                      activeTab === tab.id
+                        ? 'text-blue-600 bg-blue-50 border-r-2 border-blue-600'
+                        : 'text-gray-500 hover:text-gray-700 hover:bg-gray-100'
+                    }`}
+                  >
+                    <tab.icon className="w-5 h-5 mb-1" />
+                    <span>{tab.label}</span>
+                  </button>
+                ))}
+              </div>
+            )}
 
             {/* Content Area - Scrollable */}
             <div className="flex-1 flex flex-col overflow-hidden">
@@ -873,7 +980,7 @@ export default function Editor() {
               </div>
 
               <TransformWrapper
-                disabled={isResizing}
+                disabled={isResizing || isCanvasResizing}
                 disablePadding={true}
                 centerOnInit={true}
                 initialScale={1}
@@ -904,7 +1011,11 @@ export default function Editor() {
                     <TransformComponent wrapperClass="!w-full !h-full">
                       <div
                         id="MainCanvas"
-                        className="h-[1920px] w-[1080px] flex rounded-lg border shadow-md shadow-slate-500/10"
+                        className="flex rounded-lg border shadow-md shadow-slate-500/10 relative"
+                        style={{
+                          width: currentWidth + 'px',
+                          height: currentHeight + 'px',
+                        }}
                       >
                         <div className="size-full">
                           {template &&
@@ -922,6 +1033,19 @@ export default function Editor() {
                               />
                             )}
                         </div>
+
+                        {/* Resize Handle - Bottom Right Corner */}
+                        <div
+                          className="absolute bottom-0 right-0 w-8 h-8 cursor-se-resize z-10"
+                          onMouseDown={handleResizeStart}
+                          style={{
+                            background:
+                              'linear-gradient(135deg, transparent 50%, #000 50%)',
+                            border: '2px solid #000',
+                            borderRadius: '0 0 8px 0',
+                          }}
+                          title="Drag to resize canvas"
+                        />
                       </div>
                     </TransformComponent>
                   </>
