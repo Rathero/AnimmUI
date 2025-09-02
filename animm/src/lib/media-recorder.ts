@@ -126,21 +126,18 @@ class MediaRecorder {
       this.lastTime = 0;
 
       try {
-        // Create a MediaRecorder with a canvas stream
+        // Create a MediaRecorder with a canvas stream at the specified FPS
         const stream = this.canvas!.captureStream(config.fps);
 
-        // Configure recorder options
+        // Configure recorder options with proper frame rate settings
         const recorderOptions: any = {
           type: 'video',
           mimeType: 'video/webm;codecs=vp9',
           frameRate: config.fps,
+          videoBitsPerSecond: config.bitrate || 8000000, // Higher bitrate for better quality
           quality: config.quality || 1,
           disableLogs: true,
         };
-
-        if (config.bitrate) {
-          recorderOptions.videoBitsPerSecond = config.bitrate;
-        }
 
         this.recorder = new RecordRTC(stream, recorderOptions);
         this.recorder.startRecording();
@@ -189,38 +186,51 @@ class MediaRecorder {
       }
     }
 
-    // Set up frame counting interval
-    const frameInterval = 1000 / this.frameInterval; // Convert to milliseconds
-    this.recordingInterval = setInterval(() => {
+    // Use requestAnimationFrame for more precise timing control
+    const frameIntervalMs = this.frameInterval; // Already in milliseconds
+    let lastFrameTime = 0;
+
+    const frameLoop = (currentTime: number) => {
       if (!this.isRecording) {
         return;
       }
 
-      this.frameCount++;
+      // Only process frames at the specified interval
+      if (currentTime - lastFrameTime >= frameIntervalMs) {
+        this.frameCount++;
+        lastFrameTime = currentTime;
 
-      // Update status
-      if (this.statusCallback) {
-        const progress = Math.min(
-          (this.frameCount / this.totalFrames) * 100,
-          100
-        );
-        const currentTime = Date.now() - this.startTime;
-        this.statusCallback({
-          isRecording: true,
-          progress,
-          currentTime,
-          totalFrames: this.totalFrames,
-        });
+        // Update status
+        if (this.statusCallback) {
+          const progress = Math.min(
+            (this.frameCount / this.totalFrames) * 100,
+            100
+          );
+          const elapsedTime = Date.now() - this.startTime;
+          this.statusCallback({
+            isRecording: true,
+            progress,
+            currentTime: elapsedTime,
+            totalFrames: this.totalFrames,
+          });
+        }
+
+        // Check if we've captured all required frames
+        if (this.frameCount >= this.totalFrames) {
+          console.log(
+            `Captured all ${this.totalFrames} frames, stopping recording`
+          );
+          this.stopRecording();
+          return;
+        }
       }
 
-      // Check if we've captured all required frames
-      if (this.frameCount >= this.totalFrames) {
-        console.log(
-          `Captured all ${this.totalFrames} frames, stopping recording`
-        );
-        this.stopRecording();
-      }
-    }, frameInterval);
+      // Continue the frame loop
+      this.animationFrameId = requestAnimationFrame(frameLoop);
+    };
+
+    // Start the frame loop
+    this.animationFrameId = requestAnimationFrame(frameLoop);
   }
 
   stopRecording(): void {
@@ -292,6 +302,10 @@ class MediaRecorder {
     if (this.recordingInterval) {
       clearInterval(this.recordingInterval);
       this.recordingInterval = null;
+    }
+    if (this.animationFrameId) {
+      cancelAnimationFrame(this.animationFrameId);
+      this.animationFrameId = null;
     }
   }
 
