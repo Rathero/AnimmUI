@@ -51,16 +51,6 @@ class MediaRecorder {
     config: RecordingConfig,
     onStatusUpdate?: (status: RecordingStatus) => void
   ): Promise<RecordingResult> {
-    config = {
-      exportId: '1',
-      duration: 1000,
-      fps: 30,
-      format: 'gif',
-      quality: 1,
-      bitrate: 4000000,
-      width: 500,
-      height: 500,
-    };
     if (this.isRecording) {
       return {
         success: false,

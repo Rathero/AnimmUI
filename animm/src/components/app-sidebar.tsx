@@ -119,22 +119,22 @@ export function AppSidebar() {
                 </div>
               )}
 
-              {/* Brand Assets */}
-              <SidebarMenuItem>
-                <SidebarMenuButton asChild>
-                  <Link href="#">
-                    <FolderOpen className="w-4 h-4" />
-                    <span>Brand Assets (Coming Soon)</span>
-                  </Link>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-
               {/* Exports */}
               <SidebarMenuItem>
                 <SidebarMenuButton asChild isActive={pathname === '/exports'}>
                   <Link href="/exports">
                     <Download className="w-4 h-4" />
                     <span>Exports</span>
+                  </Link>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+
+              {/* Brand Assets */}
+              <SidebarMenuItem>
+                <SidebarMenuButton asChild>
+                  <Link href="#">
+                    <FolderOpen className="w-4 h-4" />
+                    <span>Brand Assets (Coming Soon)</span>
                   </Link>
                 </SidebarMenuButton>
               </SidebarMenuItem>
