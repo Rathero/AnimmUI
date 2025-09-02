@@ -126,13 +126,32 @@ class MediaRecorder {
       this.lastTime = 0;
 
       try {
-        // Create a MediaRecorder with a canvas stream at the specified FPS
-        const stream = this.canvas!.captureStream(config.fps);
+        // Create a MediaRecorder with a canvas stream (without FPS parameter for better browser compatibility)
+        const stream = this.canvas!.captureStream();
 
         // Configure recorder options with proper frame rate settings
+        // Try different MIME types for better FPS support
+        const mimeTypes = [
+          'video/webm;codecs=vp9',
+          'video/webm;codecs=vp8',
+          'video/webm',
+          'video/mp4;codecs=h264',
+        ];
+
+        let selectedMimeType = mimeTypes[0];
+        for (const mimeType of mimeTypes) {
+          if (
+            (MediaRecorder as any).isTypeSupported &&
+            (MediaRecorder as any).isTypeSupported(mimeType)
+          ) {
+            selectedMimeType = mimeType;
+            break;
+          }
+        }
+
         const recorderOptions: any = {
           type: 'video',
-          mimeType: 'video/webm;codecs=vp9',
+          mimeType: selectedMimeType,
           frameRate: config.fps,
           videoBitsPerSecond: config.bitrate || 8000000, // Higher bitrate for better quality
           quality: config.quality || 1,
@@ -141,6 +160,10 @@ class MediaRecorder {
 
         this.recorder = new RecordRTC(stream, recorderOptions);
         this.recorder.startRecording();
+
+        console.log(
+          `Recording started with MIME type: ${selectedMimeType}, FPS: ${config.fps}, Frame interval: ${this.frameInterval}ms`
+        );
 
         // Start Rive animation and frame counting
         this.startRiveAnimationWithFrameControl();
@@ -186,19 +209,48 @@ class MediaRecorder {
       }
     }
 
-    // Use requestAnimationFrame for more precise timing control
+    // Use precise timing control for frame capture
     const frameIntervalMs = this.frameInterval; // Already in milliseconds
     let lastFrameTime = 0;
+    let animationStartTime = 0;
 
     const frameLoop = (currentTime: number) => {
       if (!this.isRecording) {
         return;
       }
 
-      // Only process frames at the specified interval
-      if (currentTime - lastFrameTime >= frameIntervalMs) {
+      // Initialize animation start time
+      if (animationStartTime === 0) {
+        animationStartTime = currentTime;
+        lastFrameTime = currentTime;
+      }
+
+      // Calculate the exact time when the next frame should be captured
+      const targetFrameTime =
+        animationStartTime + this.frameCount * frameIntervalMs;
+
+      // Only process frames when we've reached the target time
+      if (currentTime >= targetFrameTime) {
         this.frameCount++;
         lastFrameTime = currentTime;
+
+        // Force Rive to advance to the exact frame time for precise timing
+        if (this.riveInstance && this.riveInstance.advance) {
+          const frameTime = ((this.frameCount - 1) * frameIntervalMs) / 1000; // Convert to seconds
+          this.riveInstance.advance(frameTime);
+        }
+
+        // Force canvas redraw to ensure frame is captured
+        if (this.canvas && this.canvas.getContext) {
+          const ctx = this.canvas.getContext('2d');
+          if (ctx) {
+            // Trigger a small redraw to ensure the frame is captured
+            ctx.save();
+            ctx.globalAlpha = 0.01;
+            ctx.fillRect(0, 0, 1, 1);
+            ctx.restore();
+          }
+        }
 
         // Update status
         if (this.statusCallback) {
