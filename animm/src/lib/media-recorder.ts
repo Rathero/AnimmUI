@@ -156,7 +156,7 @@ class MediaRecorder {
             );
             this.stopRecording();
           }
-        }, config.duration + 5000); // Add 5 seconds buffer
+        }, config.duration); // Add 5 seconds buffer
 
         console.log(
           `Started frame-controlled recording: ${this.totalFrames} frames at ${config.fps}fps`
