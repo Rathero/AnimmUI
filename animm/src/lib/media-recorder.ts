@@ -219,39 +219,9 @@ class MediaRecorder {
         return;
       }
 
-      // Initialize animation start time
-      if (animationStartTime === 0) {
-        animationStartTime = currentTime;
-        lastFrameTime = currentTime;
-      }
-
-      // Calculate the exact time when the next frame should be captured
-      const targetFrameTime =
-        animationStartTime + this.frameCount * frameIntervalMs;
-
-      // Only process frames when we've reached the target time
-      if (currentTime >= targetFrameTime) {
-        this.frameCount++;
-        lastFrameTime = currentTime;
-
-        // Force Rive to advance to the exact frame time for precise timing
-        if (this.riveInstance && this.riveInstance.advance) {
-          const frameTime = ((this.frameCount - 1) * frameIntervalMs) / 1000; // Convert to seconds
-          this.riveInstance.advance(frameTime);
-        }
-
-        // Force canvas redraw to ensure frame is captured
-        if (this.canvas && this.canvas.getContext) {
-          const ctx = this.canvas.getContext('2d');
-          if (ctx) {
-            // Trigger a small redraw to ensure the frame is captured
-            ctx.save();
-            ctx.globalAlpha = 0.01;
-            ctx.fillRect(0, 0, 1, 1);
-            ctx.restore();
-          }
-        }
-
+      this.frameCount++;
+      lastFrameTime = currentTime;
+      if (currentTime - lastFrameTime >= frameIntervalMs) {
         // Update status
         if (this.statusCallback) {
           const progress = Math.min(
