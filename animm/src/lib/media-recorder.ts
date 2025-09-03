@@ -48,8 +48,8 @@ class MediaRecorder {
   private capturedFrames: ImageData[] = [];
   private config: RecordingConfig | null = null;
   private rendererCanvas: HTMLCanvasElement | null = null;
-  private lastFrameData: Uint8ClampedArray | null = null;
-  private frameCheckInterval: NodeJS.Timeout | null = null;
+  private recordedChunks: Blob[] = [];
+  private nativeMediaRecorder: globalThis.MediaRecorder | null = null;
 
   async startRecording(
     config: RecordingConfig,
@@ -139,7 +139,7 @@ class MediaRecorder {
       this.isRecording = true;
       this.startTime = Date.now();
       this.frameCount = 0;
-      this.capturedFrames = [];
+      this.recordedChunks = [];
 
       try {
         // Start the Rive animation
@@ -148,38 +148,37 @@ class MediaRecorder {
           console.log('Rive animation started for frame-controlled recording');
         }
 
-        // Start frame capture using the renderer canvas
-        this.startFrameCapture();
+        // Get canvas stream and start recording
+        this.startCanvasStreamRecording(config);
 
-        // Set a generous timeout since we're now frame-based, not time-based
-        // This is just a safety net in case something goes wrong
-        const safetyTimeout = Math.max(60000, config.duration * 3); // At least 1 minute or 3x the original duration
+        // Set a generous timeout as safety net
+        const safetyTimeout = Math.max(60000, config.duration * 3);
 
         console.log(
-          `Frame-based recording started with safety timeout: ${safetyTimeout}ms`
+          `Canvas stream recording started with safety timeout: ${safetyTimeout}ms`
         );
 
         // Timeout fallback in case something goes wrong
         this.recordingTimeout = setTimeout(() => {
           if (this.isRecording) {
             console.log(
-              `Frame-controlled recording safety timeout reached after ${safetyTimeout}ms, stopping...`
+              `Canvas stream recording safety timeout reached after ${safetyTimeout}ms, stopping...`
             );
             this.stopFrameControlledRecording();
           }
         }, safetyTimeout);
 
         console.log(
-          `Started frame-controlled recording: ${this.totalFrames} frames at ${config.fps}fps`
+          `Started canvas stream recording: ${this.totalFrames} frames at ${config.fps}fps`
         );
       } catch (error) {
-        console.error('Error starting frame-controlled recording:', error);
+        console.error('Error starting canvas stream recording:', error);
         resolve({
           success: false,
           error:
             error instanceof Error
               ? error.message
-              : 'Failed to start frame-controlled recording',
+              : 'Failed to start canvas stream recording',
           format: 'webm',
           size: 0,
           duration: 0,
@@ -189,160 +188,19 @@ class MediaRecorder {
     });
   }
 
-  private startFrameCapture(): void {
+  private startCanvasStreamRecording(config: RecordingConfig): void {
     if (!this.rendererCanvas || !this.isRecording) {
       return;
     }
 
-    console.log('Starting frame change detection...');
-
-    // Check for frame changes at high frequency (60fps) to detect when canvas updates
-    const checkInterval = 1000 / 60; // Check 60 times per second
-
-    const checkForFrameChange = () => {
-      if (!this.isRecording || this.frameCount >= this.totalFrames) {
-        if (this.frameCount >= this.totalFrames) {
-          console.log(
-            `Captured all ${this.totalFrames} frames, stopping recording`
-          );
-          this.stopFrameControlledRecording();
-        }
-        return;
-      }
-
-      try {
-        // Get the current frame from the renderer canvas
-        const ctx = this.rendererCanvas?.getContext('2d');
-        if (!ctx || !this.rendererCanvas) {
-          console.warn(
-            'Could not get renderer canvas context for frame capture'
-          );
-          // Continue checking
-          this.frameCheckInterval = setTimeout(
-            checkForFrameChange,
-            checkInterval
-          );
-          return;
-        }
-
-        // Get current frame data
-        const imageData = ctx.getImageData(
-          0,
-          0,
-          this.rendererCanvas.width,
-          this.rendererCanvas.height
-        );
-
-        // Check if this frame is different from the last one
-        const hasChanged = this.hasFrameChanged(imageData.data);
-
-        if (hasChanged) {
-          // Frame has changed, capture it
-          this.capturedFrames.push(imageData);
-          this.frameCount++;
-          this.lastFrameData = new Uint8ClampedArray(imageData.data);
-
-          // Update status
-          if (this.statusCallback) {
-            const progress = Math.min(
-              (this.frameCount / this.totalFrames) * 100,
-              100
-            );
-            const elapsedTime = Date.now() - this.startTime;
-            this.statusCallback({
-              isRecording: true,
-              progress,
-              currentTime: elapsedTime,
-              totalFrames: this.totalFrames,
-            });
-          }
-
-          console.log(
-            `Captured frame ${this.frameCount}/${this.totalFrames} (canvas changed)`
-          );
-        }
-
-        // Continue checking for changes
-        this.frameCheckInterval = setTimeout(
-          checkForFrameChange,
-          checkInterval
-        );
-      } catch (error) {
-        console.error('Error checking for frame changes:', error);
-        // Continue checking even if one check fails
-        this.frameCheckInterval = setTimeout(
-          checkForFrameChange,
-          checkInterval
-        );
-      }
-    };
-
-    // Start checking for frame changes
-    checkForFrameChange();
-  }
-
-  private hasFrameChanged(currentFrameData: Uint8ClampedArray): boolean {
-    if (!this.lastFrameData) {
-      // First frame, always capture
-      return true;
-    }
-
-    // Compare frame data to detect changes
-    // For performance, we can sample pixels instead of comparing every pixel
-    const sampleRate = Math.max(1, Math.floor(currentFrameData.length / 10000)); // Sample ~10k pixels
-
-    for (let i = 0; i < currentFrameData.length; i += sampleRate) {
-      if (currentFrameData[i] !== this.lastFrameData[i]) {
-        return true; // Frame has changed
-      }
-    }
-
-    return false; // No significant changes detected
-  }
-
-  private stopFrameControlledRecording(): void {
-    if (!this.isRecording) {
-      return;
-    }
-
-    console.log('Stopping frame-controlled recording...');
-    this.isRecording = false;
-    this.clearTimers();
-
-    // Compile captured frames into video
-    this.compileFramesToVideo();
-  }
-
-  private async compileFramesToVideo(): Promise<void> {
-    if (!this.config || this.capturedFrames.length === 0) {
-      if (this.resolvePromise) {
-        this.resolvePromise({
-          success: false,
-          error: 'No frames captured or config missing',
-          format: this.config?.format || 'webm',
-          size: 0,
-          duration: Date.now() - this.startTime,
-        });
-      }
-      this.cleanup();
-      return;
-    }
+    console.log('Starting canvas stream recording...');
 
     try {
-      // Create a temporary canvas for frame compilation
-      const tempCanvas = document.createElement('canvas');
-      tempCanvas.width = this.canvas!.width;
-      tempCanvas.height = this.canvas!.height;
-      const tempCtx = tempCanvas.getContext('2d');
+      // 1. Get a stream from the canvas
+      const stream = this.rendererCanvas.captureStream(config.fps);
+      console.log(`Canvas stream created at ${config.fps} FPS`);
 
-      if (!tempCtx) {
-        throw new Error('Could not create temporary canvas context');
-      }
-
-      // Create a MediaRecorder stream from the temporary canvas
-      const stream = tempCanvas.captureStream(this.config.fps);
-
-      // Configure recorder options
+      // 2. Configure MediaRecorder options
       const mimeTypes = [
         'video/webm;codecs=vp9',
         'video/webm;codecs=vp8',
@@ -362,95 +220,174 @@ class MediaRecorder {
       }
 
       const recorderOptions: any = {
-        type: 'video',
         mimeType: selectedMimeType,
-        frameRate: this.config.fps,
-        videoBitsPerSecond: this.config.bitrate || 8000000,
-        quality: this.config.quality || 1,
-        disableLogs: true,
+        videoBitsPerSecond: config.bitrate || 8000000,
       };
 
-      this.recorder = new RecordRTC(stream, recorderOptions);
-      this.recorder.startRecording();
+      // 3. Create native MediaRecorder instance
+      this.nativeMediaRecorder = new globalThis.MediaRecorder(
+        stream,
+        recorderOptions
+      );
 
-      // Play back captured frames to the temporary canvas
-      const frameInterval = 1000 / this.config.fps;
-      let currentFrame = 0;
-
-      const playFrame = () => {
-        if (currentFrame >= this.capturedFrames.length) {
-          // All frames played, stop recording
-          setTimeout(() => {
-            this.recorder!.stopRecording(() => {
-              const blob = this.recorder!.getBlob();
-              const recordedFormat = blob.type.includes('webm')
-                ? 'webm'
-                : 'mp4';
-
-              blob
-                .arrayBuffer()
-                .then(buffer => {
-                  const uint8Array = new Uint8Array(buffer);
-                  const result: RecordingResult = {
-                    success: true,
-                    data: uint8Array,
-                    format: recordedFormat,
-                    size: uint8Array.length,
-                    duration: Date.now() - this.startTime,
-                  };
-                  console.log(
-                    `${recordedFormat.toUpperCase()} created from ${
-                      this.capturedFrames.length
-                    } frames, size: ${uint8Array.length} bytes`
-                  );
-
-                  if (this.resolvePromise) {
-                    this.resolvePromise(result);
-                  }
-                })
-                .catch(error => {
-                  console.error('Error processing compiled video:', error);
-                  if (this.resolvePromise) {
-                    this.resolvePromise({
-                      success: false,
-                      error: error.message,
-                      format: recordedFormat,
-                      size: 0,
-                      duration: Date.now() - this.startTime,
-                    });
-                  }
-                })
-                .finally(() => {
-                  this.cleanup();
-                });
-            });
-          }, 1000);
-          return;
+      // 4. Clear previous chunks and prepare for new data
+      this.recordedChunks = [];
+      this.nativeMediaRecorder.ondataavailable = (event: BlobEvent) => {
+        if (event.data.size > 0) {
+          this.recordedChunks.push(event.data);
+          console.log(`Received data chunk: ${event.data.size} bytes`);
         }
-
-        // Draw the current frame to the temporary canvas
-        tempCtx.putImageData(this.capturedFrames[currentFrame], 0, 0);
-        currentFrame++;
-
-        // Schedule next frame
-        setTimeout(playFrame, frameInterval);
       };
 
-      // Start playing frames
-      playFrame();
+      // 5. Handle the stop event to create the video
+      this.nativeMediaRecorder.onstop = () => {
+        console.log('MediaRecorder stopped, processing video...');
+        this.processRecordedVideo();
+      };
+
+      // 6. Start recording
+      this.nativeMediaRecorder.start();
+      console.log(`MediaRecorder started with MIME type: ${selectedMimeType}`);
+
+      // 7. Start frame counting to stop after requested frames
+      this.startFrameCounting(config);
     } catch (error) {
-      console.error('Error compiling frames to video:', error);
+      console.error('Error starting canvas stream recording:', error);
       if (this.resolvePromise) {
         this.resolvePromise({
           success: false,
           error:
-            error instanceof Error ? error.message : 'Failed to compile frames',
-          format: this.config.format,
+            error instanceof Error
+              ? error.message
+              : 'Failed to start canvas stream recording',
+          format: config.format,
+          size: 0,
+          duration: 0,
+        });
+      }
+      this.cleanup();
+    }
+  }
+
+  private startFrameCounting(config: RecordingConfig): void {
+    // Calculate how long to record based on frame count and FPS
+    const recordingDuration = (this.totalFrames / config.fps) * 1000; // milliseconds
+
+    console.log(
+      `Will record for ${recordingDuration}ms to capture ${this.totalFrames} frames at ${config.fps}fps`
+    );
+
+    // Update status periodically
+    const statusInterval = setInterval(() => {
+      if (!this.isRecording) {
+        clearInterval(statusInterval);
+        return;
+      }
+
+      const elapsedTime = Date.now() - this.startTime;
+      const progress = Math.min((elapsedTime / recordingDuration) * 100, 100);
+
+      if (this.statusCallback) {
+        this.statusCallback({
+          isRecording: true,
+          progress,
+          currentTime: elapsedTime,
+          totalFrames: this.totalFrames,
+        });
+      }
+    }, 100);
+
+    // Stop recording after the calculated duration
+    setTimeout(() => {
+      if (this.isRecording) {
+        console.log(
+          `Recording duration reached (${recordingDuration}ms), stopping...`
+        );
+        clearInterval(statusInterval);
+        this.stopFrameControlledRecording();
+      }
+    }, recordingDuration);
+  }
+
+  private processRecordedVideo(): void {
+    try {
+      // Create blob from recorded chunks
+      const blob = new Blob(this.recordedChunks, { type: 'video/webm' });
+      const recordedFormat = blob.type.includes('webm') ? 'webm' : 'mp4';
+
+      console.log(`Video blob created: ${blob.size} bytes, type: ${blob.type}`);
+
+      // Convert to Uint8Array
+      blob
+        .arrayBuffer()
+        .then(buffer => {
+          const uint8Array = new Uint8Array(buffer);
+          const result: RecordingResult = {
+            success: true,
+            data: uint8Array,
+            format: recordedFormat,
+            size: uint8Array.length,
+            duration: Date.now() - this.startTime,
+          };
+
+          console.log(
+            `${recordedFormat.toUpperCase()} created from canvas stream, size: ${
+              uint8Array.length
+            } bytes`
+          );
+
+          if (this.resolvePromise) {
+            this.resolvePromise(result);
+          }
+        })
+        .catch(error => {
+          console.error('Error processing recorded video:', error);
+          if (this.resolvePromise) {
+            this.resolvePromise({
+              success: false,
+              error: error.message,
+              format: 'webm',
+              size: 0,
+              duration: Date.now() - this.startTime,
+            });
+          }
+        })
+        .finally(() => {
+          this.cleanup();
+        });
+    } catch (error) {
+      console.error('Error processing recorded video:', error);
+      if (this.resolvePromise) {
+        this.resolvePromise({
+          success: false,
+          error:
+            error instanceof Error
+              ? error.message
+              : 'Failed to process recorded video',
+          format: 'webm',
           size: 0,
           duration: Date.now() - this.startTime,
         });
       }
       this.cleanup();
+    }
+  }
+
+  private stopFrameControlledRecording(): void {
+    if (!this.isRecording) {
+      return;
+    }
+
+    console.log('Stopping canvas stream recording...');
+    this.isRecording = false;
+    this.clearTimers();
+
+    // Stop the MediaRecorder
+    if (
+      this.nativeMediaRecorder &&
+      this.nativeMediaRecorder.state === 'recording'
+    ) {
+      this.nativeMediaRecorder.stop();
     }
   }
 
@@ -662,10 +599,6 @@ class MediaRecorder {
       clearInterval(this.recordingInterval);
       this.recordingInterval = null;
     }
-    if (this.frameCheckInterval) {
-      clearTimeout(this.frameCheckInterval);
-      this.frameCheckInterval = null;
-    }
     if (this.animationFrameId) {
       cancelAnimationFrame(this.animationFrameId);
       this.animationFrameId = null;
@@ -697,8 +630,8 @@ class MediaRecorder {
     this.capturedFrames = [];
     this.config = null;
     this.rendererCanvas = null;
-    this.lastFrameData = null;
-    this.frameCheckInterval = null;
+    this.recordedChunks = [];
+    this.nativeMediaRecorder = null;
   }
 }
 
@@ -747,10 +680,10 @@ Usage Examples:
    );
 
 The frame-controlled approach:
-- Uses Rive's renderer CanvasRenderingContext2D to detect when frames actually change
-- Captures frames only when the canvas content changes (not time-based)
-- Provides true frame-based recording that matches the actual animation timing
-- Captures frames as ImageData and compiles them into video
-- Automatically stops when the specified number of frames is reached
-- Uses frame difference detection for optimal performance
+- Uses canvas.captureStream() to get a direct video stream from the canvas
+- Records the stream using MediaRecorder API for optimal performance
+- Calculates recording duration based on frame count and FPS
+- Automatically stops after the calculated duration to capture exact frame count
+- Much simpler and more reliable than complex frame detection
+- Uses native browser APIs for best performance and compatibility
 */
