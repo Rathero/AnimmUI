@@ -12,13 +12,11 @@ import {
 } from '@/types/collections';
 import RiveComp from '@/components/editor/rive-component';
 import useTemplatesService from '@/app/services/TemplatesService';
-import Script from 'next/script';
 import { VariableStringSetter } from '@/components/editor/variable-string-setter';
 import {
   mediaRecorder,
   RecordingConfig,
   RecordingResult,
-  RecordingStatus,
 } from '@/lib/media-recorder';
 
 export default function Viewer() {
@@ -164,25 +162,6 @@ export default function Viewer() {
         (window as any).__RECORDING_RESULT__ = null;
         (window as any).__RECORDING_STATUS__ = null;
 
-        /*
-        // Ensure Rive animation is ready and stopped before recording
-        const riveInstance = (window as any).__RIVE_INSTANCE__;
-        if (riveInstance && typeof riveInstance.stop === 'function') {
-          try {
-            riveInstance.stop();
-            console.log('Rive animation stopped before recording');
-          } catch (error) {
-            console.warn(
-              'Could not stop Rive animation before recording:',
-              error
-            );
-          }
-        }
-        // Status update callback
-        const onStatusUpdate = (status: RecordingStatus) => {
-          (window as any).__RECORDING_STATUS__ = status;
-        };
-*/
         const result = await mediaRecorder.startRecording(config);
 
         // Store the result globally for .NET to poll
@@ -207,27 +186,10 @@ export default function Viewer() {
         return errorResult;
       }
     };
-    /*
-    // Function to check if recording is in progress
-    (window as any).isRecording = () => {
-      return (
-        mediaRecorder.() ||
-        (window as any).__RECORDING_IN_PROGRESS__
-      );
-    };
-*/
     // Function to get the recording result (for .NET to poll)
     (window as any).getRecordingResult = () => {
       return (window as any).__RECORDING_RESULT__;
     };
-    /*
-    // Function to get the current recording status
-    (window as any).getRecordingStatus = () => {
-      return (
-        (window as any).__RECORDING_STATUS__ || mediaRecorder.getCurrentStatus()
-      );
-    };
-*/
     // Function to stop recording manually
     (window as any).stopRecording = () => {
       mediaRecorder.stopRecording();
@@ -270,27 +232,6 @@ export default function Viewer() {
       }
     };
 
-    // Legacy GIF functions for backward compatibility
-    (window as any).startGifRecording = async (config: any) => {
-      const recordingConfig: RecordingConfig = {
-        ...config,
-        format: 'gif',
-      };
-      return (window as any).startRecording(recordingConfig);
-    };
-
-    (window as any).isGifRecording = () => {
-      return (window as any).isRecording();
-    };
-
-    (window as any).getGifRecordingResult = () => {
-      return (window as any).getRecordingResult();
-    };
-
-    (window as any).clearGifRecordingResult = () => {
-      return (window as any).clearRecordingResult();
-    };
-
     // Cleanup function
     return () => {
       delete (window as any).startRecording;
@@ -301,10 +242,6 @@ export default function Viewer() {
       delete (window as any).clearRecordingResult;
       delete (window as any).startRiveAnimation;
       delete (window as any).stopRiveAnimation;
-      delete (window as any).startGifRecording;
-      delete (window as any).isGifRecording;
-      delete (window as any).getGifRecordingResult;
-      delete (window as any).clearGifRecordingResult;
       delete (window as any).__RECORDING_RESULT__;
       delete (window as any).__RECORDING_IN_PROGRESS__;
       delete (window as any).__RECORDING_STATUS__;

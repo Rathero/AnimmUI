@@ -18,12 +18,6 @@ declare global {
     startRiveAnimation: () => void;
     stopRiveAnimation: () => void;
 
-    // Legacy GIF functions for backward compatibility
-    startGifRecording: (config: any) => Promise<RecordingResult>;
-    isGifRecording: () => boolean;
-    getGifRecordingResult: () => RecordingResult | null;
-    clearGifRecordingResult: () => void;
-
     // Internal state variables
     __RECORDING_RESULT__: RecordingResult | null;
     __RECORDING_IN_PROGRESS__: boolean;

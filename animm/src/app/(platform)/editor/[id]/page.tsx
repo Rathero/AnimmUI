@@ -285,8 +285,13 @@ export default function Editor() {
         ) {
           const composition = template?.Result.templateCompositions[0];
           setArtBoard(template?.Result.templateCompositions[0].name);
-          initialWidth = composition.templateResolutions[0].width;
-          initialHeight = composition.templateResolutions[0].height;
+          if (
+            composition.templateResolutions &&
+            composition.templateResolutions.length > 0
+          ) {
+            initialWidth = composition.templateResolutions[0].width;
+            initialHeight = composition.templateResolutions[0].height;
+          }
         } else {
           setArtBoard('Template');
         }
