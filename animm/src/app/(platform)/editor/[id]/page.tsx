@@ -9,6 +9,7 @@ import {
   useViewModelInstanceBoolean,
 } from '@rive-app/react-webgl2';
 import { getBaseNameFromPath, replaceRiveImageFromUrl } from '@/lib/rive-image';
+import videoConfig from '@/data/VideoConfig.json';
 
 import { TransformWrapper, TransformComponent } from 'react-zoom-pan-pinch';
 
@@ -268,14 +269,11 @@ export default function Editor() {
       const template = await get(params.id);
       setTemplate(template);
       if (template) {
-        // Set video source only for specific template IDs
-        if (template.Result.id === 13 || template.Result.id === 11) {
-          setVideoSrc(
-            'https://animmfilesv2.blob.core.windows.net/video/WL_Video.mp4'
-          );
-        } else {
-          setVideoSrc(null);
-        }
+        // Set video source based on template ID configuration
+        const videoUrl = (videoConfig as Record<string, string>)[
+          template.Result.id.toString()
+        ];
+        setVideoSrc(videoUrl || null);
         // No longer need to initialize variable values state since we read directly from inputs
         let initialWidth = 1080;
         let initialHeight = 1080;
