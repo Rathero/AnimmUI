@@ -153,7 +153,7 @@ export default function Editor() {
     return template.Result.modules.some(module =>
       module.variables.some(variable => {
         // If we have an artboard, check if it's included in the variable's section
-        if (artBoard != 'Template') {
+        if (artBoard != 'Template' && artBoard != 'Main') {
           const variableSection = variable.section || 'Variables';
           if (!variableSection.includes(artBoard)) {
             return false;
