@@ -92,7 +92,11 @@ export default function Editor() {
           artBoard && variableSection.includes(artBoard);
 
         // If we have an artboard and it's not in the section, skip this variable
-        if (artBoard != 'Template' && !isArtboardInSection) {
+        if (
+          artBoard != 'Template' &&
+          artBoard != 'Main' &&
+          !isArtboardInSection
+        ) {
           return;
         }
 
