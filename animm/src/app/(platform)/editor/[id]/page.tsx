@@ -1060,15 +1060,15 @@ export default function Editor() {
                                       'absolute top-0 -z-10 object-cover ' +
                                       (currentWidth / currentHeight > 2.3 &&
                                       currentWidth / currentHeight <= 3
-                                        ? 'v_thin '
+                                        ? ' '
                                         : '') +
                                       (currentWidth / currentHeight >= 3
-                                        ? 'v_pan '
+                                        ? ' '
                                         : '') +
                                       (currentWidth / currentHeight <= 0.5
-                                        ? 'v_ver '
+                                        ? ' '
                                         : '') +
-                                      (currentHeight <= 400 ? 'v_thin ' : '')
+                                      (currentHeight <= 400 ? ' ' : '')
                                     }
                                   >
                                     <source src={videoSrc} type="video/mp4" />
