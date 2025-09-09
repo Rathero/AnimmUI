@@ -200,7 +200,7 @@ class MediaRecorder {
       const stream = this.rendererCanvas.captureStream(config.fps);
       console.log(`Canvas stream created at ${config.fps} FPS`);
 
-      // 2. Configure MediaRecorder options
+      // 2. Configure MediaRecorder options with transparency support
       const mimeTypes = [
         'video/webm;codecs=vp9',
         'video/webm;codecs=vp8',
@@ -222,6 +222,10 @@ class MediaRecorder {
       const recorderOptions: any = {
         mimeType: selectedMimeType,
         videoBitsPerSecond: config.bitrate || 8000000,
+        // Enable transparency support
+        video: {
+          alpha: 'keep', // Preserve transparency
+        },
       };
 
       // 3. Create native MediaRecorder instance
@@ -431,6 +435,10 @@ class MediaRecorder {
           videoBitsPerSecond: config.bitrate || 8000000, // Higher bitrate for better quality
           quality: config.quality || 1,
           disableLogs: true,
+          // Enable transparency support
+          video: {
+            alpha: 'keep', // Preserve transparency
+          },
         };
 
         this.recorder = new RecordRTC(stream, recorderOptions);

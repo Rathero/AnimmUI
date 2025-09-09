@@ -93,6 +93,10 @@ export async function POST(request: Request) {
       const mediaRecorder = new MediaRecorder(stream, {
         mimeType: 'video/webm;codecs=vp9', // Use VP9 codec for better quality
         videoBitsPerSecond: 40000000,
+        // Enable transparency support
+        video: {
+          alpha: 'keep', // Preserve transparency
+        },
       });
 
       const chunks: Blob[] = [];
