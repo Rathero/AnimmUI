@@ -32,8 +32,10 @@ import {
   Grid3X3,
   Download,
   Settings,
+  Video,
 } from 'lucide-react';
 import EditorImages from '@/components/editor/editor-images';
+import EditorVideo from '@/components/editor/editor-video';
 import RiveComp from '@/components/editor/rive-component';
 import {
   GeneratedAnimation,
@@ -146,6 +148,10 @@ export default function Editor() {
       return template.Result.modules.some(module => module.images.length > 0);
     }
 
+    if (tabId === 'video') {
+      return videoSrc !== null && videoSrc !== '';
+    }
+
     if (tabId === 'products') {
       return template?.Result?.products && template.Result.products.length > 0;
     }
@@ -181,6 +187,7 @@ export default function Editor() {
     const allTabs = [
       { id: 'text', icon: Type, label: 'Text' },
       { id: 'image', icon: ImageIcon, label: 'Image' },
+      { id: 'video', icon: Video, label: 'Video' },
       { id: 'triggers', icon: Settings, label: 'Triggers' },
       { id: 'products', icon: Grid3X3, label: 'Products' },
     ];
@@ -885,6 +892,14 @@ export default function Editor() {
                           />
                         )}
 
+                        {/* Video Variables */}
+                        {activeTab === 'video' && (
+                          <EditorVideo
+                            videoSrc={videoSrc}
+                            onVideoChange={setVideoSrc}
+                          />
+                        )}
+
                         {/* Trigger Variables */}
                         {activeTab === 'triggers' &&
                           getVariablesForSection(
@@ -1048,8 +1063,10 @@ export default function Editor() {
                                     updateAllVariablesAfterResolutionChange
                                   }
                                 />
+
                                 {videoSrc && (
                                   <video
+                                    key={videoSrc}
                                     width={'100%'}
                                     height={'100%'}
                                     autoPlay={true}
