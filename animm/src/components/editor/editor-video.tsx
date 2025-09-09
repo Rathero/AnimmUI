@@ -4,7 +4,6 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from '@/components/ui/popover';
-import { Separator } from '@/components/ui/separator';
 import { Upload, Play, Pause } from 'lucide-react';
 import { useRef, useState } from 'react';
 
@@ -48,7 +47,6 @@ export default function EditorVideo({
 
   return (
     <div className="space-y-2">
-      <Separator className="my-4" />
       <p className="text-sm">Video</p>
       <div className="ps-2">
         <Popover>

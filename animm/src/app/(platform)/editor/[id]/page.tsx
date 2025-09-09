@@ -3,13 +3,10 @@
 import { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { FileAsset, Rive } from '@rive-app/react-webgl2';
-import {
-  useViewModelInstanceString,
-  useViewModelInstanceNumber,
-  useViewModelInstanceBoolean,
-} from '@rive-app/react-webgl2';
+import { useViewModelInstanceNumber } from '@rive-app/react-webgl2';
 import { getBaseNameFromPath, replaceRiveImageFromUrl } from '@/lib/rive-image';
 import videoConfig from '@/data/VideoConfig.json';
+import { Separator } from '@/components/ui/separator';
 
 import { TransformWrapper, TransformComponent } from 'react-zoom-pan-pinch';
 
@@ -788,10 +785,6 @@ export default function Editor() {
             <Download className="mr-2 h-4 w-4" />
             Export
           </Button>
-          {/* <Button size="sm">
-            <Save className="mr-2 h-4 w-4" />
-            Save Project
-          </Button> */}
         </div>
       </div>
 
@@ -824,42 +817,43 @@ export default function Editor() {
             {/* Content Area - Scrollable */}
             <div className="flex-1 flex flex-col overflow-hidden">
               <div className="flex-1 p-4 space-y-4 overflow-y-auto">
-                {/* CSV Import */}
-                {/* <div className="mb-4">
-                  <Button variant="outline" size="sm" className="w-full">
-                    <Upload className="mr-2 h-4 w-4" />
-                    Import CSV...
-                  </Button>
-                </div> */}
-
                 {/* Section Selector */}
-                {template?.Result?.modules && getAllSections().length > 1 && (
-                  <div className="mb-4">
-                    <label className="text-sm font-medium text-gray-700 mb-2 block">
-                      Section
-                    </label>
-                    <select
-                      value={selectedSection}
-                      onChange={e => setSelectedSection(e.target.value)}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                    >
-                      {getAllSections().map((section, index) => (
-                        <option key={section} value={section}>
-                          {section}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-                )}
+                {activeTab === 'text' &&
+                  template?.Result?.modules &&
+                  getAllSections().length > 1 && (
+                    <div className="mb-4">
+                      <label className="text-sm font-medium text-gray-700 mb-2 block">
+                        Section
+                      </label>
+                      <select
+                        value={selectedSection}
+                        onChange={e => setSelectedSection(e.target.value)}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      >
+                        {getAllSections().map((section, index) => (
+                          <option key={section} value={section}>
+                            {section}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                  )}
 
                 {/* Variables */}
                 {template?.Result?.modules &&
                   template.Result.modules.length > 0 && (
-                    <div className="space-y-3">
-                      <div className="text-sm font-medium text-gray-700">
-                        {selectedSection || getAllSections()[0] || 'Section'}
-                      </div>
-                      <div className="space-y-3 pl-3">
+                    <div className="">
+                      {activeTab === 'text' && (
+                        <>
+                          <div className="text-sm font-medium text-gray-700">
+                            {selectedSection ||
+                              getAllSections()[0] ||
+                              'Section'}
+                          </div>
+                          <Separator className="my-4" />
+                        </>
+                      )}
+                      <div className="">
                         {/* Text Variables */}
                         {activeTab === 'text' &&
                           getVariablesForSection(

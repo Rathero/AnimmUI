@@ -138,7 +138,6 @@ export default function EditorImages({
     <>
       {imgSrc.length > 0 && (
         <div className="space-y-2">
-          <Separator className="my-4" />
           <p className="text-sm">Images</p>
           <div className="grid grid-cols-2 gap-2 ps-2">
             {imgSrc.map((y: string, index) => {
