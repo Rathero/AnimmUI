@@ -5,7 +5,7 @@ import { useParams, useRouter } from 'next/navigation';
 import { FileAsset, Rive } from '@rive-app/react-webgl2';
 import { useViewModelInstanceNumber } from '@rive-app/react-webgl2';
 import { getBaseNameFromPath, replaceRiveImageFromUrl } from '@/lib/rive-image';
-import videoConfig from '@/data/VideoConfig.json';
+import { getVideoSource, getVideoElementProps } from '@/lib/video-utils';
 import { Separator } from '@/components/ui/separator';
 
 import { TransformWrapper, TransformComponent } from 'react-zoom-pan-pinch';
@@ -61,7 +61,7 @@ export default function Editor() {
   const [isEditMode, setIsEditMode] = useState(true);
   const [isCsvDialogOpen, setIsCsvDialogOpen] = useState(false);
   const [selectedSection, setSelectedSection] = useState<string>('');
-  const [artBoard, setArtBoard] = useState<string>('');
+  const [artBoard, setArtBoard] = useState<string>('Template');
   const [videoSrc, setVideoSrc] = useState<string | null>(null);
 
   // Get all unique sections from all modules
@@ -278,10 +278,8 @@ export default function Editor() {
       setTemplate(template);
       if (template) {
         // Set video source based on template ID configuration
-        const videoUrl = (videoConfig as Record<string, string>)[
-          template.Result.id.toString()
-        ];
-        setVideoSrc(videoUrl || null);
+        const videoUrl = getVideoSource(template.Result.id);
+        setVideoSrc(videoUrl);
         // No longer need to initialize variable values state since we read directly from inputs
         let initialWidth = 1080;
         let initialHeight = 1080;
@@ -1060,13 +1058,7 @@ export default function Editor() {
 
                                 {videoSrc && (
                                   <video
-                                    key={videoSrc}
-                                    width={'100%'}
-                                    height={'100%'}
-                                    autoPlay={true}
-                                    muted
-                                    loop={true}
-                                    id="videoBackground"
+                                    {...getVideoElementProps(videoSrc, true)}
                                     className={
                                       'absolute top-0 -z-10 object-cover ' +
                                       (currentWidth / currentHeight > 2.3 &&

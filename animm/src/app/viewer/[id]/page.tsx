@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
 import { FileAsset, Rive } from '@rive-app/react-webgl2';
 import { getBaseNameFromPath, replaceRiveImageFromUrl } from '@/lib/rive-image';
+import { getVideoSource, getVideoElementProps } from '@/lib/video-utils';
 
 import {
   ApiTemplate,
@@ -23,6 +24,7 @@ export default function Viewer() {
   const params = useParams<{ id: string }>();
 
   const [template, setTemplate] = useState<ApiTemplate | undefined>(undefined);
+  const [videoSrc, setVideoSrc] = useState<string | null>(null);
 
   const [assets, setAssets] = useState<Array<FileAsset>>([]);
   const [rivesStates, setRiveStates] = useState<Rive[]>([]);
@@ -31,6 +33,11 @@ export default function Viewer() {
   async function initializeTemplate() {
     const template = await get(params.id);
     setTemplate(template);
+    if (template) {
+      // Set video source - prioritize URL parameter, then fall back to config
+      const videoSource = getVideoSource(template.Result.id, videoUrl);
+      setVideoSrc(videoSource);
+    }
   }
   const [functionsToSetBoolean, setFunctionsToSetBoolean] = useState<
     Array<{ x: number; f: (x: boolean) => void }>
@@ -142,6 +149,7 @@ export default function Viewer() {
   const isPdf = urlParams.get('pdf') === 'true';
   const artBoard = urlParams.get('artboard');
   const format = urlParams.get('format') ?? '';
+  const videoUrl = urlParams.get('video');
   // Bleed size: 3mm = ~12px at 96dpi
   const bleedPx = isPdf ? 12 : 0;
 
@@ -288,13 +296,20 @@ export default function Viewer() {
             {template &&
               template.Result.modules.length > 0 &&
               template.Result.modules[0].file && (
-                <RiveComp
-                  src={template.Result.modules[0].file}
-                  setAssetsParent={setAssets}
-                  setRiveStatesParent={setRiveStates}
-                  autoplay={shouldAutoplay} // Don't autoplay if recording is expected
-                  format={format}
-                />
+                <>
+                  <RiveComp
+                    src={template.Result.modules[0].file}
+                    setAssetsParent={setAssets}
+                    setRiveStatesParent={setRiveStates}
+                    autoplay={shouldAutoplay} // Don't autoplay if recording is expected
+                    format={format}
+                  />
+                  {videoSrc && (
+                    <video {...getVideoElementProps(videoSrc, shouldAutoplay)}>
+                      <source src={videoSrc} type="video/mp4" />
+                    </video>
+                  )}
+                </>
               )}
           </div>
         </div>
@@ -303,14 +318,21 @@ export default function Viewer() {
           {template &&
             template.Result.modules.length > 0 &&
             template.Result.modules[0].file && (
-              <RiveComp
-                src={template.Result.modules[0].file}
-                setAssetsParent={setAssets}
-                setRiveStatesParent={setRiveStates}
-                autoplay={shouldAutoplay} // Don't autoplay if recording is expected
-                artboard={artBoard || ''}
-                format={format}
-              />
+              <>
+                <RiveComp
+                  src={template.Result.modules[0].file}
+                  setAssetsParent={setAssets}
+                  setRiveStatesParent={setRiveStates}
+                  autoplay={shouldAutoplay} // Don't autoplay if recording is expected
+                  artboard={artBoard || ''}
+                  format={format}
+                />
+                {videoSrc && (
+                  <video {...getVideoElementProps(videoSrc, shouldAutoplay)}>
+                    <source src={videoSrc} type="video/mp4" />
+                  </video>
+                )}
+              </>
             )}
           {template?.Result &&
             template?.Result.modules.map(module =>
