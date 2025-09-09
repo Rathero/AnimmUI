@@ -14,7 +14,7 @@ export default function ExportPreview({
   width = 200,
   height = 120,
 }: ExportPreviewProps) {
-  const [isPlaying, setIsPlaying] = useState(false);
+  const [isPlaying, setIsPlaying] = useState(true);
   const [videoRef, setVideoRef] = useState<HTMLVideoElement | null>(null);
 
   // Handle URL formatting for both relative and absolute URLs
@@ -63,6 +63,8 @@ export default function ExportPreview({
           src={formattedUrl}
           width={width}
           height={height}
+          autoPlay={true}
+          loop={true}
           className="rounded-md object-fill w-full h-full"
           onEnded={handleVideoEnded}
           onPlay={handleVideoPlay}
