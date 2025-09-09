@@ -121,9 +121,6 @@ class MediaRecorder {
 
     console.log('Rive renderer canvas found:', this.rendererCanvas);
 
-    // Set up chroma key background for transparency recording
-    this.setupChromaKeyBackground();
-
     // Stop any existing animation
     try {
       this.riveInstance.stop();
@@ -131,26 +128,6 @@ class MediaRecorder {
       console.log('Rive animation prepared and stopped');
     } catch (error) {
       console.warn('Could not prepare Rive animation:', error);
-    }
-  }
-
-  private setupChromaKeyBackground(): void {
-    if (!this.rendererCanvas) return;
-
-    // Set a bright green background as chroma key
-    const ctx = this.rendererCanvas.getContext('2d');
-    if (ctx) {
-      // Store original background
-      const originalFillStyle = ctx.fillStyle;
-
-      // Set chroma key background
-      ctx.fillStyle = '#00FF00'; // Bright green
-      ctx.fillRect(0, 0, this.rendererCanvas.width, this.rendererCanvas.height);
-
-      // Restore original fill style
-      ctx.fillStyle = originalFillStyle;
-
-      console.log('Chroma key background set for transparency recording');
     }
   }
 

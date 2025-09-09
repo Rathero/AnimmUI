@@ -304,11 +304,6 @@ export default function Viewer() {
                     autoplay={shouldAutoplay} // Don't autoplay if recording is expected
                     format={format}
                   />
-                  {videoSrc && (
-                    <video {...getVideoElementProps(videoSrc, shouldAutoplay)}>
-                      <source src={videoSrc} type="video/mp4" />
-                    </video>
-                  )}
                 </>
               )}
           </div>
@@ -327,11 +322,6 @@ export default function Viewer() {
                   artboard={artBoard || ''}
                   format={format}
                 />
-                {videoSrc && (
-                  <video {...getVideoElementProps(videoSrc, shouldAutoplay)}>
-                    <source src={videoSrc} type="video/mp4" />
-                  </video>
-                )}
               </>
             )}
           {template?.Result &&
