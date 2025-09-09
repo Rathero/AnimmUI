@@ -359,8 +359,9 @@ class MediaRecorder {
             } bytes`
           );
 
-          // Send to backend for transparency processing
-          this.sendVideoForProcessing(uint8Array, recordedFormat);
+          if (this.resolvePromise) {
+            this.resolvePromise(result);
+          }
         })
         .catch(error => {
           console.error('Error processing recorded video:', error);
@@ -589,7 +590,9 @@ class MediaRecorder {
               );
 
               // Send to backend for transparency processing
-              this.sendVideoForProcessing(uint8Array, recordedFormat);
+              if (this.resolvePromise) {
+                this.resolvePromise(result);
+              }
             })
             .catch(error => {
               console.error(`Error processing blob:`, error);
@@ -623,52 +626,6 @@ class MediaRecorder {
     if (this.animationFrameId) {
       cancelAnimationFrame(this.animationFrameId);
       this.animationFrameId = null;
-    }
-  }
-
-  private async sendVideoForProcessing(
-    videoData: Uint8Array,
-    format: string
-  ): Promise<void> {
-    try {
-      const formData = new FormData();
-      const blob = new Blob([videoData], { type: `video/${format}` });
-      formData.append('video', blob);
-      formData.append('id', this.config?.exportId || 'unknown');
-
-      const response = await fetch('/api/export/process', {
-        method: 'POST',
-        body: formData,
-      });
-
-      if (!response.ok) {
-        throw new Error('Failed to process video for transparency');
-      }
-
-      const result = await response.json();
-      console.log('Video processed for transparency:', result);
-
-      if (this.resolvePromise) {
-        this.resolvePromise({
-          success: true,
-          data: videoData,
-          format: format,
-          size: videoData.length,
-          duration: Date.now() - this.startTime,
-        });
-      }
-    } catch (error) {
-      console.error('Error sending video for processing:', error);
-      if (this.resolvePromise) {
-        this.resolvePromise({
-          success: false,
-          error:
-            error instanceof Error ? error.message : 'Failed to process video',
-          format: format,
-          size: 0,
-          duration: Date.now() - this.startTime,
-        });
-      }
     }
   }
 
