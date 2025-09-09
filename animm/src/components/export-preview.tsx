@@ -2,6 +2,7 @@ import Image from 'next/image';
 import { useState } from 'react';
 import { Play, Pause } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { getMediaInfo } from '@/lib/media-utils';
 
 interface ExportPreviewProps {
   url: string;
@@ -17,18 +18,8 @@ export default function ExportPreview({
   const [isPlaying, setIsPlaying] = useState(true);
   const [videoRef, setVideoRef] = useState<HTMLVideoElement | null>(null);
 
-  // Handle URL formatting for both relative and absolute URLs
-  const formattedUrl = url.startsWith('http')
-    ? url
-    : url.startsWith('/')
-    ? url
-    : `/${url}`;
-
-  // Determine if it's a video based on file extension
-  const isVideo = formattedUrl.toLowerCase().match(/\.(webm|mp4|avi|mov|mkv)$/);
-  const isImage = formattedUrl
-    .toLowerCase()
-    .match(/\.(jpg|jpeg|png|gif|webp|svg)$/);
+  // Get media info using shared utility
+  const mediaInfo = getMediaInfo(url);
 
   // Handle video play/pause
   const togglePlay = () => {
@@ -55,12 +46,12 @@ export default function ExportPreview({
     setIsPlaying(false);
   };
 
-  if (isVideo) {
+  if (mediaInfo.isVideo) {
     return (
       <div className="relative group">
         <video
           ref={setVideoRef}
-          src={formattedUrl}
+          src={mediaInfo.url}
           width={width}
           height={height}
           autoPlay={true}
@@ -89,11 +80,11 @@ export default function ExportPreview({
     );
   }
 
-  if (isImage) {
+  if (mediaInfo.isImage) {
     return (
       <div className="relative">
         <Image
-          src={formattedUrl}
+          src={mediaInfo.url}
           alt="Export preview"
           width={width}
           height={height}

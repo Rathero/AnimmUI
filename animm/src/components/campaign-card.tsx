@@ -2,6 +2,7 @@ import Image from 'next/image';
 import { FolderOpen } from 'lucide-react';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { ExportBatch } from '@/types/exports';
+import { getMediaInfo } from '@/lib/media-utils';
 
 interface CampaignCardProps {
   campaign: string;
@@ -14,22 +15,15 @@ export default function CampaignCard({
   exportBatches,
   onClick,
 }: CampaignCardProps) {
-  // Get the first finished export image as preview
+  // Get the first finished export as preview
   const firstFinishedExport = exportBatches
     .flatMap(batch => batch.exports)
     .find(exp => exp.status === 2 && exp.url);
 
-  // Handle both relative and absolute URLs
-  let previewImage = '/img/placeholder.svg';
-  if (firstFinishedExport?.url) {
-    if (firstFinishedExport.url.startsWith('http')) {
-      previewImage = firstFinishedExport.url;
-    } else {
-      previewImage = firstFinishedExport.url.startsWith('/')
-        ? firstFinishedExport.url
-        : `/${firstFinishedExport.url}`;
-    }
-  }
+  // Get media info using shared utility
+  const mediaInfo = getMediaInfo(
+    firstFinishedExport?.url || '/img/placeholder.svg'
+  );
   const totalExports = exportBatches.flatMap(batch => batch.exports).length;
   const finishedExports = exportBatches
     .flatMap(batch => batch.exports)
@@ -42,13 +36,29 @@ export default function CampaignCard({
     >
       <CardHeader className="p-0 h-32 flex-shrink-0">
         <div className="relative w-full h-full">
-          <Image
-            src={previewImage}
-            alt="Campaign preview"
-            priority
-            fill
-            style={{ objectFit: 'cover' }}
-          />
+          {mediaInfo.isVideo ? (
+            <video
+              src={mediaInfo.url}
+              className="w-full h-full object-cover"
+              autoPlay
+              loop
+              muted
+            />
+          ) : mediaInfo.isImage ? (
+            <Image
+              src={mediaInfo.url}
+              alt="Campaign preview"
+              priority
+              fill
+              style={{ objectFit: 'cover' }}
+            />
+          ) : (
+            <div className="w-full h-full bg-muted flex items-center justify-center">
+              <span className="text-xs text-muted-foreground">
+                Preview not available
+              </span>
+            </div>
+          )}
         </div>
       </CardHeader>
       <CardContent className="flex-1 p-4">
