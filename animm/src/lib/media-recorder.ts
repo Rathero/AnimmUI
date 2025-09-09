@@ -121,6 +121,9 @@ class MediaRecorder {
 
     console.log('Rive renderer canvas found:', this.rendererCanvas);
 
+    // Set up chroma key background for transparency recording
+    this.setupChromaKeyBackground();
+
     // Stop any existing animation
     try {
       this.riveInstance.stop();
@@ -128,6 +131,26 @@ class MediaRecorder {
       console.log('Rive animation prepared and stopped');
     } catch (error) {
       console.warn('Could not prepare Rive animation:', error);
+    }
+  }
+
+  private setupChromaKeyBackground(): void {
+    if (!this.rendererCanvas) return;
+
+    // Set a bright green background as chroma key
+    const ctx = this.rendererCanvas.getContext('2d');
+    if (ctx) {
+      // Store original background
+      const originalFillStyle = ctx.fillStyle;
+
+      // Set chroma key background
+      ctx.fillStyle = '#00FF00'; // Bright green
+      ctx.fillRect(0, 0, this.rendererCanvas.width, this.rendererCanvas.height);
+
+      // Restore original fill style
+      ctx.fillStyle = originalFillStyle;
+
+      console.log('Chroma key background set for transparency recording');
     }
   }
 
@@ -222,10 +245,6 @@ class MediaRecorder {
       const recorderOptions: any = {
         mimeType: selectedMimeType,
         videoBitsPerSecond: config.bitrate || 8000000,
-        // Enable transparency support
-        video: {
-          alpha: 'keep', // Preserve transparency
-        },
       };
 
       // 3. Create native MediaRecorder instance
@@ -340,9 +359,8 @@ class MediaRecorder {
             } bytes`
           );
 
-          if (this.resolvePromise) {
-            this.resolvePromise(result);
-          }
+          // Send to backend for transparency processing
+          this.sendVideoForProcessing(uint8Array, recordedFormat);
         })
         .catch(error => {
           console.error('Error processing recorded video:', error);
@@ -435,10 +453,6 @@ class MediaRecorder {
           videoBitsPerSecond: config.bitrate || 8000000, // Higher bitrate for better quality
           quality: config.quality || 1,
           disableLogs: true,
-          // Enable transparency support
-          video: {
-            alpha: 'keep', // Preserve transparency
-          },
         };
 
         this.recorder = new RecordRTC(stream, recorderOptions);
@@ -574,9 +588,8 @@ class MediaRecorder {
                 } bytes. Ready to send to backend.`
               );
 
-              if (this.resolvePromise) {
-                this.resolvePromise(result);
-              }
+              // Send to backend for transparency processing
+              this.sendVideoForProcessing(uint8Array, recordedFormat);
             })
             .catch(error => {
               console.error(`Error processing blob:`, error);
@@ -610,6 +623,52 @@ class MediaRecorder {
     if (this.animationFrameId) {
       cancelAnimationFrame(this.animationFrameId);
       this.animationFrameId = null;
+    }
+  }
+
+  private async sendVideoForProcessing(
+    videoData: Uint8Array,
+    format: string
+  ): Promise<void> {
+    try {
+      const formData = new FormData();
+      const blob = new Blob([videoData], { type: `video/${format}` });
+      formData.append('video', blob);
+      formData.append('id', this.config?.exportId || 'unknown');
+
+      const response = await fetch('/api/export/process', {
+        method: 'POST',
+        body: formData,
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to process video for transparency');
+      }
+
+      const result = await response.json();
+      console.log('Video processed for transparency:', result);
+
+      if (this.resolvePromise) {
+        this.resolvePromise({
+          success: true,
+          data: videoData,
+          format: format,
+          size: videoData.length,
+          duration: Date.now() - this.startTime,
+        });
+      }
+    } catch (error) {
+      console.error('Error sending video for processing:', error);
+      if (this.resolvePromise) {
+        this.resolvePromise({
+          success: false,
+          error:
+            error instanceof Error ? error.message : 'Failed to process video',
+          format: format,
+          size: 0,
+          duration: Date.now() - this.startTime,
+        });
+      }
     }
   }
 
