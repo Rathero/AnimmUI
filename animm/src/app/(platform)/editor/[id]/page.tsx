@@ -498,12 +498,6 @@ export default function Editor() {
 
     setResizeStartDimensions({ width: actualWidth, height: actualHeight });
 
-    console.log('Resize start:', {
-      startPos: { x: e.clientX, y: e.clientY },
-      startDimensions: { width: actualWidth, height: actualHeight },
-      currentState: { width: currentWidth, height: currentHeight },
-    });
-
     // Add visual feedback
     document.body.style.cursor = 'se-resize';
     document.body.style.userSelect = 'none';
@@ -530,7 +524,7 @@ export default function Editor() {
     );
 
     // Add step limits to prevent extreme jumps
-    const maxStep = 500; // More conservative step limit for smoother resizing
+    const maxStep = 10000; // More conservative step limit for smoother resizing
     const constrainedWidth = Math.max(
       resizeStartDimensions.width - maxStep,
       Math.min(resizeStartDimensions.width + maxStep, newWidth)
@@ -539,16 +533,6 @@ export default function Editor() {
       resizeStartDimensions.height - maxStep,
       Math.min(resizeStartDimensions.height + maxStep, newHeight)
     );
-
-    console.log('Resizing canvas:', {
-      newWidth: constrainedWidth,
-      newHeight: constrainedHeight,
-      deltaX,
-      deltaY,
-      originalWidth: resizeStartDimensions.width,
-      originalHeight: resizeStartDimensions.height,
-    });
-
     setCurrentWidth(constrainedWidth);
     setCurrentHeight(constrainedHeight);
 
@@ -556,11 +540,6 @@ export default function Editor() {
     if (mainCanvas) {
       mainCanvas.style.width = constrainedWidth + 'px';
       mainCanvas.style.height = constrainedHeight + 'px';
-      console.log(
-        'Canvas dimensions updated:',
-        mainCanvas.style.width,
-        mainCanvas.style.height
-      );
     }
   };
 
