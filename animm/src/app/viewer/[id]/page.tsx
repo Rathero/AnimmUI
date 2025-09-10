@@ -80,7 +80,7 @@ export default function Viewer() {
       const params = new URLSearchParams(queryString);
       params.forEach((value, key) => {
         // Handle image replacement params like imgX where X is the template image id
-        const imgMatch = key.match(/^img(\d+)$/i);
+        const imgMatch = key.match(/^imagen(\d+)$/i);
         if (imgMatch) {
           const imageId = parseInt(imgMatch[1], 10);
           replaceImageById(imageId, value);
