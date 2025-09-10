@@ -147,6 +147,7 @@ body {
 video {
   height: 100% !important;
   width: 100% !important;
+  z-index: 0 !important;
 }
 
 .v_thin {
@@ -163,4 +164,9 @@ video {
   padding-right: 0px;
   padding-left: 0px;
   padding-bottom: 540px;
+}
+
+canvas {
+  position: absolute !important;
+  z-index: 1 !important;
 }

@@ -31,7 +31,6 @@ export const getVideoElementProps = (
   videoSrc: string,
   autoplay: boolean = true
 ) => ({
-  key: videoSrc,
   width: '100%',
   height: '100%',
   autoPlay: autoplay,

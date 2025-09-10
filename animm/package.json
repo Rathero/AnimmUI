@@ -29,6 +29,8 @@
     "@rive-app/react-webgl2": "^4.22.1",
     "@sparticuz/chromium": "^133.0.0",
     "@sparticuz/chromium-min": "^133.0.0",
+    "@tabler/icons": "^3.34.1",
+    "@tabler/icons-react": "^3.34.1",
     "@tanstack/react-table": "^8.21.2",
     "canvas-record": "^5.3.0",
     "class-variance-authority": "^0.7.1",

@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { FileAsset, Rive } from '@rive-app/react-webgl2';
 import { useViewModelInstanceNumber } from '@rive-app/react-webgl2';
@@ -10,6 +10,18 @@ import { Separator } from '@/components/ui/separator';
 
 import { TransformWrapper, TransformComponent } from 'react-zoom-pan-pinch';
 
+import {
+  IconColumns1,
+  IconLayoutDashboard,
+  IconLinkPlus,
+  IconMinus,
+  IconPlayerPauseFilled,
+  IconPlayerPlayFilled,
+  IconPlus,
+  IconResize,
+  IconTemperatureSun,
+  IconUpload,
+} from '@tabler/icons-react';
 import { EditorZoom } from '@/components/editor/editor-zoom';
 import { EditorPlay } from '@/components/editor/editor-play';
 import { EditorText } from '@/components/editor/editor-text';
@@ -308,6 +320,10 @@ export default function Editor() {
           if (mainCanvas) {
             mainCanvas.style.width = initialWidth + 'px';
             mainCanvas.style.height = initialHeight + 'px';
+            // Ensure initial centering and zoom
+            const scale = Zoom / 100;
+            mainCanvas.style.transform = `scale(${scale})`;
+            mainCanvas.style.transformOrigin = 'center center';
           }
         }, 100);
         const newGeneratedAnimation: GeneratedAnimation = {
@@ -379,6 +395,10 @@ export default function Editor() {
     if (mainCan) {
       mainCan.style.width = width + 'px';
       mainCan.style.height = height + 'px';
+      // Maintain centering and zoom when resolution changes
+      const scale = Zoom / 100;
+      mainCan.style.transform = `scale(${scale})`;
+      mainCan.style.transformOrigin = 'center center';
     }
 
     //if (rivesStates && rivesStates[0]) {
@@ -441,149 +461,11 @@ export default function Editor() {
     }
   }
 
-  // EventListener to Deactivate Zoom Pan to be able to Resize
-  const [isResizing, setIsResizing] = useState(false);
-  const [isCanvasResizing, setIsCanvasResizing] = useState(false);
-  const [resizeStartPos, setResizeStartPos] = useState({ x: 0, y: 0 });
-  const [resizeStartDimensions, setResizeStartDimensions] = useState({
-    width: 0,
-    height: 0,
-  });
-
   // Initialize template on component mount
   useEffect(() => {
     initializeTemplate();
   }, []);
-
-  // Set up event listeners after template is loaded
-  useEffect(() => {
-    if (!template) return; // Wait for template to be loaded
-
-    const mainCanvas = document.getElementById('MainCanvas');
-    if (!mainCanvas) return;
-
-    const handleMouseEvent = (event: any) => {
-      if (event.target.classList.contains('resizeItem')) {
-        setIsResizing(true);
-      } else {
-        setIsResizing(false);
-      }
-    };
-
-    document.body.addEventListener('mousemove', handleMouseEvent);
-    mainCanvas.addEventListener('mousedown', handleMouseEvent);
-
-    // Cleanup function
-    return () => {
-      mainCanvas.removeEventListener('mousedown', handleMouseEvent);
-      document.body.removeEventListener('mousemove', handleMouseEvent);
-    };
-  }, [template]); // Re-run when template changes
-
-  // Canvas resize handlers
-  const handleResizeStart = (e: React.MouseEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    setIsCanvasResizing(true);
-    setResizeStartPos({ x: e.clientX, y: e.clientY });
-
-    // Get the actual current dimensions from the DOM element
-    const mainCanvas = document.getElementById('MainCanvas');
-    const actualWidth = mainCanvas
-      ? parseInt(mainCanvas.style.width) || currentWidth
-      : currentWidth;
-    const actualHeight = mainCanvas
-      ? parseInt(mainCanvas.style.height) || currentHeight
-      : currentHeight;
-
-    setResizeStartDimensions({ width: actualWidth, height: actualHeight });
-
-    console.log('Resize start:', {
-      startPos: { x: e.clientX, y: e.clientY },
-      startDimensions: { width: actualWidth, height: actualHeight },
-      currentState: { width: currentWidth, height: currentHeight },
-    });
-
-    // Add visual feedback
-    document.body.style.cursor = 'se-resize';
-    document.body.style.userSelect = 'none';
-  };
-
-  const handleResizeMove = (e: MouseEvent) => {
-    if (!isCanvasResizing) return;
-
-    const deltaX = e.clientX - resizeStartPos.x;
-    const deltaY = e.clientY - resizeStartPos.y;
-
-    // Add constraints to prevent extreme values
-    const minSize = 200;
-    const maxSize = 4000; // Maximum reasonable size
-
-    // Calculate new dimensions with constraints
-    const newWidth = Math.max(
-      minSize,
-      Math.min(maxSize, resizeStartDimensions.width + deltaX)
-    );
-    const newHeight = Math.max(
-      minSize,
-      Math.min(maxSize, resizeStartDimensions.height + deltaY)
-    );
-
-    // Add step limits to prevent extreme jumps
-    const maxStep = 500; // More conservative step limit for smoother resizing
-    const constrainedWidth = Math.max(
-      resizeStartDimensions.width - maxStep,
-      Math.min(resizeStartDimensions.width + maxStep, newWidth)
-    );
-    const constrainedHeight = Math.max(
-      resizeStartDimensions.height - maxStep,
-      Math.min(resizeStartDimensions.height + maxStep, newHeight)
-    );
-
-    console.log('Resizing canvas:', {
-      newWidth: constrainedWidth,
-      newHeight: constrainedHeight,
-      deltaX,
-      deltaY,
-      originalWidth: resizeStartDimensions.width,
-      originalHeight: resizeStartDimensions.height,
-    });
-
-    setCurrentWidth(constrainedWidth);
-    setCurrentHeight(constrainedHeight);
-
-    const mainCanvas = document.getElementById('MainCanvas');
-    if (mainCanvas) {
-      mainCanvas.style.width = constrainedWidth + 'px';
-      mainCanvas.style.height = constrainedHeight + 'px';
-      console.log(
-        'Canvas dimensions updated:',
-        mainCanvas.style.width,
-        mainCanvas.style.height
-      );
-    }
-  };
-
-  const handleResizeEnd = () => {
-    setIsCanvasResizing(false);
-
-    // Clean up visual feedback
-    document.body.style.cursor = '';
-    document.body.style.userSelect = '';
-  };
-
-  // Add global resize event listeners
-  useEffect(() => {
-    if (isCanvasResizing) {
-      document.addEventListener('mousemove', handleResizeMove);
-      document.addEventListener('mouseup', handleResizeEnd);
-
-      return () => {
-        document.removeEventListener('mousemove', handleResizeMove);
-        document.removeEventListener('mouseup', handleResizeEnd);
-      };
-    }
-  }, [isCanvasResizing, resizeStartPos, resizeStartDimensions]);
+  // Re-attach when Zoom changes to ensure the handler has the latest Zoom value
 
   const generateUrl = async () => {
     if (template) {
@@ -651,6 +533,98 @@ export default function Editor() {
     }
   };
 
+  const [Zoom, setZoom] = useState(100);
+  const zoomRef = useRef(Zoom);
+
+  // Update ref when zoom state changes
+  useEffect(() => {
+    zoomRef.current = Zoom;
+  }, [Zoom]);
+
+  // Add wheel zoom event listener to MiddleDiv after template loads
+  useEffect(() => {
+    if (!template || isLoading) return;
+
+    const attachWheelListener = () => {
+      const middleDiv = document.getElementById('MiddleDiv');
+      if (middleDiv) {
+        middleDiv.addEventListener('wheel', handleWheelZoom, {
+          passive: false,
+        });
+        return middleDiv;
+      }
+      return null;
+    };
+
+    // Try to attach after template loads
+    const timeoutId = setTimeout(() => {
+      const middleDiv = attachWheelListener();
+
+      return () => {
+        if (middleDiv) {
+          middleDiv.removeEventListener('wheel', handleWheelZoom);
+        }
+      };
+    }, 200);
+
+    return () => {
+      clearTimeout(timeoutId);
+    };
+  }, [template, isLoading]); // Run when template loads
+  const zIncrement = 10;
+  const changeZoom = (i: number | 0) => {
+    let newZoom = 100;
+    switch (i) {
+      case 0:
+        newZoom = Zoom - zIncrement;
+        break;
+      case 1:
+        newZoom = 100;
+        break;
+      case 2:
+        newZoom = Zoom + zIncrement;
+        break;
+      default:
+    }
+
+    if (newZoom >= 30 && newZoom <= 200 && newZoom != Zoom) {
+      setZoom(newZoom);
+      const mainCanvas: any = document.querySelector('#MainCanvas');
+      if (mainCanvas) {
+        const scale = newZoom / 100;
+        mainCanvas.style.transform = `scale(${scale})`;
+        mainCanvas.style.transformOrigin = 'center center';
+      }
+    }
+  };
+
+  // Wheel zoom functionality
+  const handleWheelZoom = (event: WheelEvent) => {
+    event.preventDefault();
+
+    const delta = event.deltaY;
+    const zoomIncrement = 5; // Smaller increment for smoother wheel zooming
+    const currentZoom = zoomRef.current;
+
+    let newZoom = currentZoom;
+    if (delta < 0) {
+      // Wheel up - zoom in
+      newZoom = Math.min(currentZoom + zoomIncrement, 200);
+    } else if (delta > 0) {
+      // Wheel down - zoom out
+      newZoom = Math.max(currentZoom - zoomIncrement, 30);
+    }
+
+    if (newZoom !== currentZoom && newZoom >= 30 && newZoom <= 200) {
+      setZoom(newZoom);
+      const mainCanvas: any = document.querySelector('#MainCanvas');
+      if (mainCanvas) {
+        const scale = newZoom / 100;
+        mainCanvas.style.transform = `scale(${scale})`;
+        mainCanvas.style.transformOrigin = 'center center';
+      }
+    }
+  };
   const handleExportJpeg = async () => {
     setIsExportingJpeg(true);
     try {
@@ -963,9 +937,12 @@ export default function Editor() {
         </div>
 
         {/* Center: Preview/Canvas */}
-        <div className="flex-1 flex flex-col items-center justify-center min-w-0 relative">
+        <div
+          id="MiddleDiv"
+          className="flex-1 flex flex-col items-center justify-center min-w-0 relative"
+        >
           <div className="w-full h-full overflow-hidden p-4">
-            <div className="w-full h-full relative rounded-lg border bg-sidebar bg-editor">
+            <div className="w-full h-full relative rounded-lg border bg-sidebar bg-editor flex items-center justify-center">
               {/* Format and Resolution Info */}
               <div className="absolute top-4 left-4 right-4 flex justify-between items-center z-10">
                 <span className="text-sm font-medium text-gray-700">
@@ -975,7 +952,6 @@ export default function Editor() {
                   {currentWidth}x{currentHeight}
                 </span>
               </div>
-
               {/* Edit/Preview Controls - Bottom Left */}
               <div className="absolute bottom-4 left-4 z-10">
                 <div className="flex items-center gap-2 bg-white rounded-lg shadow-md px-3 py-2">
@@ -1002,102 +978,76 @@ export default function Editor() {
                 </div>
               </div>
 
-              <TransformWrapper
-                disabled={isResizing || isCanvasResizing}
-                disablePadding={true}
-                centerOnInit={true}
-                initialScale={1}
-                wheel={{ step: 0.1 }}
-                minScale={0.1}
-                maxScale={3}
-              >
-                {({
-                  zoomIn,
-                  zoomOut,
-                  setTransform,
-                  resetTransform,
-                  centerView,
-                  zoomToElement,
-                }) => (
-                  <>
-                    {!template?.Result.static && (
-                      <EditorPlay playRive={playRive} playing={playing} />
-                    )}
-                    <EditorZoom
-                      zoomIn={zoomIn}
-                      zoomOut={zoomOut}
-                      setTransform={setTransform}
-                      resetTransform={resetTransform}
-                      centerView={centerView}
-                      zoomToElement={zoomToElement}
-                    />
-                    <TransformComponent wrapperClass="!w-full !h-full">
-                      <div
-                        id="MainCanvas"
-                        className="flex rounded-lg border shadow-md shadow-slate-500/10 relative"
-                        style={{
-                          width: currentWidth + 'px',
-                          height: currentHeight + 'px',
-                        }}
-                      >
-                        <div className="size-full">
-                          {template &&
-                            template.Result.modules.length > 0 &&
-                            template.Result.modules[0].file &&
-                            artBoard && (
-                              <>
-                                <RiveComp
-                                  src={template.Result.modules[0].file}
-                                  setAssetsParent={setAssets}
-                                  setRiveStatesParent={setRiveStates}
-                                  artboard={artBoard}
-                                  onStateChange={
-                                    updateAllVariablesAfterResolutionChange
-                                  }
-                                />
-
-                                {videoSrc && (
-                                  <video
-                                    {...getVideoElementProps(videoSrc, true)}
-                                    className={
-                                      'absolute top-0 -z-10 object-cover ' +
-                                      (currentWidth / currentHeight > 2.3 &&
-                                      currentWidth / currentHeight <= 3
-                                        ? ' '
-                                        : '') +
-                                      (currentWidth / currentHeight >= 3
-                                        ? ' '
-                                        : '') +
-                                      (currentWidth / currentHeight <= 0.5
-                                        ? ' '
-                                        : '') +
-                                      (currentHeight <= 400 ? ' ' : '')
-                                    }
-                                  >
-                                    <source src={videoSrc} type="video/mp4" />
-                                  </video>
-                                )}
-                              </>
-                            )}
-                        </div>
-
-                        {/* Resize Handle - Bottom Right Corner */}
-                        <div
-                          className="absolute bottom-0 right-0 w-8 h-8 cursor-se-resize z-10"
-                          onMouseDown={handleResizeStart}
-                          style={{
-                            background:
-                              'linear-gradient(135deg, transparent 50%, #000 50%)',
-                            border: '2px solid #000',
-                            borderRadius: '0 0 8px 0',
-                          }}
-                          title="Drag to resize canvas"
-                        />
-                      </div>
-                    </TransformComponent>
-                  </>
+              <>
+                {!template?.Result.static && (
+                  <EditorPlay playRive={playRive} playing={playing} />
                 )}
-              </TransformWrapper>
+                <div className="absolute right-4 bottom-0 z-50 p-4">
+                  <div className="flex items-center gap-2 bg-white rounded-lg shadow-md px-1 py-1">
+                    <Button className="bg-white" onClick={() => changeZoom(0)}>
+                      <IconMinus color="black" />
+                    </Button>
+                    <Button
+                      className="bg-white text-black"
+                      onClick={() => changeZoom(1)}
+                    >
+                      {Zoom}%
+                    </Button>
+                    <Button className="bg-white" onClick={() => changeZoom(2)}>
+                      <IconPlus color="black" />
+                    </Button>
+                  </div>
+                </div>
+                <div
+                  id="MainCanvas"
+                  className="flex rounded-lg border shadow-md shadow-slate-500/10 relative"
+                  style={{
+                    width: currentWidth + 'px',
+                    height: currentHeight + 'px',
+                    transform: `scale(${Zoom / 100})`,
+                    transformOrigin: 'center center',
+                  }}
+                >
+                  <div className="size-full">
+                    {template &&
+                      template.Result.modules.length > 0 &&
+                      template.Result.modules[0].file &&
+                      artBoard && (
+                        <>
+                          <RiveComp
+                            src={template.Result.modules[0].file}
+                            setAssetsParent={setAssets}
+                            setRiveStatesParent={setRiveStates}
+                            artboard={artBoard}
+                            onStateChange={
+                              updateAllVariablesAfterResolutionChange
+                            }
+                          />
+
+                          {videoSrc && (
+                            <video
+                              {...getVideoElementProps(videoSrc, true)}
+                              className={
+                                'absolute top-0 -z-10 object-cover ' +
+                                (currentWidth / currentHeight > 2.3 &&
+                                currentWidth / currentHeight <= 3
+                                  ? ' '
+                                  : '') +
+                                (currentWidth / currentHeight >= 3 ? ' ' : '') +
+                                (currentWidth / currentHeight <= 0.5
+                                  ? ' '
+                                  : '') +
+                                (currentHeight <= 400 ? ' ' : '')
+                              }
+                            >
+                              <source src={videoSrc} type="video/mp4" />
+                            </video>
+                          )}
+                        </>
+                      )}
+                  </div>
+                </div>
+              </>
             </div>
           </div>
         </div>
