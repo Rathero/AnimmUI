@@ -894,7 +894,7 @@ export default function Editor() {
                                         key={languageId}
                                         value={languageId}
                                       >
-                                        {languageId.toUpperCase()}
+                                        {languageId}
                                       </option>
                                     ))}
                                   </select>
