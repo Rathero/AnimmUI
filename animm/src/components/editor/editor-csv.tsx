@@ -241,7 +241,7 @@ export default function EditorCsv({
             key:
               variablesToMatch
                 .find(x => x.name == variableColumns[y])
-                ?.id?.toString() || '',
+                ?.id?.toString() || variableColumns[y],
             value: column,
           });
         });
