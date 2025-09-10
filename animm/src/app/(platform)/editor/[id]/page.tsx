@@ -47,6 +47,8 @@ import { toast } from 'sonner';
 import { EditorCheckbox } from '@/components/editor/editor-checkbox';
 import { VariableStringSetter } from '@/components/editor/variable-string-setter';
 import { LoadingSpinner } from '@/components/ui/loading-spinner';
+import { useLanguageContent } from '@/hooks/useLanguageContent';
+import languageService from '@/app/services/LanguageService';
 
 export default function Editor() {
   const params = useParams<{ id: string }>();
@@ -63,6 +65,55 @@ export default function Editor() {
   const [selectedSection, setSelectedSection] = useState<string>('');
   const [artBoard, setArtBoard] = useState<string>('Template');
   const [videoSrc, setVideoSrc] = useState<string | null>(null);
+  const [selectedLanguage, setSelectedLanguage] = useState<string>('');
+
+  // Get all text variables for language switching
+  const getAllTextVariables = () => {
+    if (!template?.Result?.modules) return [];
+    const textVariables: TemplateVariable[] = [];
+    template.Result.modules.forEach(module => {
+      module.variables.forEach(variable => {
+        if (
+          variable.type === TemplateVariableTypeEnum.TextArea ||
+          variable.type === TemplateVariableTypeEnum.Input
+        ) {
+          textVariables.push(variable);
+        }
+      });
+    });
+    return textVariables;
+  };
+
+  // Get available languages for this template
+  const availableLanguages = languageService.getAvailableLanguages(params.id);
+  const hasLanguageConfig = languageService.hasLanguageConfig(params.id);
+
+  // Handle language change
+  const handleLanguageChange = (languageId: string) => {
+    setSelectedLanguage(languageId);
+
+    if (!languageId || !params.id) return;
+
+    const languageContent = languageService.getLanguageContent(
+      params.id,
+      languageId
+    );
+    if (!languageContent) {
+      console.warn(
+        `No language content found for template ${params.id} and language ${languageId}`
+      );
+      return;
+    }
+
+    // Apply language content to all text variables
+    const textVariables = getAllTextVariables();
+    textVariables.forEach(variable => {
+      const content = languageContent.variables[variable.id.toString()];
+      if (content !== undefined) {
+        changeText(content, variable);
+      }
+    });
+  };
 
   // Get all unique sections from all modules
   const getAllSections = () => {
@@ -921,24 +972,31 @@ export default function Editor() {
                               )}
 
                             {/* Languages Dropdown */}
-                            {template?.Result?.languages && (
-                              <div className="space-y-2">
-                                <label className="text-sm font-medium text-gray-700">
-                                  Languages
-                                </label>
-                                <select className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
-                                  <option value="">Select a language</option>
-                                  {template.Result.languages.map(language => (
-                                    <option
-                                      key={language.id}
-                                      value={language.id}
-                                    >
-                                      {language.name}
-                                    </option>
-                                  ))}
-                                </select>
-                              </div>
-                            )}
+                            {hasLanguageConfig &&
+                              availableLanguages.length > 0 && (
+                                <div className="space-y-2">
+                                  <label className="text-sm font-medium text-gray-700">
+                                    Languages
+                                  </label>
+                                  <select
+                                    value={selectedLanguage}
+                                    onChange={e =>
+                                      handleLanguageChange(e.target.value)
+                                    }
+                                    className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                  >
+                                    <option value="">Select a language</option>
+                                    {availableLanguages.map(languageId => (
+                                      <option
+                                        key={languageId}
+                                        value={languageId}
+                                      >
+                                        {languageId.toUpperCase()}
+                                      </option>
+                                    ))}
+                                  </select>
+                                </div>
+                              )}
                           </div>
                         )}
                       </div>

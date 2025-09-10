@@ -1,0 +1,57 @@
+{
+  "templates": {
+    "14": {
+      "languages": {
+        "English": {
+          "variables": {
+            "67": "Reach a growing, global audience",
+            "68": "Get your property on one of the world’s most downloaded travel apps.",
+            "69": "List your property"
+          }
+        },
+        "Dutch": {
+          "variables": {
+            "67": "Bereik een groeiend, wereldwijd publiek",
+            "68": "Zet uw accommodatie op een van de meest gedownloade reisapps ter wereld.",
+            "69": "Uw accommodatie aanmelden"
+          }
+        },
+        "German": {
+          "variables": {
+            "67": "Erreichen Sie ein wachsendes, globales Publikum",
+            "68": "Stellen Sie Ihre Unterkunft auf einer der weltweit am häufigsten heruntergeladenen Reise-Apps ein.",
+            "69": "Ihre Unterkunft inserieren"
+          }
+        },
+        "Spanish": {
+          "variables": {
+            "67": "Llega a una audiencia global en crecimiento",
+            "68": "Pon tu propiedad en una de las aplicaciones de viajes más descargadas del mundo.",
+            "69": "Anuncia tu propiedad"
+          }
+        },
+        "Catalan": {
+          "variables": {
+            "67": "Arriba a una audiència global en creixement",
+            "68": "Publica la teva propietat en una de les aplicacions de viatges més descarregades del món.",
+            "69": "Anuncia la teva propietat"
+          }
+        },
+        "French": {
+          "variables": {
+            "67": "Touchez une audience mondiale en pleine croissance",
+            "68": "Ajoutez votre propriété sur l’une des applications de voyage les plus téléchargées au monde.",
+            "69": "Ajoutez votre propriété"
+          }
+        },
+        "Portuguese": {
+          "variables": {
+            "67": "Alcance um público global em crescimento",
+            "68": "Coloque sua propriedade em um dos aplicativos de viagem mais baixados do mundo.",
+            "69": "Anuncie sua propriedade"
+          }
+        }
+      }
+    }
+  }
+}
