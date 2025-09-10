@@ -618,106 +618,9 @@ export default function Editor() {
     }
   }, [isCanvasResizing, resizeStartPos, resizeStartDimensions]);
 
-  const generateUrl = async () => {
-    if (template) {
-      const paramsUrl = new URLSearchParams();
-      template.Result.modules.forEach(module => {
-        module.variables.forEach(variable => {
-          paramsUrl.append(variable.id.toString(), variable.defaultValue || '');
-        });
-      });
-      paramsUrl.append('autoplay', 'true');
-      paramsUrl.append('artboard', artBoard);
-      window.open(
-        '/viewer/' + params.id + '?' + paramsUrl.toString(),
-        '_blank'
-      );
-    }
-  };
-
   const [isExporting, setIsExporting] = useState(false);
   const [isExportingJpeg, setIsExportingJpeg] = useState(false);
   const [isSavingImage, setIsSavingImage] = useState(false);
-
-  const handleExport = async () => {
-    try {
-      setIsExporting(true);
-      // Get all variables
-      const variables: Record<string, string> = {};
-      if (template) {
-        template.Result.modules.forEach(module => {
-          module.variables.forEach(variable => {
-            variables[variable.name] = variable.defaultValue || '';
-          });
-        });
-      }
-
-      // Call export API
-      const response = await fetch(
-        'https://animmexport.azurewebsites.net/Export',
-        {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            id: params.id,
-            variables,
-          }),
-        }
-      );
-
-      const data = await response.json();
-
-      if (data.success) {
-        toast.success('Video exported successfully!');
-        // Open the video in a new tab
-        window.open(data.videoUrl, '_blank');
-      } else {
-        toast.error('Failed to export video');
-      }
-    } catch (error) {
-      console.error('Export error:', error);
-      toast.error('Failed to export video');
-    } finally {
-      setIsExporting(false);
-    }
-  };
-
-  const handleExportJpeg = async () => {
-    setIsExportingJpeg(true);
-    try {
-      if (rivesStates && rivesStates.length > 0) {
-        rivesStates.forEach(riveState => {
-          if (riveState) {
-            riveState.pause();
-          }
-        });
-        setPlaying(false);
-      }
-
-      const canvas = document.querySelector(
-        '#MainCanvas canvas'
-      ) as HTMLCanvasElement;
-      if (canvas) {
-        const dataUrl = canvas.toDataURL('image/jpeg', 0.9);
-        const link = document.createElement('a');
-        link.href = dataUrl;
-        link.download = `${template?.Result.name || 'export'}.jpeg`;
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-        toast.success('JPEG exported successfully!');
-      } else {
-        toast.error('Failed to find canvas element for export.');
-      }
-    } catch (error) {
-      console.error('JPEG export error:', error);
-      toast.error('Failed to export JPEG.');
-    } finally {
-      setIsExportingJpeg(false);
-    }
-  };
 
   if (isLoading) {
     return (
@@ -1048,7 +951,6 @@ export default function Editor() {
               </div>
 
               <TransformWrapper
-                disabled={isResizing || isCanvasResizing}
                 disablePadding={true}
                 centerOnInit={true}
                 initialScale={1}
