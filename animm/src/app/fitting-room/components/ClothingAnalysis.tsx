@@ -18,6 +18,11 @@ interface SimplifiedClothingItem {
     hex: string;
   };
   confidence: number;
+  // Optional secondary colors for future expansion
+  secondaryColors?: Array<{
+    name: string;
+    hex: string;
+  }>;
 }
 
 interface ClothingAnalysisProps {

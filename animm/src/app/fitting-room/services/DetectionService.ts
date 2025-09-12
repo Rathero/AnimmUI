@@ -130,33 +130,110 @@ export class DetectionService {
     // Analyze colors
     const colorCounts: { [key: string]: number } = {};
     const colorPalette = [
-      { name: 'navy', hex: '#1e3a8a', rgb: [30, 58, 138] },
+      // Blacks and Grays
       { name: 'black', hex: '#000000', rgb: [0, 0, 0] },
-      { name: 'white', hex: '#ffffff', rgb: [255, 255, 255] },
+      { name: 'charcoal', hex: '#36454f', rgb: [54, 69, 79] },
+      { name: 'dark gray', hex: '#2d3748', rgb: [45, 55, 72] },
       { name: 'gray', hex: '#6b7280', rgb: [107, 114, 128] },
+      { name: 'light gray', hex: '#9ca3af', rgb: [156, 163, 175] },
+      { name: 'silver', hex: '#c0c0c0', rgb: [192, 192, 192] },
+      { name: 'white', hex: '#ffffff', rgb: [255, 255, 255] },
+      { name: 'off-white', hex: '#f8f9fa', rgb: [248, 249, 250] },
+      { name: 'cream', hex: '#f5f5dc', rgb: [245, 245, 220] },
+      { name: 'ivory', hex: '#fffff0', rgb: [255, 255, 240] },
+
+      // Blues
+      { name: 'navy', hex: '#1e3a8a', rgb: [30, 58, 138] },
+      { name: 'dark blue', hex: '#1e40af', rgb: [30, 64, 175] },
       { name: 'blue', hex: '#3b82f6', rgb: [59, 130, 246] },
+      { name: 'royal blue', hex: '#2563eb', rgb: [37, 99, 235] },
+      { name: 'sky blue', hex: '#0ea5e9', rgb: [14, 165, 233] },
+      { name: 'light blue', hex: '#38bdf8', rgb: [56, 189, 248] },
+      { name: 'cyan', hex: '#06b6d4', rgb: [6, 182, 212] },
+      { name: 'teal', hex: '#0d9488', rgb: [13, 148, 136] },
+      { name: 'turquoise', hex: '#0891b2', rgb: [8, 145, 178] },
+
+      // Reds
+      { name: 'dark red', hex: '#991b1b', rgb: [153, 27, 27] },
       { name: 'red', hex: '#ef4444', rgb: [239, 68, 68] },
+      { name: 'crimson', hex: '#dc2626', rgb: [220, 38, 38] },
+      { name: 'scarlet', hex: '#b91c1c', rgb: [185, 28, 28] },
+      { name: 'burgundy', hex: '#7f1d1d', rgb: [127, 29, 29] },
+      { name: 'maroon', hex: '#800000', rgb: [128, 0, 0] },
+      { name: 'pink', hex: '#ec4899', rgb: [236, 72, 153] },
+      { name: 'rose', hex: '#f43f5e', rgb: [244, 63, 94] },
+      { name: 'magenta', hex: '#d946ef', rgb: [217, 70, 239] },
+
+      // Greens
+      { name: 'dark green', hex: '#14532d', rgb: [20, 83, 45] },
       { name: 'green', hex: '#22c55e', rgb: [34, 197, 94] },
-      { name: 'brown', hex: '#a3a3a3', rgb: [163, 163, 163] },
+      { name: 'forest green', hex: '#166534', rgb: [22, 101, 52] },
+      { name: 'emerald', hex: '#10b981', rgb: [16, 185, 129] },
+      { name: 'lime', hex: '#84cc16', rgb: [132, 204, 22] },
+      { name: 'olive', hex: '#365314', rgb: [54, 83, 20] },
+      { name: 'sage', hex: '#6b7280', rgb: [107, 114, 128] },
+      { name: 'mint', hex: '#6ee7b7', rgb: [110, 231, 183] },
+
+      // Yellows and Oranges
+      { name: 'yellow', hex: '#eab308', rgb: [234, 179, 8] },
+      { name: 'gold', hex: '#f59e0b', rgb: [245, 158, 11] },
+      { name: 'amber', hex: '#f59e0b', rgb: [245, 158, 11] },
+      { name: 'orange', hex: '#f97316', rgb: [249, 115, 22] },
+      { name: 'dark orange', hex: '#ea580c', rgb: [234, 88, 12] },
+      { name: 'peach', hex: '#fed7aa', rgb: [254, 215, 170] },
+      { name: 'coral', hex: '#ff7f50', rgb: [255, 127, 80] },
+      { name: 'salmon', hex: '#fa8072', rgb: [250, 128, 114] },
+
+      // Purples
+      { name: 'purple', hex: '#8b5cf6', rgb: [139, 92, 246] },
+      { name: 'violet', hex: '#7c3aed', rgb: [124, 58, 237] },
+      { name: 'lavender', hex: '#a78bfa', rgb: [167, 139, 250] },
+      { name: 'plum', hex: '#581c87', rgb: [88, 28, 135] },
+      { name: 'indigo', hex: '#4c1d95', rgb: [76, 29, 149] },
+      { name: 'mauve', hex: '#c084fc', rgb: [192, 132, 252] },
+
+      // Browns and Tans
+      { name: 'brown', hex: '#92400e', rgb: [146, 64, 14] },
+      { name: 'dark brown', hex: '#451a03', rgb: [69, 26, 3] },
+      { name: 'light brown', hex: '#d97706', rgb: [217, 119, 6] },
+      { name: 'tan', hex: '#d2b48c', rgb: [210, 180, 140] },
       { name: 'beige', hex: '#f5f5dc', rgb: [245, 245, 220] },
+      { name: 'khaki', hex: '#f0e68c', rgb: [240, 230, 140] },
+      { name: 'camel', hex: '#c19a6b', rgb: [193, 154, 107] },
+      { name: 'coffee', hex: '#6f4e37', rgb: [111, 78, 55] },
+      { name: 'chocolate', hex: '#7b3f00', rgb: [123, 63, 0] },
+
+      // Special Colors
+      { name: 'denim', hex: '#1e40af', rgb: [30, 64, 175] },
+      { name: 'jeans blue', hex: '#1565c0', rgb: [21, 101, 192] },
+      { name: 'stone', hex: '#78716c', rgb: [120, 113, 108] },
+      { name: 'slate', hex: '#475569', rgb: [71, 85, 105] },
+      { name: 'zinc', hex: '#71717a', rgb: [113, 113, 122] },
+      { name: 'neutral', hex: '#a8a29e', rgb: [168, 162, 158] },
     ];
 
     // Sample pixels and determine dominant colors
-    for (let i = 0; i < pixels.length; i += 16) {
-      // Sample every 4th pixel
+    // Sample more pixels for better accuracy
+    for (let i = 0; i < pixels.length; i += 4) {
+      // Sample every pixel for better accuracy
       const r = pixels[i];
       const g = pixels[i + 1];
       const b = pixels[i + 2];
+      const a = pixels[i + 3];
 
-      // Find closest color in palette
+      // Skip transparent pixels
+      if (a < 128) continue;
+
+      // Find closest color in palette using weighted distance
       let closestColor = colorPalette[0];
       let minDistance = Infinity;
 
       for (const color of colorPalette) {
+        // Use weighted distance calculation for better color matching
         const distance = Math.sqrt(
-          Math.pow(r - color.rgb[0], 2) +
-            Math.pow(g - color.rgb[1], 2) +
-            Math.pow(b - color.rgb[2], 2)
+          Math.pow(r - color.rgb[0], 2) * 0.3 +
+            Math.pow(g - color.rgb[1], 2) * 0.59 +
+            Math.pow(b - color.rgb[2], 2) * 0.11
         );
 
         if (distance < minDistance) {
@@ -165,8 +242,11 @@ export class DetectionService {
         }
       }
 
-      colorCounts[closestColor.name] =
-        (colorCounts[closestColor.name] || 0) + 1;
+      // Only count colors that are reasonably close (within threshold)
+      if (minDistance < 100) {
+        colorCounts[closestColor.name] =
+          (colorCounts[closestColor.name] || 0) + 1;
+      }
     }
 
     // Find dominant color
@@ -176,11 +256,11 @@ export class DetectionService {
     const dominantColor =
       colorPalette.find(c => c.name === dominantColorName) || colorPalette[0];
 
-    // Find secondary colors
+    // Find secondary colors (up to 5 additional colors)
     const secondaryColors = Object.keys(colorCounts)
       .filter(name => name !== dominantColorName)
       .sort((a, b) => colorCounts[b] - colorCounts[a])
-      .slice(0, 3)
+      .slice(0, 5)
       .map(name => colorPalette.find(c => c.name === name))
       .filter(Boolean);
 
