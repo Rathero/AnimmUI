@@ -154,15 +154,18 @@ export class DetectionService {
       { name: 'turquoise', hex: '#0891b2', rgb: [8, 145, 178] },
 
       // Reds
-      { name: 'dark red', hex: '#991b1b', rgb: [153, 27, 27] },
-      { name: 'red', hex: '#ef4444', rgb: [239, 68, 68] },
-      { name: 'crimson', hex: '#dc2626', rgb: [220, 38, 38] },
-      { name: 'scarlet', hex: '#b91c1c', rgb: [185, 28, 28] },
-      { name: 'burgundy', hex: '#7f1d1d', rgb: [127, 29, 29] },
+      { name: 'red', hex: '#ff0000', rgb: [255, 0, 0] },
+      { name: 'bright red', hex: '#ff3333', rgb: [255, 51, 51] },
+      { name: 'crimson', hex: '#dc143c', rgb: [220, 20, 60] },
+      { name: 'scarlet', hex: '#ff2400', rgb: [255, 36, 0] },
+      { name: 'dark red', hex: '#8b0000', rgb: [139, 0, 0] },
+      { name: 'burgundy', hex: '#800020', rgb: [128, 0, 32] },
       { name: 'maroon', hex: '#800000', rgb: [128, 0, 0] },
-      { name: 'pink', hex: '#ec4899', rgb: [236, 72, 153] },
-      { name: 'rose', hex: '#f43f5e', rgb: [244, 63, 94] },
-      { name: 'magenta', hex: '#d946ef', rgb: [217, 70, 239] },
+      { name: 'cherry red', hex: '#de3163', rgb: [222, 49, 99] },
+      { name: 'fire brick', hex: '#b22222', rgb: [178, 34, 34] },
+      { name: 'pink', hex: '#ffc0cb', rgb: [255, 192, 203] },
+      { name: 'rose', hex: '#ff69b4', rgb: [255, 105, 180] },
+      { name: 'magenta', hex: '#ff00ff', rgb: [255, 0, 255] },
 
       // Greens
       { name: 'dark green', hex: '#14532d', rgb: [20, 83, 45] },
@@ -224,16 +227,16 @@ export class DetectionService {
       // Skip transparent pixels
       if (a < 128) continue;
 
-      // Find closest color in palette using weighted distance
+      // Find closest color in palette using improved distance calculation
       let closestColor = colorPalette[0];
       let minDistance = Infinity;
 
       for (const color of colorPalette) {
-        // Use weighted distance calculation for better color matching
+        // Use standard Euclidean distance for better color matching
         const distance = Math.sqrt(
-          Math.pow(r - color.rgb[0], 2) * 0.3 +
-            Math.pow(g - color.rgb[1], 2) * 0.59 +
-            Math.pow(b - color.rgb[2], 2) * 0.11
+          Math.pow(r - color.rgb[0], 2) +
+            Math.pow(g - color.rgb[1], 2) +
+            Math.pow(b - color.rgb[2], 2)
         );
 
         if (distance < minDistance) {
@@ -242,19 +245,32 @@ export class DetectionService {
         }
       }
 
-      // Only count colors that are reasonably close (within threshold)
-      if (minDistance < 100) {
+      // Count all colors, but weight them by distance
+      const weight = Math.max(0, 1 - minDistance / 200); // Normalize distance to 0-1
+      if (weight > 0.1) {
+        // Only count if reasonably close
         colorCounts[closestColor.name] =
-          (colorCounts[closestColor.name] || 0) + 1;
+          (colorCounts[closestColor.name] || 0) + weight;
       }
     }
 
     // Find dominant color
-    const dominantColorName = Object.keys(colorCounts).reduce((a, b) =>
-      colorCounts[a] > colorCounts[b] ? a : b
-    );
-    const dominantColor =
+    let dominantColorName = 'red'; // Default fallback
+    if (Object.keys(colorCounts).length > 0) {
+      dominantColorName = Object.keys(colorCounts).reduce((a, b) =>
+        colorCounts[a] > colorCounts[b] ? a : b
+      );
+    }
+    let dominantColor =
       colorPalette.find(c => c.name === dominantColorName) || colorPalette[0];
+
+    // Debug logging
+    console.log('Color detection results:', {
+      totalPixels: pixels.length / 4,
+      colorCounts,
+      dominantColor: dominantColorName,
+      dominantColorHex: dominantColor.hex,
+    });
 
     // Find secondary colors (up to 5 additional colors)
     const secondaryColors = Object.keys(colorCounts)
@@ -264,10 +280,26 @@ export class DetectionService {
       .map(name => colorPalette.find(c => c.name === name))
       .filter(Boolean);
 
-    // Calculate saturation and brightness
-    const avgR = dominantColor.rgb[0];
-    const avgG = dominantColor.rgb[1];
-    const avgB = dominantColor.rgb[2];
+    // Calculate actual average RGB values from the image
+    let totalR = 0,
+      totalG = 0,
+      totalB = 0,
+      pixelCount = 0;
+
+    for (let i = 0; i < pixels.length; i += 4) {
+      const a = pixels[i + 3];
+      if (a >= 128) {
+        // Skip transparent pixels
+        totalR += pixels[i];
+        totalG += pixels[i + 1];
+        totalB += pixels[i + 2];
+        pixelCount++;
+      }
+    }
+
+    const avgR = pixelCount > 0 ? totalR / pixelCount : 0;
+    const avgG = pixelCount > 0 ? totalG / pixelCount : 0;
+    const avgB = pixelCount > 0 ? totalB / pixelCount : 0;
 
     const max = Math.max(avgR, avgG, avgB);
     const min = Math.min(avgR, avgG, avgB);
@@ -276,6 +308,38 @@ export class DetectionService {
 
     // Determine color temperature
     const temperature = (avgR + avgG) / 2 > avgB ? 'warm' : 'cool';
+
+    // If we have very few color matches, try to find the closest color to actual average
+    if (
+      Object.keys(colorCounts).length === 0 ||
+      Math.max(...Object.values(colorCounts)) < 1
+    ) {
+      console.log('Low color match confidence, using average RGB:', {
+        avgR,
+        avgG,
+        avgB,
+      });
+
+      // Find the closest color to the actual average RGB
+      let closestToAverage = colorPalette[0];
+      let minDistanceToAverage = Infinity;
+
+      for (const color of colorPalette) {
+        const distance = Math.sqrt(
+          Math.pow(avgR - color.rgb[0], 2) +
+            Math.pow(avgG - color.rgb[1], 2) +
+            Math.pow(avgB - color.rgb[2], 2)
+        );
+
+        if (distance < minDistanceToAverage) {
+          minDistanceToAverage = distance;
+          closestToAverage = color;
+        }
+      }
+
+      dominantColor = closestToAverage;
+      console.log('Using closest color to average:', closestToAverage.name);
+    }
 
     return {
       dominant: dominantColor,
