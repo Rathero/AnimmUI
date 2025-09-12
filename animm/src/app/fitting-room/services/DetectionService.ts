@@ -62,32 +62,19 @@ export class DetectionService {
 
   async analyzeClothing(imageData: string, clothingItems: any[]): Promise<any> {
     try {
-      // Enhanced analysis for clothing items
+      // Simplified analysis for clothing items
       const analysis = {
         items: await Promise.all(
           clothingItems.map(async item => {
             const colors = await this.analyzeColors(imageData, item.bbox);
-            const shape = await this.analyzeShape(imageData, item.bbox);
-            const material = await this.detectMaterial(imageData, item.bbox);
 
             return {
               type: this.mapToClothingType(item.class),
+              dominantColor: colors.dominant,
               confidence: item.score,
-              colors,
-              shape,
-              material,
-              position: {
-                x: item.bbox[0],
-                y: item.bbox[1],
-                width: item.bbox[2],
-                height: item.bbox[3],
-              },
             };
           })
         ),
-        overallStyle: this.determineOverallStyle(clothingItems),
-        colorHarmony: this.calculateColorHarmony(clothingItems),
-        recommendations: this.generateRecommendations(clothingItems),
         timestamp: new Date().toISOString(),
       };
 

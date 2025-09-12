@@ -22,6 +22,7 @@ export default function FittingRoomPage() {
   const [clothingAnalysis, setClothingAnalysis] = useState<any>(null);
   const [isCameraActive, setIsCameraActive] = useState(false);
   const [isModelLoading, setIsModelLoading] = useState(true);
+  const [lastDetectedItems, setLastDetectedItems] = useState<string>('');
   const detectionService = useRef<DetectionService | null>(null);
 
   useEffect(() => {
@@ -75,19 +76,34 @@ export default function FittingRoomPage() {
       const results = await detectionService.current.detectObjects(imageData);
       setDetectionResults(results);
 
-      // Enhanced analysis for clothing items (less frequent for performance)
+      // Filter clothing items
       const clothingItems = results.filter(item =>
         ['person', 'tie', 'handbag', 'backpack', 'suitcase'].includes(
           item.class
         )
       );
 
-      if (clothingItems.length > 0) {
+      // Create a signature of detected items to check if anything changed
+      const currentItemsSignature = clothingItems
+        .map(item => `${item.class}-${Math.round(item.score * 100)}`)
+        .sort()
+        .join('|');
+
+      // Only update analysis if clothing items have changed
+      if (
+        clothingItems.length > 0 &&
+        currentItemsSignature !== lastDetectedItems
+      ) {
         const analysis = await detectionService.current.analyzeClothing(
           imageData,
           clothingItems
         );
         setClothingAnalysis(analysis);
+        setLastDetectedItems(currentItemsSignature);
+      } else if (clothingItems.length === 0) {
+        // Clear analysis if no clothing items detected
+        setClothingAnalysis(null);
+        setLastDetectedItems('');
       }
     } catch (error) {
       console.error('Real-time detection failed:', error);
@@ -99,6 +115,7 @@ export default function FittingRoomPage() {
     if (!isCameraActive) {
       setDetectionResults([]);
       setClothingAnalysis(null);
+      setLastDetectedItems('');
     }
   };
 
@@ -172,6 +189,7 @@ export default function FittingRoomPage() {
                 onClick={() => {
                   setDetectionResults([]);
                   setClothingAnalysis(null);
+                  setLastDetectedItems('');
                 }}
               >
                 <RotateCcw className="h-4 w-4" />
@@ -239,8 +257,7 @@ export default function FittingRoomPage() {
           <div className="flex items-start gap-2">
             <Badge variant="outline">4</Badge>
             <p>
-              View real-time analysis including clothing type, colors, and
-              shapes
+              View simplified analysis showing clothing type and dominant color
             </p>
           </div>
         </CardContent>
