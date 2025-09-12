@@ -57,12 +57,10 @@ npm install @tensorflow/tfjs @tensorflow-models/coco-ssd
 ## Usage
 
 1. Navigate to `/fitting-room` in your application
-2. Click "Start Camera" to activate webcam
-3. Position yourself in front of the camera
-4. Choose your detection mode:
-   - **Real-time Mode**: Click "Start Real-time Detection" for continuous analysis
-   - **Single Capture**: Click "Single Capture" for one-time analysis
-5. View live analysis including colors, shapes, and recommendations
+2. Camera and detection start automatically when the page loads
+3. Position yourself in front of the camera wearing clothing you want to analyze
+4. Analysis updates automatically when new clothing is detected
+5. View simplified analysis showing clothing type and dominant color
 
 ## Customization
 

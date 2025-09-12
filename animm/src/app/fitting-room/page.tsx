@@ -10,7 +10,7 @@ import {
   CardTitle,
 } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Camera, CameraOff, Download, RotateCcw, Loader2 } from 'lucide-react';
+import { Camera, RotateCcw, Loader2 } from 'lucide-react';
 import { CameraCapture } from './components/CameraCapture';
 import { ObjectDetectionResults } from './components/ObjectDetectionResults';
 import { ClothingAnalysis } from './components/ClothingAnalysis';
@@ -31,6 +31,8 @@ export default function FittingRoomPage() {
         detectionService.current = new DetectionService();
         await detectionService.current.initialize();
         setIsModelLoading(false);
+        // Automatically start camera after model loads
+        setIsCameraActive(true);
       } catch (error) {
         console.error('Failed to initialize detection service:', error);
         setIsModelLoading(false);
@@ -110,15 +112,6 @@ export default function FittingRoomPage() {
     }
   };
 
-  const handleCameraToggle = () => {
-    setIsCameraActive(!isCameraActive);
-    if (!isCameraActive) {
-      setDetectionResults([]);
-      setClothingAnalysis(null);
-      setLastDetectedItems('');
-    }
-  };
-
   if (isModelLoading) {
     return (
       <div className="container mx-auto p-6">
@@ -150,10 +143,10 @@ export default function FittingRoomPage() {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Camera className="h-5 w-5" />
-              Camera Feed
+              Detection System
             </CardTitle>
             <CardDescription>
-              Capture images to detect clothing items
+              Automatic real-time clothing detection
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
@@ -166,33 +159,16 @@ export default function FittingRoomPage() {
 
             <div className="flex gap-2">
               <Button
-                onClick={handleCameraToggle}
-                variant={isCameraActive ? 'destructive' : 'default'}
-                className="flex-1"
-                disabled={!detectionService.current}
-              >
-                {isCameraActive ? (
-                  <>
-                    <CameraOff className="h-4 w-4 mr-2" />
-                    Stop Camera
-                  </>
-                ) : (
-                  <>
-                    <Camera className="h-4 w-4 mr-2" />
-                    Start Camera
-                  </>
-                )}
-              </Button>
-
-              <Button
                 variant="outline"
                 onClick={() => {
                   setDetectionResults([]);
                   setClothingAnalysis(null);
                   setLastDetectedItems('');
                 }}
+                className="flex-1"
               >
-                <RotateCcw className="h-4 w-4" />
+                <RotateCcw className="h-4 w-4 mr-2" />
+                Reset Analysis
               </Button>
             </div>
           </CardContent>
@@ -238,7 +214,7 @@ export default function FittingRoomPage() {
         <CardContent className="space-y-2">
           <div className="flex items-start gap-2">
             <Badge variant="outline">1</Badge>
-            <p>Click "Start Camera" to activate your webcam</p>
+            <p>Camera and detection start automatically when the page loads</p>
           </div>
           <div className="flex items-start gap-2">
             <Badge variant="outline">2</Badge>
@@ -249,10 +225,7 @@ export default function FittingRoomPage() {
           </div>
           <div className="flex items-start gap-2">
             <Badge variant="outline">3</Badge>
-            <p>
-              Click "Start Real-time Detection" for continuous analysis, or use
-              "Single Capture" for one-time analysis
-            </p>
+            <p>Analysis updates automatically when new clothing is detected</p>
           </div>
           <div className="flex items-start gap-2">
             <Badge variant="outline">4</Badge>
