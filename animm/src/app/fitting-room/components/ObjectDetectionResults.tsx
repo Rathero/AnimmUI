@@ -10,7 +10,7 @@ import {
   CardTitle,
 } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Loader2, Eye, EyeOff, Shirt, Bag, User } from 'lucide-react';
+import { Loader2, Eye, EyeOff, Shirt, User, ShoppingBag } from 'lucide-react';
 
 interface DetectionResult {
   class: string;
@@ -62,7 +62,7 @@ const getClassIcon = (className: string) => {
     case 'handbag':
     case 'backpack':
     case 'suitcase':
-      return <Bag className="h-4 w-4" />;
+      return <ShoppingBag className="h-4 w-4" />;
     default:
       return <Shirt className="h-4 w-4" />;
   }
