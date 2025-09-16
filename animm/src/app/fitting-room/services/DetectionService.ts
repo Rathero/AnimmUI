@@ -6,6 +6,8 @@ import * as cocoSsd from '@tensorflow-models/coco-ssd';
 export class DetectionService {
   private model: cocoSsd.ObjectDetection | null = null;
   private isModelLoaded = false;
+  private faceApiModelsLoaded = false;
+  private faceapi: any = null;
 
   async initialize(): Promise<void> {
     try {
@@ -30,6 +32,9 @@ export class DetectionService {
       this.model = await cocoSsd.load();
       this.isModelLoaded = true;
       //console.log('COCO-SSD model loaded successfully');
+
+      // Load face-api.js models
+      await this.loadFaceApiModels();
     } catch (error) {
       console.error('Failed to load COCO-SSD model:', error);
       throw error;
@@ -462,11 +467,192 @@ export class DetectionService {
 
   // Method to check if model is ready
   isReady(): boolean {
-    return this.isModelLoaded;
+    return this.isModelLoaded && this.faceApiModelsLoaded;
   }
 
-  // Method specifically for glasses detection
+  // Load face-api.js models
+  private async loadFaceApiModels(): Promise<void> {
+    try {
+      // Dynamic import to avoid SSR issues
+      if (typeof window === 'undefined') {
+        console.log('Face-api.js not available on server side');
+        this.faceApiModelsLoaded = false;
+        return;
+      }
+
+      this.faceapi = await import('@vladmandic/face-api');
+      const faceapi = this.faceapi;
+
+      const MODEL_URL = '/models'; // path to the models in the public folder
+
+      // Ensure TensorFlow.js is ready for face-api.js
+      await tf.ready();
+      console.log('TensorFlow.js ready for face-api.js');
+
+      // Load models sequentially to avoid conflicts
+      console.log('Loading tinyFaceDetector...');
+      await faceapi.nets.tinyFaceDetector.loadFromUri(MODEL_URL);
+      console.log('TinyFaceDetector loaded');
+
+      console.log('Loading faceLandmark68Net...');
+      await faceapi.nets.faceLandmark68Net.loadFromUri(MODEL_URL);
+      console.log('FaceLandmark68Net loaded');
+
+      // Add a small delay to ensure models are fully initialized
+      await new Promise(resolve => setTimeout(resolve, 200));
+
+      // Verify models are actually loaded
+      if (
+        faceapi.nets.tinyFaceDetector.isLoaded &&
+        faceapi.nets.faceLandmark68Net.isLoaded
+      ) {
+        this.faceApiModelsLoaded = true;
+        console.log('Face-api.js models loaded and verified successfully');
+      } else {
+        throw new Error('Models loaded but not properly initialized');
+      }
+    } catch (error) {
+      console.error('Error loading face-api.js models:', error);
+      // Don't throw error, just mark as not loaded so fallback can be used
+      this.faceApiModelsLoaded = false;
+    }
+  }
+
+  // Check for glasses using face landmarks
+  private checkForGlasses(landmarks: any): boolean {
+    try {
+      // These are the specific landmark points for eyebrows and eyes
+      const leftEyebrow = landmarks.getLeftEyeBrow();
+      const rightEyebrow = landmarks.getRightEyeBrow();
+      const leftEye = landmarks.getLeftEye();
+      const rightEye = landmarks.getRightEye();
+
+      // Calculate the average vertical distance between the bottom of the eyebrows and the top of the eyes.
+      const avgLeftDistance =
+        (leftEye[0].y - leftEyebrow[4].y + leftEye[1].y - leftEyebrow[3].y) / 2;
+      const avgRightDistance =
+        (rightEye[0].y -
+          rightEyebrow[4].y +
+          rightEye[1].y -
+          rightEyebrow[3].y) /
+        2;
+
+      // A heuristic threshold. If the distance is very small, it's likely
+      // because a glasses frame is covering the space.
+      // This value may need tuning depending on the camera, lighting, etc.
+      const GLASSES_THRESHOLD = 5; // You can adjust this value
+
+      const hasGlasses =
+        avgLeftDistance < GLASSES_THRESHOLD ||
+        avgRightDistance < GLASSES_THRESHOLD;
+
+      console.log('Face-api glasses detection:', {
+        avgLeftDistance: avgLeftDistance.toFixed(2),
+        avgRightDistance: avgRightDistance.toFixed(2),
+        hasGlasses,
+        threshold: GLASSES_THRESHOLD,
+      });
+
+      return hasGlasses;
+    } catch (error) {
+      console.error('Error in glasses detection:', error);
+      return false;
+    }
+  }
+
+  // Method specifically for glasses detection using face-api.js
   async detectGlasses(imageData: string): Promise<{
+    personDetected: boolean;
+    glassesDetected: boolean;
+    personValue: number;
+  }> {
+    try {
+      // First check if face-api.js models are loaded
+      if (!this.faceApiModelsLoaded) {
+        console.log(
+          'Face-api.js models not loaded yet, falling back to COCO-SSD'
+        );
+        return await this.detectGlassesFallback(imageData);
+      }
+
+      // Additional check to ensure face-api.js is properly initialized
+      if (
+        !this.faceapi ||
+        !this.faceapi.nets.tinyFaceDetector.isLoaded ||
+        !this.faceapi.nets.faceLandmark68Net.isLoaded
+      ) {
+        console.log(
+          'Face-api.js models not properly loaded, falling back to COCO-SSD'
+        );
+        return await this.detectGlassesFallback(imageData);
+      }
+
+      // Create image element from base64 data
+      const img = await this.createImageElement(imageData);
+
+      // Use face-api.js to detect face and landmarks
+      let detections = null;
+      try {
+        detections = await this.faceapi
+          .detectSingleFace(img, new this.faceapi.TinyFaceDetectorOptions())
+          .withFaceLandmarks();
+      } catch (faceApiError) {
+        console.error('Face-api.js detection error:', faceApiError);
+        // Fall through to COCO-SSD fallback
+      }
+
+      let personDetected = false;
+      let glassesDetected = false;
+
+      if (detections) {
+        personDetected = true;
+        // Use face landmarks to detect glasses
+        try {
+          glassesDetected = this.checkForGlasses(detections.landmarks);
+        } catch (landmarkError) {
+          console.error('Error in landmark analysis:', landmarkError);
+          glassesDetected = false;
+        }
+      } else {
+        // Fallback to COCO-SSD for person detection
+        const results = await this.detectObjects(imageData);
+        personDetected = results.some(
+          item => item.class === 'person' && item.score > 0.5
+        );
+
+        if (personDetected) {
+          // Use fallback glasses detection
+          const fallbackResult = await this.detectGlassesFallback(imageData);
+          glassesDetected = fallbackResult.glassesDetected;
+        }
+      }
+
+      let personValue = 0; // No person detected
+      if (personDetected) {
+        personValue = glassesDetected ? 2 : 1; // 1 = person with glasses, 2 = person without glasses
+      }
+
+      console.log('Face-api glasses detection result:', {
+        personDetected,
+        glassesDetected,
+        personValue,
+        faceDetected: !!detections,
+      });
+
+      return {
+        personDetected,
+        glassesDetected,
+        personValue,
+      };
+    } catch (error) {
+      console.error('Face-api glasses detection failed:', error);
+      // Fallback to COCO-SSD detection
+      return await this.detectGlassesFallback(imageData);
+    }
+  }
+
+  // Fallback method using COCO-SSD
+  private async detectGlassesFallback(imageData: string): Promise<{
     personDetected: boolean;
     glassesDetected: boolean;
     personValue: number;
@@ -488,7 +674,7 @@ export class DetectionService {
 
         // Fallback: If detection fails, use a simple heuristic based on image characteristics
         if (!glassesDetected) {
-          glassesDetected = await this.detectGlassesFallback(imageData);
+          glassesDetected = await this.detectGlassesFallbackImage(imageData);
         }
       }
 
@@ -510,7 +696,7 @@ export class DetectionService {
         personValue,
       };
     } catch (error) {
-      console.error('Glasses detection failed:', error);
+      console.error('Fallback glasses detection failed:', error);
       return {
         personDetected: false,
         glassesDetected: false,
@@ -624,7 +810,9 @@ export class DetectionService {
   }
 
   // Simple fallback glasses detection
-  private async detectGlassesFallback(imageData: string): Promise<boolean> {
+  private async detectGlassesFallbackImage(
+    imageData: string
+  ): Promise<boolean> {
     try {
       const img = await this.createImageElement(imageData);
 
