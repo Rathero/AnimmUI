@@ -9,6 +9,15 @@ export class DetectionService {
   private faceApiModelsLoaded = false;
   private faceapi: any = null;
 
+  // Glasses detection history for time-based voting
+  private glassesDetectionHistory: Array<{
+    timestamp: number;
+    hasGlasses: boolean;
+    personDetected: boolean;
+  }> = [];
+  private readonly GLASSES_VOTING_WINDOW = 30000; // 30 seconds in milliseconds
+  private readonly GLASSES_VOTING_THRESHOLD = 0.25; // 25% threshold
+
   async initialize(): Promise<void> {
     try {
       // Try to set WebGL backend first, fallback to CPU if not available
@@ -103,8 +112,15 @@ export class DetectionService {
   ): Promise<HTMLImageElement> {
     return new Promise((resolve, reject) => {
       const img = new Image();
-      img.onload = () => resolve(img);
-      img.onerror = reject;
+      img.onload = () => {
+        console.log('Image loaded successfully:', img.width, 'x', img.height);
+        resolve(img);
+      };
+      img.onerror = error => {
+        console.error('Image loading failed:', error);
+        reject(error);
+      };
+      img.crossOrigin = 'anonymous'; // Add CORS for face-api.js
       img.src = imageData;
     });
   }
@@ -470,6 +486,83 @@ export class DetectionService {
     return this.isModelLoaded && this.faceApiModelsLoaded;
   }
 
+  // Add detection result to history
+  private addDetectionToHistory(
+    hasGlasses: boolean,
+    personDetected: boolean
+  ): void {
+    const now = Date.now();
+
+    // Add new detection
+    this.glassesDetectionHistory.push({
+      timestamp: now,
+      hasGlasses,
+      personDetected,
+    });
+
+    // Clean up old detections (older than 30 seconds)
+    const beforeCleanup = this.glassesDetectionHistory.length;
+    this.glassesDetectionHistory = this.glassesDetectionHistory.filter(
+      detection => now - detection.timestamp <= this.GLASSES_VOTING_WINDOW
+    );
+
+    // Log history updates for debugging
+    if (beforeCleanup !== this.glassesDetectionHistory.length) {
+      console.log(
+        `Cleaned up ${
+          beforeCleanup - this.glassesDetectionHistory.length
+        } old detections from history`
+      );
+    }
+  }
+
+  // Reset detection history when person detection stops
+  private resetDetectionHistory(): void {
+    this.glassesDetectionHistory = [];
+    console.log('Glasses detection history reset - person detection stopped');
+  }
+
+  // Get glasses detection result based on voting from last 30 seconds
+  private getVotedGlassesDetection(): {
+    hasGlasses: boolean;
+    confidence: number;
+  } {
+    const now = Date.now();
+
+    // Filter detections from last 30 seconds where person was detected
+    const recentPersonDetections = this.glassesDetectionHistory.filter(
+      detection =>
+        now - detection.timestamp <= this.GLASSES_VOTING_WINDOW &&
+        detection.personDetected
+    );
+
+    if (recentPersonDetections.length === 0) {
+      return { hasGlasses: false, confidence: 0 };
+    }
+
+    // Calculate percentage of detections that found glasses
+    const glassesDetections = recentPersonDetections.filter(
+      d => d.hasGlasses
+    ).length;
+    const glassesPercentage = glassesDetections / recentPersonDetections.length;
+
+    // If at least 25% of detections say glasses, then person has glasses
+    const hasGlasses = glassesPercentage >= this.GLASSES_VOTING_THRESHOLD;
+    /*
+    console.log('Glasses voting result:', {
+      totalDetections: recentPersonDetections.length,
+      glassesDetections,
+      glassesPercentage: (glassesPercentage * 100).toFixed(1) + '%',
+      threshold: this.GLASSES_VOTING_THRESHOLD * 100 + '%',
+      finalResult: hasGlasses,
+    });*/
+
+    return {
+      hasGlasses,
+      confidence: glassesPercentage,
+    };
+  }
+
   // Load face-api.js models
   private async loadFaceApiModels(): Promise<void> {
     try {
@@ -480,8 +573,15 @@ export class DetectionService {
         return;
       }
 
-      this.faceapi = await import('@vladmandic/face-api');
+      const faceApiModule = await import('@vladmandic/face-api');
+      this.faceapi = faceApiModule.default || faceApiModule;
       const faceapi = this.faceapi;
+
+      console.log('Face-api module loaded:', !!this.faceapi);
+      console.log(
+        'Face-api methods available:',
+        Object.keys(this.faceapi || {})
+      );
 
       const MODEL_URL = '/models'; // path to the models in the public folder
 
@@ -540,10 +640,10 @@ export class DetectionService {
       // A heuristic threshold. If the distance is very small, it's likely
       // because a glasses frame is covering the space.
       // This value may need tuning depending on the camera, lighting, etc.
-      const GLASSES_THRESHOLD = 5; // You can adjust this value
+      const GLASSES_THRESHOLD = 30; // You can adjust this value
 
       const hasGlasses =
-        avgLeftDistance < GLASSES_THRESHOLD ||
+        avgLeftDistance < GLASSES_THRESHOLD &&
         avgRightDistance < GLASSES_THRESHOLD;
 
       console.log('Face-api glasses detection:', {
@@ -560,7 +660,7 @@ export class DetectionService {
     }
   }
 
-  // Method specifically for glasses detection using face-api.js
+  // Method specifically for glasses detection using face-api.js with voting system
   async detectGlasses(imageData: string): Promise<{
     personDetected: boolean;
     glassesDetected: boolean;
@@ -593,25 +693,61 @@ export class DetectionService {
       // Use face-api.js to detect face and landmarks
       let detections = null;
       try {
+        /*
+        console.log('Attempting face detection with face-api.js...');
+        console.log('Image dimensions:', img.width, 'x', img.height);
+        console.log('Face-api available:', !!this.faceapi);
+        console.log(
+          'TinyFaceDetector loaded:',
+          this.faceapi?.nets?.tinyFaceDetector?.isLoaded
+        );
+        console.log(
+          'FaceLandmark68Net loaded:',
+          this.faceapi?.nets?.faceLandmark68Net?.isLoaded
+        );*/
+
+        // Try different detection options
+        const detectionOptions = new this.faceapi.TinyFaceDetectorOptions({
+          inputSize: 320,
+          scoreThreshold: 0.1, // Lower threshold for better detection
+        });
+
+        // Try multiple detection methods
+        //console.log('Trying detectSingleFace...');
         detections = await this.faceapi
-          .detectSingleFace(img, new this.faceapi.TinyFaceDetectorOptions())
+          .detectSingleFace(img, detectionOptions)
           .withFaceLandmarks();
+
+        // If no face detected, try detectAllFaces
+        if (!detections) {
+          //console.log('No single face detected, trying detectAllFaces...');
+          const allFaces = await this.faceapi
+            .detectAllFaces(img, detectionOptions)
+            .withFaceLandmarks();
+
+          if (allFaces && allFaces.length > 0) {
+            detections = allFaces[0]; // Use the first face
+            //console.log('Found face using detectAllFaces:', detections);
+          }
+        }
+
+        //console.log('Face detection result:', detections);
       } catch (faceApiError) {
         console.error('Face-api.js detection error:', faceApiError);
         // Fall through to COCO-SSD fallback
       }
 
       let personDetected = false;
-      let glassesDetected = false;
+      let currentGlassesDetected = false;
 
       if (detections) {
         personDetected = true;
         // Use face landmarks to detect glasses
         try {
-          glassesDetected = this.checkForGlasses(detections.landmarks);
+          currentGlassesDetected = this.checkForGlasses(detections.landmarks);
         } catch (landmarkError) {
           console.error('Error in landmark analysis:', landmarkError);
-          glassesDetected = false;
+          currentGlassesDetected = false;
         }
       } else {
         // Fallback to COCO-SSD for person detection
@@ -623,21 +759,40 @@ export class DetectionService {
         if (personDetected) {
           // Use fallback glasses detection
           const fallbackResult = await this.detectGlassesFallback(imageData);
-          glassesDetected = fallbackResult.glassesDetected;
+          currentGlassesDetected = fallbackResult.glassesDetected;
         }
       }
+
+      // Check if person detection just stopped (transition from detected to not detected)
+      const wasPersonDetected =
+        this.glassesDetectionHistory.length > 0 &&
+        this.glassesDetectionHistory[this.glassesDetectionHistory.length - 1]
+          .personDetected;
+
+      if (wasPersonDetected && !personDetected) {
+        this.resetDetectionHistory();
+      }
+
+      // Add current detection to history
+      this.addDetectionToHistory(currentGlassesDetected, personDetected);
+
+      // Get voted glasses detection result
+      const votedResult = this.getVotedGlassesDetection();
+      const glassesDetected = votedResult.hasGlasses;
 
       let personValue = 0; // No person detected
       if (personDetected) {
         personValue = glassesDetected ? 2 : 1; // 1 = person with glasses, 2 = person without glasses
       }
-
+      /*
       console.log('Face-api glasses detection result:', {
         personDetected,
-        glassesDetected,
+        currentGlassesDetected,
+        votedGlassesDetected: glassesDetected,
+        confidence: (votedResult.confidence * 100).toFixed(1) + '%',
         personValue,
         faceDetected: !!detections,
-      });
+      });*/
 
       return {
         personDetected,
