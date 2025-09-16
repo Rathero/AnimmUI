@@ -13,7 +13,7 @@ export class DetectionService {
       try {
         await tf.setBackend('webgl');
         await tf.ready();
-        console.log('TensorFlow.js WebGL backend initialized');
+        //console.log('TensorFlow.js WebGL backend initialized');
       } catch (webglError) {
         console.warn(
           'WebGL backend not available, falling back to CPU:',
@@ -21,15 +21,15 @@ export class DetectionService {
         );
         await tf.setBackend('cpu');
         await tf.ready();
-        console.log('TensorFlow.js CPU backend initialized');
+        //console.log('TensorFlow.js CPU backend initialized');
       }
 
-      console.log('TensorFlow.js backend:', tf.getBackend());
+      //console.log('TensorFlow.js backend:', tf.getBackend());
 
       // Load COCO-SSD model
       this.model = await cocoSsd.load();
       this.isModelLoaded = true;
-      console.log('COCO-SSD model loaded successfully');
+      //console.log('COCO-SSD model loaded successfully');
     } catch (error) {
       console.error('Failed to load COCO-SSD model:', error);
       throw error;
@@ -46,16 +46,25 @@ export class DetectionService {
       const imageElement = await this.createImageElement(imageData);
       const predictions = await this.model.detect(imageElement);
 
-      // Filter and format results
+      // Filter and format results - lower threshold for glasses detection
       return predictions
-        .filter(prediction => prediction.score > 0.3) // Confidence threshold
+        .filter(prediction => {
+          // Lower threshold for glasses and person detection
+          if (
+            prediction.class === 'person' ||
+            prediction.class === 'eyeglasses'
+          ) {
+            return prediction.score > 0.2;
+          }
+          return prediction.score > 0.3;
+        })
         .map(prediction => ({
           class: prediction.class,
           score: prediction.score,
           bbox: prediction.bbox,
         }));
     } catch (error) {
-      console.error('Object detection failed:', error);
+      //console.error('Object detection failed:', error);
       throw error;
     }
   }
@@ -80,7 +89,7 @@ export class DetectionService {
 
       return analysis;
     } catch (error) {
-      console.error('Clothing analysis failed:', error);
+      //console.error('Clothing analysis failed:', error);
       throw error;
     }
   }
@@ -265,12 +274,12 @@ export class DetectionService {
       colorPalette.find(c => c.name === dominantColorName) || colorPalette[0];
 
     // Debug logging
-    console.log('Color detection results:', {
+    /*console.log('Color detection results:', {
       totalPixels: pixels.length / 4,
       colorCounts,
       dominantColor: dominantColorName,
       dominantColorHex: dominantColor.hex,
-    });
+    });*/
 
     // Find secondary colors (up to 5 additional colors)
     const secondaryColors = Object.keys(colorCounts)
@@ -314,11 +323,11 @@ export class DetectionService {
       Object.keys(colorCounts).length === 0 ||
       Math.max(...Object.values(colorCounts)) < 1
     ) {
-      console.log('Low color match confidence, using average RGB:', {
+      /*console.log('Low color match confidence, using average RGB:', {
         avgR,
         avgG,
         avgB,
-      });
+      });*/
 
       // Find the closest color to the actual average RGB
       let closestToAverage = colorPalette[0];
@@ -338,7 +347,7 @@ export class DetectionService {
       }
 
       dominantColor = closestToAverage;
-      console.log('Using closest color to average:', closestToAverage.name);
+      //console.log('Using closest color to average:', closestToAverage.name);
     }
 
     return {
@@ -455,5 +464,225 @@ export class DetectionService {
   // Method to check if model is ready
   isReady(): boolean {
     return this.isModelLoaded;
+  }
+
+  // Method specifically for glasses detection
+  async detectGlasses(imageData: string): Promise<{
+    personDetected: boolean;
+    glassesDetected: boolean;
+    personValue: number;
+  }> {
+    try {
+      const results = await this.detectObjects(imageData);
+      //console.log('Detection results:', results);
+
+      // Look for person detection
+      const personDetected = results.some(
+        item => item.class === 'person' && item.score > 0.5
+      );
+
+      let glassesDetected = false;
+
+      if (personDetected) {
+        // Try to detect glasses using a simple image analysis approach
+        glassesDetected = await this.detectGlassesInImage(imageData);
+
+        // Fallback: If detection fails, use a simple heuristic based on image characteristics
+        if (!glassesDetected) {
+          glassesDetected = await this.detectGlassesFallback(imageData);
+        }
+      }
+
+      let personValue = 0; // No person detected
+      if (personDetected) {
+        personValue = glassesDetected ? 1 : 2; // 1 = person with glasses, 2 = person without glasses
+      }
+
+      /*console.log('Glasses detection result:', {
+        personDetected,
+        glassesDetected,
+        personValue,
+        allClasses: results.map(r => r.class),
+      });*/
+
+      return {
+        personDetected,
+        glassesDetected,
+        personValue,
+      };
+    } catch (error) {
+      console.error('Glasses detection failed:', error);
+      return {
+        personDetected: false,
+        glassesDetected: false,
+        personValue: 0,
+      };
+    }
+  }
+
+  // Enhanced glasses detection using multiple image analysis techniques
+  private async detectGlassesInImage(imageData: string): Promise<boolean> {
+    try {
+      const img = await this.createImageElement(imageData);
+      const canvas = document.createElement('canvas');
+      const ctx = canvas.getContext('2d');
+
+      if (!ctx) return false;
+
+      canvas.width = img.width;
+      canvas.height = img.height;
+      ctx.drawImage(img, 0, 0);
+
+      // Focus on the upper portion of the image where glasses would be
+      const faceRegion = {
+        x: 0,
+        y: 0,
+        width: img.width,
+        height: img.height * 0.4, // Upper 40% of the image
+      };
+
+      const imageData_face = ctx.getImageData(
+        faceRegion.x,
+        faceRegion.y,
+        faceRegion.width,
+        faceRegion.height
+      );
+
+      const pixels = imageData_face.data;
+      let darkPixelCount = 0;
+      let edgePixelCount = 0;
+      let totalPixels = 0;
+      let horizontalLineCount = 0;
+
+      // Analyze pixels for glasses characteristics
+      for (let i = 0; i < pixels.length; i += 4) {
+        const r = pixels[i];
+        const g = pixels[i + 1];
+        const b = pixels[i + 2];
+        const brightness = (r + g + b) / 3;
+
+        totalPixels++;
+
+        // Count very dark pixels (potential glasses frames)
+        if (brightness < 60) {
+          darkPixelCount++;
+        }
+
+        // Count edge pixels (potential glasses edges)
+        if (brightness > 20 && brightness < 120) {
+          edgePixelCount++;
+        }
+      }
+
+      // Look for horizontal lines (glasses frames are often horizontal)
+      for (let y = 0; y < faceRegion.height - 1; y++) {
+        let lineDarkPixels = 0;
+        for (let x = 0; x < faceRegion.width; x++) {
+          const pixelIndex = (y * faceRegion.width + x) * 4;
+          const r = pixels[pixelIndex];
+          const g = pixels[pixelIndex + 1];
+          const b = pixels[pixelIndex + 2];
+          const brightness = (r + g + b) / 3;
+
+          if (brightness < 80) {
+            lineDarkPixels++;
+          }
+        }
+
+        // If a horizontal line has many dark pixels, it might be glasses
+        if (lineDarkPixels > faceRegion.width * 0.3) {
+          horizontalLineCount++;
+        }
+      }
+
+      // Calculate ratios
+      const darkPixelRatio = darkPixelCount / totalPixels;
+      const edgePixelRatio = edgePixelCount / totalPixels;
+      const horizontalLineRatio = horizontalLineCount / faceRegion.height;
+
+      // Enhanced detection logic
+      const hasGlasses =
+        darkPixelRatio > 0.03 || // 3% dark pixels
+        edgePixelRatio > 0.15 || // 15% edge pixels
+        horizontalLineRatio > 0.1; // 10% horizontal lines
+
+      /*console.log('Enhanced glasses analysis:', {
+        darkPixelRatio: darkPixelRatio.toFixed(4),
+        edgePixelRatio: edgePixelRatio.toFixed(4),
+        horizontalLineRatio: horizontalLineRatio.toFixed(4),
+        hasGlasses,
+        totalPixels,
+        darkPixelCount,
+        edgePixelCount,
+        horizontalLineCount,
+      });*/
+
+      return hasGlasses;
+    } catch (error) {
+      //console.error('Glasses image analysis failed:', error);
+      return false;
+    }
+  }
+
+  // Simple fallback glasses detection
+  private async detectGlassesFallback(imageData: string): Promise<boolean> {
+    try {
+      const img = await this.createImageElement(imageData);
+
+      // Simple heuristic: check if the image has certain characteristics
+      // This is a very basic approach for demo purposes
+      const canvas = document.createElement('canvas');
+      const ctx = canvas.getContext('2d');
+
+      if (!ctx) return false;
+
+      canvas.width = img.width;
+      canvas.height = img.height;
+      ctx.drawImage(img, 0, 0);
+
+      // Get image data
+      const imageData_ctx = ctx.getImageData(0, 0, img.width, img.height);
+      const pixels = imageData_ctx.data;
+
+      // Count pixels in different brightness ranges
+      let veryDarkPixels = 0;
+      let darkPixels = 0;
+      let totalPixels = 0;
+
+      for (let i = 0; i < pixels.length; i += 4) {
+        const r = pixels[i];
+        const g = pixels[i + 1];
+        const b = pixels[i + 2];
+        const brightness = (r + g + b) / 3;
+
+        totalPixels++;
+
+        if (brightness < 30) {
+          veryDarkPixels++;
+        } else if (brightness < 80) {
+          darkPixels++;
+        }
+      }
+
+      // Simple heuristic: if there are enough dark pixels, assume glasses
+      const veryDarkRatio = veryDarkPixels / totalPixels;
+      const darkRatio = darkPixels / totalPixels;
+
+      const hasGlasses = veryDarkRatio > 0.02 || darkRatio > 0.1;
+
+      /*console.log('Fallback glasses detection:', {
+        veryDarkRatio: veryDarkRatio.toFixed(4),
+        darkRatio: darkRatio.toFixed(4),
+        hasGlasses,
+        totalPixels,
+        veryDarkPixels,
+        darkPixels,
+      });*/
+
+      return hasGlasses;
+    } catch (error) {
+      console.error('Fallback glasses detection failed:', error);
+      return false;
+    }
   }
 }
