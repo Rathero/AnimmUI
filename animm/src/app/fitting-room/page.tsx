@@ -61,12 +61,17 @@ export default function FittingRoomPage() {
       functionsToSetNumbers.length > 0 &&
       !initialized
     ) {
-      console.log('initializing detection');
-      const mainCan: any = document.querySelector('#MainCanvas');
-      if (mainCan) {
-        mainCan.style.width = window.innerWidth + 'px';
-        mainCan.style.height = window.innerHeight + 'px';
-      }
+       console.log('initializing detection');
+       const mainCan: any = document.querySelector('#MainCanvas');
+       if (mainCan) {
+         // Ensure full viewport coverage on all devices
+         mainCan.style.width = '100vw';
+         mainCan.style.height = '100vh';
+         mainCan.style.position = 'fixed';
+         mainCan.style.top = '0';
+         mainCan.style.left = '0';
+         mainCan.style.zIndex = '1';
+       }
 
       const initializeDetection = async () => {
         try {
@@ -82,9 +87,28 @@ export default function FittingRoomPage() {
         }
       };
 
-      initializeDetection();
-    }
-  }, [rivesStates, functionsToSetNumbers]);
+       initializeDetection();
+     }
+   }, [rivesStates, functionsToSetNumbers]);
+
+   // Handle window resize and orientation change
+   useEffect(() => {
+     const handleResize = () => {
+       const mainCan: any = document.querySelector('#MainCanvas');
+       if (mainCan) {
+         mainCan.style.width = '100vw';
+         mainCan.style.height = '100vh';
+       }
+     };
+
+     window.addEventListener('resize', handleResize);
+     window.addEventListener('orientationchange', handleResize);
+
+     return () => {
+       window.removeEventListener('resize', handleResize);
+       window.removeEventListener('orientationchange', handleResize);
+     };
+   }, []);
 
   const startRealTimeDetection = (
     functionsToSetNumbers: Array<{ x: number; f: (x: number) => void }>
@@ -224,7 +248,7 @@ export default function FittingRoomPage() {
   };
 
   return (
-    <div className="h-full w-full" id="MainCanvas">
+    <div className="h-screen w-screen fixed inset-0" id="MainCanvas">
       {/* Full-screen Rive animation */}
       <RiveComp
         src="https://animmfilesv2.blob.core.windows.net/riv/demo/nedap_fitting_room.riv"

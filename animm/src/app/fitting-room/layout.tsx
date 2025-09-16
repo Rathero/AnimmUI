@@ -9,8 +9,19 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en">
-      <body style={{ margin: '0px' }}>{children}</body>
+    <html lang="en" style={{ height: '100%', margin: 0, padding: 0 }}>
+      <body style={{ 
+        margin: '0px', 
+        padding: '0px', 
+        height: '100vh', 
+        overflow: 'hidden',
+        position: 'fixed',
+        top: 0,
+        left: 0,
+        width: '100vw'
+      }}>
+        {children}
+      </body>
     </html>
   );
 }
