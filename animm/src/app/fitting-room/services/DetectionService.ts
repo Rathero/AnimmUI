@@ -37,36 +37,35 @@ export class DetectionService {
   }
 
   async detectObjects(imageData: string): Promise<any[]> {
-    if (!this.isModelLoaded || !this.model) {
-      throw new Error('Model not loaded yet');
-    }
+    if (this.isModelLoaded && this.model) {
+      try {
+        // Convert base64 image to tensor
+        const imageElement = await this.createImageElement(imageData);
+        const predictions = await this.model.detect(imageElement);
 
-    try {
-      // Convert base64 image to tensor
-      const imageElement = await this.createImageElement(imageData);
-      const predictions = await this.model.detect(imageElement);
-
-      // Filter and format results - lower threshold for glasses detection
-      return predictions
-        .filter(prediction => {
-          // Lower threshold for glasses and person detection
-          if (
-            prediction.class === 'person' ||
-            prediction.class === 'eyeglasses'
-          ) {
-            return prediction.score > 0.2;
-          }
-          return prediction.score > 0.3;
-        })
-        .map(prediction => ({
-          class: prediction.class,
-          score: prediction.score,
-          bbox: prediction.bbox,
-        }));
-    } catch (error) {
-      //console.error('Object detection failed:', error);
-      throw error;
+        // Filter and format results - lower threshold for glasses detection
+        return predictions
+          .filter(prediction => {
+            // Lower threshold for glasses and person detection
+            if (
+              prediction.class === 'person' ||
+              prediction.class === 'eyeglasses'
+            ) {
+              return prediction.score > 0.2;
+            }
+            return prediction.score > 0.3;
+          })
+          .map(prediction => ({
+            class: prediction.class,
+            score: prediction.score,
+            bbox: prediction.bbox,
+          }));
+      } catch (error) {
+        //console.error('Object detection failed:', error);
+        throw error;
+      }
     }
+    return [];
   }
 
   async analyzeClothing(imageData: string, clothingItems: any[]): Promise<any> {

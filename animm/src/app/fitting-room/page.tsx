@@ -34,6 +34,7 @@ export default function FittingRoomPage() {
 
   // Debug mode for testing glasses detection
   const [debugMode, setDebugMode] = useState(false);
+  const [initialized, setInitialized] = useState(false);
   const [manualPersonValue, setManualPersonValue] = useState(0);
 
   // Create a mock Person variable for Rive
@@ -57,8 +58,10 @@ export default function FittingRoomPage() {
       rivesStates &&
       rivesStates.length > 0 &&
       functionsToSetNumbers &&
-      functionsToSetNumbers.length > 0
+      functionsToSetNumbers.length > 0 &&
+      !initialized
     ) {
+      console.log('initializing detection');
       const mainCan: any = document.querySelector('#MainCanvas');
       if (mainCan) {
         mainCan.style.width = window.innerWidth + 'px';
@@ -72,6 +75,7 @@ export default function FittingRoomPage() {
           setIsModelLoading(false);
           // Start real-time detection for glasses
           startRealTimeDetection(functionsToSetNumbers);
+          setInitialized(true);
         } catch (error) {
           //console.error('Failed to initialize detection service:', error);
           setIsModelLoading(false);
@@ -197,8 +201,9 @@ export default function FittingRoomPage() {
       }
       // Only update if value changed (performance optimization)
       if (personValue.current !== newPersonValue) {
+        console.log('previous value', personValue.current);
         personValue.current = newPersonValue;
-
+        console.log('sending value', newPersonValue);
         // Send value to Rive
         setPersonValue(newPersonValue, functionsToSetNumbers);
       }
@@ -211,7 +216,6 @@ export default function FittingRoomPage() {
     value: number,
     functionsToSetNumbers: Array<{ x: number; f: (x: number) => void }>
   ) => {
-    console.log('aqui2', functionsToSetNumbers);
     functionsToSetNumbers.forEach(x => {
       if (x.x === personVariable.id) {
         x.f(value);
@@ -238,7 +242,6 @@ export default function FittingRoomPage() {
           onSetFunctionString={() => {}}
           onSetFunctionBoolean={() => {}}
           onSetFunctionNumber={setValueFunction => {
-            console.log(personVariable.id, setValueFunction);
             setFunctionsToSetNumbers(prev => [
               { x: personVariable.id, f: setValueFunction },
               ...prev,
