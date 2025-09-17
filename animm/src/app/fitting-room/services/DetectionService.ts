@@ -43,24 +43,24 @@ export class DetectionService {
 
   async detectObjects(imageData: string): Promise<any[]> {
     if (this.isModelLoaded && this.model) {
-    try {
-      const imageElement = await this.createImageElement(imageData);
-      const predictions = await this.model.detect(imageElement);
+      try {
+        const imageElement = await this.createImageElement(imageData);
+        const predictions = await this.model.detect(imageElement);
 
-      return predictions
+        return predictions
           .filter(prediction => {
             if (prediction.class === 'person') {
               return prediction.score > 0.3;
             }
             return false;
           })
-        .map(prediction => ({
-          class: prediction.class,
-          score: prediction.score,
-          bbox: prediction.bbox,
-        }));
-    } catch (error) {
-      throw error;
+          .map(prediction => ({
+            class: prediction.class,
+            score: prediction.score,
+            bbox: prediction.bbox,
+          }));
+      } catch (error) {
+        throw error;
       }
     }
     return [];
@@ -298,9 +298,9 @@ export class DetectionService {
       let personValue = 0;
       if (personDetected) {
         personValue = beardDetected ? 2 : 1;
-    }
+      }
 
-    return {
+      return {
         personDetected,
         beardDetected,
         personValue,

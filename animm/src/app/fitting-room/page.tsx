@@ -49,6 +49,7 @@ export default function FittingRoomPage() {
       functionsToSetNumbers.length > 0 &&
       !initialized
     ) {
+      setInitialized(true);
       const mainCan: any = document.querySelector('#MainCanvas');
       if (mainCan) {
         mainCan.style.width = '100vw';
@@ -64,7 +65,6 @@ export default function FittingRoomPage() {
           detectionService.current = new DetectionService();
           await detectionService.current.initialize();
           startRealTimeDetection(functionsToSetNumbers);
-          setInitialized(true);
         } catch (error) {}
       };
 
