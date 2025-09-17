@@ -65,8 +65,7 @@ export default function FittingRoomPage() {
           await detectionService.current.initialize();
           startRealTimeDetection(functionsToSetNumbers);
           setInitialized(true);
-        } catch (error) {
-        }
+        } catch (error) {}
       };
 
       initializeDetection();
@@ -129,8 +128,7 @@ export default function FittingRoomPage() {
 
         video.addEventListener('loadeddata', frameProcessor);
       })
-      .catch(error => {
-      });
+      .catch(error => {});
   };
 
   const processFrameQueue = async (
@@ -170,8 +168,7 @@ export default function FittingRoomPage() {
         personValue.current = newPersonValue;
         setPersonValue(newPersonValue, functionsToSetNumbers);
       }
-    } catch (error) {
-    }
+    } catch (error) {}
   };
 
   const setPersonValue = (
