@@ -43,7 +43,6 @@ export default function RiveComp({
     autoBind: true,
     assetLoader: asset => {
       if (asset.isImage) {
-        console.log('asset ' + asset.name, asset);
         assets.push(asset);
         setAssets(assets);
         setAssetsParent(assets);

@@ -163,7 +163,6 @@ export default function Viewer() {
     // Make the recording function available globally for .NET
     (window as any).startRecording = async (config: RecordingConfig) => {
       try {
-        console.log('Starting recording from .NET:', config);
 
         // Set recording in progress
         (window as any).__RECORDING_IN_PROGRESS__ = true;
@@ -216,7 +215,6 @@ export default function Viewer() {
       if (riveInstance && typeof riveInstance.play === 'function') {
         try {
           riveInstance.play('SM');
-          console.log('Rive animation started manually');
         } catch (error) {
           console.warn('Could not start Rive animation manually:', error);
         }
@@ -231,7 +229,6 @@ export default function Viewer() {
       if (riveInstance && typeof riveInstance.stop === 'function') {
         try {
           riveInstance.stop();
-          console.log('Rive animation stopped manually');
         } catch (error) {
           console.warn('Could not stop Rive animation manually:', error);
         }

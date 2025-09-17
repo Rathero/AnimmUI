@@ -87,7 +87,6 @@ class MediaRecorder {
     try {
       this.riveInstance.stop();
       await new Promise(resolve => setTimeout(resolve, 100));
-      console.log('Rive animation prepared and stopped');
     } catch (error) {
       console.warn('Could not prepare Rive animation:', error);
     }
@@ -106,12 +105,10 @@ class MediaRecorder {
         // Start the Rive animation
         if (this.riveInstance && typeof this.riveInstance.play === 'function') {
           this.riveInstance.play('SM');
-          console.log('Rive animation started for recording');
         }
 
         // Get canvas stream with optimized settings for 60fps
         const stream = this.canvas!.captureStream(60); // Force 60fps
-        console.log('Canvas stream created at 60 FPS');
 
         // Configure MediaRecorder for optimal 60fps recording
         const mimeTypes = [
@@ -154,7 +151,6 @@ class MediaRecorder {
         // Clear previous chunks and prepare for new data
         this.recordedChunks = [];
         this.nativeMediaRecorder.ondataavailable = (event: BlobEvent) => {
-          console.log(event);
           if (event.data.size > 0) {
             this.recordedChunks.push(event.data);
           }
@@ -162,15 +158,11 @@ class MediaRecorder {
 
         // Handle the stop event to create the video
         this.nativeMediaRecorder.onstop = () => {
-          console.log('MediaRecorder stopped, processing video...');
           this.processRecordedVideo();
         };
 
         // Start recording
         this.nativeMediaRecorder.start();
-        console.log(
-          `MediaRecorder started with MIME type: ${selectedMimeType} at 60fps`
-        );
 
         // Start status updates
         this.startStatusUpdates(config);
@@ -178,9 +170,6 @@ class MediaRecorder {
         // Set timeout to stop recording
         this.recordingTimeout = setTimeout(() => {
           if (this.isRecording) {
-            console.log(
-              `Recording duration reached (${config.duration}ms), stopping...`
-            );
             this.stopRecording();
           }
         }, config.duration);
@@ -227,7 +216,6 @@ class MediaRecorder {
       const blob = new Blob(this.recordedChunks, { type: 'video/webm' });
       const recordedFormat = blob.type.includes('webm') ? 'webm' : 'mp4';
 
-      console.log(`Video blob created: ${blob.size} bytes, type: ${blob.type}`);
 
       // Convert to Uint8Array
       blob
@@ -242,11 +230,6 @@ class MediaRecorder {
             duration: Date.now() - this.startTime,
           };
 
-          console.log(
-            `${recordedFormat.toUpperCase()} created at 60fps, size: ${
-              uint8Array.length
-            } bytes`
-          );
 
           if (this.resolvePromise) {
             this.resolvePromise(result);
@@ -290,7 +273,6 @@ class MediaRecorder {
       return;
     }
 
-    console.log('Stopping recording...');
     this.isRecording = false;
     this.clearTimers();
 
@@ -355,8 +337,6 @@ Usage Examples:
        bitrate: 15000000
      },
      (status) => {
-       console.log(`Recording progress: ${status.progress}%`);
-       console.log(`Elapsed time: ${status.currentTime}ms`);
      }
    );
 

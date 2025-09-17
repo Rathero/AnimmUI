@@ -194,6 +194,7 @@ export class DetectionService {
       // Simple threshold for beard detection
       const hasBeard = mouthToJawDistance < 60;
 
+
       return hasBeard;
     } catch (error) {
       console.error('Error in beard detection:', error);
@@ -259,7 +260,6 @@ export class DetectionService {
 
       if (detections) {
         const results = await this.detectObjects(imageData);
-        console.log('results', results);
         personDetected = results.some(
           item => item.class === 'person' && item.score > 0.5
         );
@@ -273,7 +273,6 @@ export class DetectionService {
       } else {
         // Fallback to COCO-SSD for person detection
         const results = await this.detectObjects(imageData);
-        console.log('results', results);
         personDetected = results.some(
           item => item.class === 'person' && item.score > 0.5
         );

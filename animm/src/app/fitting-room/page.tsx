@@ -63,7 +63,6 @@ export default function FittingRoomPage() {
       functionsToSetNumbers.length > 0 &&
       !initialized
     ) {
-      //console.log('initializing detection');
       const mainCan: any = document.querySelector('#MainCanvas');
       if (mainCan) {
         // Ensure full viewport coverage on all devices
@@ -202,24 +201,16 @@ export default function FittingRoomPage() {
       if (debugMode) {
         // Use manual value for testing
         newPersonValue = manualPersonValue;
-        //console.log('Debug mode - using manual value:', newPersonValue);
       } else {
         // Use actual detection
         const detection = await detectionService.current.detectBeard(imageData);
         newPersonValue = detection.personValue;
 
         // Log detection results for debugging
-        console.log('Beard detection:', {
-          personDetected: detection.personDetected,
-          beardDetected: detection.beardDetected,
-          personValue: newPersonValue,
-        });
       }
       // Only update if value changed (performance optimization)
       if (personValue.current !== newPersonValue) {
-        //console.log('previous value', personValue.current);
         personValue.current = newPersonValue;
-        //console.log('sending value', newPersonValue);
         // Send value to Rive
         setPersonValue(newPersonValue, functionsToSetNumbers);
       }

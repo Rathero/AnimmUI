@@ -20,9 +20,6 @@ export async function POST(request: NextRequest) {
     const buffer = await file.arrayBuffer();
     const uint8Array = new Uint8Array(buffer);
 
-    console.log(`Received ${format} file for export ${exportId}:`, {
-      size: uint8Array.length,
-      duration,
       fps,
       format,
     });
