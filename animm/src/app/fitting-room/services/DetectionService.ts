@@ -194,7 +194,6 @@ export class DetectionService {
       // Simple threshold for beard detection
       const hasBeard = mouthToJawDistance < 60;
 
-
       return hasBeard;
     } catch (error) {
       console.error('Error in beard detection:', error);

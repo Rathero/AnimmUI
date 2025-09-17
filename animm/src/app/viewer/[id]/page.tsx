@@ -163,7 +163,6 @@ export default function Viewer() {
     // Make the recording function available globally for .NET
     (window as any).startRecording = async (config: RecordingConfig) => {
       try {
-
         // Set recording in progress
         (window as any).__RECORDING_IN_PROGRESS__ = true;
         (window as any).__RECORDING_RESULT__ = null;
