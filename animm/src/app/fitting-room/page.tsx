@@ -19,18 +19,20 @@ export default function FittingRoomPage() {
   >([]);
   const detectionService = useRef<DetectionService | null>(null);
   const lastDetectionTime = useRef<number>(0);
-  const detectionThrottle = 500; // Throttle detection to every 500ms
+  const detectionThrottle = 100; // Minimal throttle since we already process once per second
 
   // Shared values for frame processing (inspired by Vision Camera)
   const personValue = useRef<number>(0);
   const isProcessing = useRef<boolean>(false);
   const frameQueue = useRef<string[]>([]);
-  const maxQueueSize = 3; // Limit queue size for performance
+  const maxQueueSize = 1; // Only keep 1 frame in queue for efficiency
 
-  // Throttled FPS processing (like Vision Camera's runAtTargetFps)
-  const TARGET_FPS = 2; // Process at 2 FPS for better performance
+  // Throttled FPS processing - process once per second for efficiency
+  const TARGET_FPS = 1; // Process at 1 FPS (once per second)
   const lastProcessTime = useRef<number>(0);
-  const fpsInterval = 1000 / TARGET_FPS;
+  const lastCaptureTime = useRef<number>(0);
+  const fpsInterval = 1000 / TARGET_FPS; // 1000ms = 1 second
+  const captureInterval = 1000; // Capture frame every 1 second
 
   // Debug mode for testing beard detection
   const [debugMode, setDebugMode] = useState(false);
@@ -129,23 +131,28 @@ export default function FittingRoomPage() {
         const canvas = document.createElement('canvas');
         const ctx = canvas.getContext('2d');
 
-        // Vision Camera-inspired frame processor
+        // Optimized frame processor - capture and process once per second
         const frameProcessor = () => {
           if (video.readyState === video.HAVE_ENOUGH_DATA && ctx) {
-            canvas.width = video.videoWidth;
-            canvas.height = video.videoHeight;
-            ctx.drawImage(video, 0, 0);
+            const now = Date.now();
 
-            const imageData = canvas.toDataURL('image/jpeg');
+            // Only capture frame once per second
+            if (now - lastCaptureTime.current >= captureInterval) {
+              lastCaptureTime.current = now;
 
-            // Add frame to queue (like Vision Camera's frame processing)
-            if (frameQueue.current.length < maxQueueSize) {
-              frameQueue.current.push(imageData);
-            }
+              canvas.width = video.videoWidth;
+              canvas.height = video.videoHeight;
+              ctx.drawImage(video, 0, 0);
 
-            // Process frames asynchronously (like Vision Camera's runAsync)
-            if (!isProcessing.current && frameQueue.current.length > 0) {
-              processFrameQueue(functionsToSetNumbers);
+              const imageData = canvas.toDataURL('image/jpeg');
+
+              // Replace frame in queue (only keep latest frame)
+              frameQueue.current = [imageData];
+
+              // Process frame immediately since we're already throttling capture
+              if (!isProcessing.current) {
+                processFrameQueue(functionsToSetNumbers);
+              }
             }
           }
           requestAnimationFrame(frameProcessor);
@@ -158,18 +165,11 @@ export default function FittingRoomPage() {
       });
   };
 
-  // Process frame queue asynchronously (inspired by Vision Camera's runAsync)
+  // Process frame queue asynchronously - simplified since we throttle at capture
   const processFrameQueue = async (
     functionsToSetNumbers: Array<{ x: number; f: (x: number) => void }>
   ) => {
     if (isProcessing.current || frameQueue.current.length === 0) return;
-
-    // Throttle processing to target FPS (like Vision Camera's runAtTargetFps)
-    const now = Date.now();
-    if (now - lastProcessTime.current < fpsInterval) {
-      return;
-    }
-    lastProcessTime.current = now;
 
     isProcessing.current = true;
 
@@ -180,12 +180,6 @@ export default function FittingRoomPage() {
       }
     } finally {
       isProcessing.current = false;
-
-      // Continue processing if there are more frames
-      if (frameQueue.current.length > 0) {
-        // Use setTimeout to allow other tasks to run (like Vision Camera's async processing)
-        setTimeout(() => processFrameQueue(functionsToSetNumbers), 0);
-      }
     }
   };
 
@@ -215,11 +209,11 @@ export default function FittingRoomPage() {
         newPersonValue = detection.personValue;
 
         // Log detection results for debugging
-        //console.log('Beard detection:', {
-        //  personDetected: detection.personDetected,
-        //  beardDetected: detection.beardDetected,
-        //  personValue: newPersonValue,
-        //});
+        console.log('Beard detection:', {
+          personDetected: detection.personDetected,
+          beardDetected: detection.beardDetected,
+          personValue: newPersonValue,
+        });
       }
       // Only update if value changed (performance optimization)
       if (personValue.current !== newPersonValue) {

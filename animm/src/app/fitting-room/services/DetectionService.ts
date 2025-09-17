@@ -258,7 +258,11 @@ export class DetectionService {
       let currentBeardDetected = false;
 
       if (detections) {
-        personDetected = true;
+        const results = await this.detectObjects(imageData);
+        console.log('results', results);
+        personDetected = results.some(
+          item => item.class === 'person' && item.score > 0.5
+        );
         // Use face landmarks to detect beard
         try {
           currentBeardDetected = this.checkForBeard(detections.landmarks);
@@ -269,6 +273,7 @@ export class DetectionService {
       } else {
         // Fallback to COCO-SSD for person detection
         const results = await this.detectObjects(imageData);
+        console.log('results', results);
         personDetected = results.some(
           item => item.class === 'person' && item.score > 0.5
         );
