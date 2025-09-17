@@ -9,14 +9,14 @@ export class DetectionService {
   private faceApiModelsLoaded = false;
   private faceapi: any = null;
 
-  // Glasses detection history for time-based voting
-  private glassesDetectionHistory: Array<{
+  // Beard detection history for time-based voting
+  private beardDetectionHistory: Array<{
     timestamp: number;
-    hasGlasses: boolean;
+    hasBeard: boolean;
     personDetected: boolean;
   }> = [];
-  private readonly GLASSES_VOTING_WINDOW = 30000; // 30 seconds in milliseconds
-  private readonly GLASSES_VOTING_THRESHOLD = 0.25; // 25% threshold
+  private readonly BEARD_VOTING_WINDOW = 30000; // 30 seconds in milliseconds
+  private readonly BEARD_VOTING_THRESHOLD = 0.25; // 25% threshold
 
   async initialize(): Promise<void> {
     try {
@@ -113,7 +113,7 @@ export class DetectionService {
     return new Promise((resolve, reject) => {
       const img = new Image();
       img.onload = () => {
-        console.log('Image loaded successfully:', img.width, 'x', img.height);
+        //console.log('Image loaded successfully:', img.width, 'x', img.height);
         resolve(img);
       };
       img.onerror = error => {
@@ -488,78 +488,78 @@ export class DetectionService {
 
   // Add detection result to history
   private addDetectionToHistory(
-    hasGlasses: boolean,
+    hasBeard: boolean,
     personDetected: boolean
   ): void {
     const now = Date.now();
 
     // Add new detection
-    this.glassesDetectionHistory.push({
+    this.beardDetectionHistory.push({
       timestamp: now,
-      hasGlasses,
+      hasBeard,
       personDetected,
     });
 
     // Clean up old detections (older than 30 seconds)
-    const beforeCleanup = this.glassesDetectionHistory.length;
-    this.glassesDetectionHistory = this.glassesDetectionHistory.filter(
-      detection => now - detection.timestamp <= this.GLASSES_VOTING_WINDOW
+    const beforeCleanup = this.beardDetectionHistory.length;
+    this.beardDetectionHistory = this.beardDetectionHistory.filter(
+      detection => now - detection.timestamp <= this.BEARD_VOTING_WINDOW
     );
 
     // Log history updates for debugging
-    if (beforeCleanup !== this.glassesDetectionHistory.length) {
-      console.log(
-        `Cleaned up ${
-          beforeCleanup - this.glassesDetectionHistory.length
-        } old detections from history`
-      );
+    if (beforeCleanup !== this.beardDetectionHistory.length) {
+      //console.log(
+      //  `Cleaned up ${
+      //    beforeCleanup - this.beardDetectionHistory.length
+      //  } old detections from history`
+      //);
     }
   }
 
   // Reset detection history when person detection stops
   private resetDetectionHistory(): void {
-    this.glassesDetectionHistory = [];
-    console.log('Glasses detection history reset - person detection stopped');
+    this.beardDetectionHistory = [];
+    //console.log('Beard detection history reset - person detection stopped');
   }
 
-  // Get glasses detection result based on voting from last 30 seconds
-  private getVotedGlassesDetection(): {
-    hasGlasses: boolean;
+  // Get beard detection result based on voting from last 30 seconds
+  private getVotedBeardDetection(): {
+    hasBeard: boolean;
     confidence: number;
   } {
     const now = Date.now();
 
     // Filter detections from last 30 seconds where person was detected
-    const recentPersonDetections = this.glassesDetectionHistory.filter(
+    const recentPersonDetections = this.beardDetectionHistory.filter(
       detection =>
-        now - detection.timestamp <= this.GLASSES_VOTING_WINDOW &&
+        now - detection.timestamp <= this.BEARD_VOTING_WINDOW &&
         detection.personDetected
     );
 
     if (recentPersonDetections.length === 0) {
-      return { hasGlasses: false, confidence: 0 };
+      return { hasBeard: false, confidence: 0 };
     }
 
-    // Calculate percentage of detections that found glasses
-    const glassesDetections = recentPersonDetections.filter(
-      d => d.hasGlasses
+    // Calculate percentage of detections that found beard
+    const beardDetections = recentPersonDetections.filter(
+      d => d.hasBeard
     ).length;
-    const glassesPercentage = glassesDetections / recentPersonDetections.length;
+    const beardPercentage = beardDetections / recentPersonDetections.length;
 
-    // If at least 25% of detections say glasses, then person has glasses
-    const hasGlasses = glassesPercentage >= this.GLASSES_VOTING_THRESHOLD;
-    /*
-    console.log('Glasses voting result:', {
-      totalDetections: recentPersonDetections.length,
-      glassesDetections,
-      glassesPercentage: (glassesPercentage * 100).toFixed(1) + '%',
-      threshold: this.GLASSES_VOTING_THRESHOLD * 100 + '%',
-      finalResult: hasGlasses,
-    });*/
+    // If at least 25% of detections say beard, then person has beard
+    const hasBeard = beardPercentage >= this.BEARD_VOTING_THRESHOLD;
+
+    //console.log('Beard voting result:', {
+    //  totalDetections: recentPersonDetections.length,
+    //  beardDetections,
+    //  beardPercentage: (beardPercentage * 100).toFixed(1) + '%',
+    //  threshold: this.BEARD_VOTING_THRESHOLD * 100 + '%',
+    //  finalResult: hasBeard,
+    //});
 
     return {
-      hasGlasses,
-      confidence: glassesPercentage,
+      hasBeard,
+      confidence: beardPercentage,
     };
   }
 
@@ -568,7 +568,7 @@ export class DetectionService {
     try {
       // Dynamic import to avoid SSR issues
       if (typeof window === 'undefined') {
-        console.log('Face-api.js not available on server side');
+        //console.log('Face-api.js not available on server side');
         this.faceApiModelsLoaded = false;
         return;
       }
@@ -577,26 +577,26 @@ export class DetectionService {
       this.faceapi = faceApiModule.default || faceApiModule;
       const faceapi = this.faceapi;
 
-      console.log('Face-api module loaded:', !!this.faceapi);
-      console.log(
-        'Face-api methods available:',
-        Object.keys(this.faceapi || {})
-      );
+      //console.log('Face-api module loaded:', !!this.faceapi);
+      //console.log(
+      //  'Face-api methods available:',
+      //  Object.keys(this.faceapi || {})
+      //);
 
       const MODEL_URL = '/models'; // path to the models in the public folder
 
       // Ensure TensorFlow.js is ready for face-api.js
       await tf.ready();
-      console.log('TensorFlow.js ready for face-api.js');
+      //console.log('TensorFlow.js ready for face-api.js');
 
       // Load models sequentially to avoid conflicts
-      console.log('Loading tinyFaceDetector...');
+      //console.log('Loading tinyFaceDetector...');
       await faceapi.nets.tinyFaceDetector.loadFromUri(MODEL_URL);
-      console.log('TinyFaceDetector loaded');
+      //console.log('TinyFaceDetector loaded');
 
-      console.log('Loading faceLandmark68Net...');
+      //console.log('Loading faceLandmark68Net...');
       await faceapi.nets.faceLandmark68Net.loadFromUri(MODEL_URL);
-      console.log('FaceLandmark68Net loaded');
+      //console.log('FaceLandmark68Net loaded');
 
       // Add a small delay to ensure models are fully initialized
       await new Promise(resolve => setTimeout(resolve, 200));
@@ -607,7 +607,7 @@ export class DetectionService {
         faceapi.nets.faceLandmark68Net.isLoaded
       ) {
         this.faceApiModelsLoaded = true;
-        console.log('Face-api.js models loaded and verified successfully');
+        //console.log('Face-api.js models loaded and verified successfully');
       } else {
         throw new Error('Models loaded but not properly initialized');
       }
@@ -618,61 +618,63 @@ export class DetectionService {
     }
   }
 
-  // Check for glasses using face landmarks
-  private checkForGlasses(landmarks: any): boolean {
+  // Check for beard using face landmarks
+  private checkForBeard(landmarks: any): boolean {
     try {
-      // These are the specific landmark points for eyebrows and eyes
-      const leftEyebrow = landmarks.getLeftEyeBrow();
-      const rightEyebrow = landmarks.getRightEyeBrow();
-      const leftEye = landmarks.getLeftEye();
-      const rightEye = landmarks.getRightEye();
+      // Get jawline landmarks (points 0-16) and mouth landmarks (points 48-67)
+      const jawline = landmarks.getJawOutline();
+      const mouth = landmarks.getMouth();
 
-      // Calculate the average vertical distance between the bottom of the eyebrows and the top of the eyes.
-      const avgLeftDistance =
-        (leftEye[0].y - leftEyebrow[4].y + leftEye[1].y - leftEyebrow[3].y) / 2;
-      const avgRightDistance =
-        (rightEye[0].y -
-          rightEyebrow[4].y +
-          rightEye[1].y -
-          rightEyebrow[3].y) /
-        2;
+      // Calculate the area between jawline and mouth to detect beard
+      // Beard typically appears in the lower third of the face
+      const jawlineBottom = Math.max(...jawline.map((point: any) => point.y));
+      const mouthTop = Math.min(...mouth.map((point: any) => point.y));
 
-      // A heuristic threshold. If the distance is very small, it's likely
-      // because a glasses frame is covering the space.
-      // This value may need tuning depending on the camera, lighting, etc.
-      const GLASSES_THRESHOLD = 30; // You can adjust this value
+      // Calculate the vertical distance between mouth and jawline
+      const mouthToJawDistance = jawlineBottom - mouthTop;
 
-      const hasGlasses =
-        avgLeftDistance < GLASSES_THRESHOLD &&
-        avgRightDistance < GLASSES_THRESHOLD;
+      // Get face width for normalization
+      const faceLeft = Math.min(...jawline.map((point: any) => point.x));
+      const faceRight = Math.max(...jawline.map((point: any) => point.x));
+      const faceWidth = faceRight - faceLeft;
 
-      console.log('Face-api glasses detection:', {
-        avgLeftDistance: avgLeftDistance.toFixed(2),
-        avgRightDistance: avgRightDistance.toFixed(2),
-        hasGlasses,
-        threshold: GLASSES_THRESHOLD,
-      });
+      // Normalize the distance by face width
+      const normalizedDistance = mouthToJawDistance / faceWidth;
 
-      return hasGlasses;
+      // Beard detection threshold - if there's significant space between mouth and jaw
+      // and the area is relatively large, it might indicate a beard
+      const BEARD_THRESHOLD = 0.15; // Adjust this value as needed
+
+      const hasBeard = mouthToJawDistance < 60;
+
+      //console.log('Face-api beard detection:', {
+      //  mouthToJawDistance: mouthToJawDistance.toFixed(2),
+      //  faceWidth: faceWidth.toFixed(2),
+      //  normalizedDistance: normalizedDistance.toFixed(3),
+      //  hasBeard,
+      //  threshold: BEARD_THRESHOLD,
+      //});
+
+      return hasBeard;
     } catch (error) {
-      console.error('Error in glasses detection:', error);
+      console.error('Error in beard detection:', error);
       return false;
     }
   }
 
-  // Method specifically for glasses detection using face-api.js with voting system
-  async detectGlasses(imageData: string): Promise<{
+  // Method specifically for beard detection using face-api.js with voting system
+  async detectBeard(imageData: string): Promise<{
     personDetected: boolean;
-    glassesDetected: boolean;
+    beardDetected: boolean;
     personValue: number;
   }> {
     try {
       // First check if face-api.js models are loaded
       if (!this.faceApiModelsLoaded) {
-        console.log(
-          'Face-api.js models not loaded yet, falling back to COCO-SSD'
-        );
-        return await this.detectGlassesFallback(imageData);
+        //console.log(
+        //  'Face-api.js models not loaded yet, falling back to COCO-SSD'
+        //);
+        return await this.detectBeardFallback(imageData);
       }
 
       // Additional check to ensure face-api.js is properly initialized
@@ -681,10 +683,10 @@ export class DetectionService {
         !this.faceapi.nets.tinyFaceDetector.isLoaded ||
         !this.faceapi.nets.faceLandmark68Net.isLoaded
       ) {
-        console.log(
-          'Face-api.js models not properly loaded, falling back to COCO-SSD'
-        );
-        return await this.detectGlassesFallback(imageData);
+        //console.log(
+        //  'Face-api.js models not properly loaded, falling back to COCO-SSD'
+        //);
+        return await this.detectBeardFallback(imageData);
       }
 
       // Create image element from base64 data
@@ -694,17 +696,17 @@ export class DetectionService {
       let detections = null;
       try {
         /*
-        console.log('Attempting face detection with face-api.js...');
-        console.log('Image dimensions:', img.width, 'x', img.height);
-        console.log('Face-api available:', !!this.faceapi);
-        console.log(
-          'TinyFaceDetector loaded:',
-          this.faceapi?.nets?.tinyFaceDetector?.isLoaded
-        );
-        console.log(
-          'FaceLandmark68Net loaded:',
-          this.faceapi?.nets?.faceLandmark68Net?.isLoaded
-        );*/
+        //console.log('Attempting face detection with face-api.js...');
+        //console.log('Image dimensions:', img.width, 'x', img.height);
+        //console.log('Face-api available:', !!this.faceapi);
+        //console.log(
+        //  'TinyFaceDetector loaded:',
+        //  this.faceapi?.nets?.tinyFaceDetector?.isLoaded
+        //);
+        //console.log(
+        //  'FaceLandmark68Net loaded:',
+        //  this.faceapi?.nets?.faceLandmark68Net?.isLoaded
+        //);*/
 
         // Try different detection options
         const detectionOptions = new this.faceapi.TinyFaceDetectorOptions({
@@ -730,24 +732,22 @@ export class DetectionService {
             //console.log('Found face using detectAllFaces:', detections);
           }
         }
-
-        //console.log('Face detection result:', detections);
       } catch (faceApiError) {
         console.error('Face-api.js detection error:', faceApiError);
         // Fall through to COCO-SSD fallback
       }
 
       let personDetected = false;
-      let currentGlassesDetected = false;
+      let currentBeardDetected = false;
 
       if (detections) {
         personDetected = true;
-        // Use face landmarks to detect glasses
+        // Use face landmarks to detect beard
         try {
-          currentGlassesDetected = this.checkForGlasses(detections.landmarks);
+          currentBeardDetected = this.checkForBeard(detections.landmarks);
         } catch (landmarkError) {
           console.error('Error in landmark analysis:', landmarkError);
-          currentGlassesDetected = false;
+          currentBeardDetected = false;
         }
       } else {
         // Fallback to COCO-SSD for person detection
@@ -757,16 +757,16 @@ export class DetectionService {
         );
 
         if (personDetected) {
-          // Use fallback glasses detection
-          const fallbackResult = await this.detectGlassesFallback(imageData);
-          currentGlassesDetected = fallbackResult.glassesDetected;
+          // Use fallback beard detection
+          const fallbackResult = await this.detectBeardFallback(imageData);
+          currentBeardDetected = fallbackResult.beardDetected;
         }
       }
 
       // Check if person detection just stopped (transition from detected to not detected)
       const wasPersonDetected =
-        this.glassesDetectionHistory.length > 0 &&
-        this.glassesDetectionHistory[this.glassesDetectionHistory.length - 1]
+        this.beardDetectionHistory.length > 0 &&
+        this.beardDetectionHistory[this.beardDetectionHistory.length - 1]
           .personDetected;
 
       if (wasPersonDetected && !personDetected) {
@@ -774,42 +774,42 @@ export class DetectionService {
       }
 
       // Add current detection to history
-      this.addDetectionToHistory(currentGlassesDetected, personDetected);
+      this.addDetectionToHistory(currentBeardDetected, personDetected);
 
-      // Get voted glasses detection result
-      const votedResult = this.getVotedGlassesDetection();
-      const glassesDetected = votedResult.hasGlasses;
+      // Get voted beard detection result
+      const votedResult = this.getVotedBeardDetection();
+      const beardDetected = votedResult.hasBeard;
 
       let personValue = 0; // No person detected
       if (personDetected) {
-        personValue = glassesDetected ? 2 : 1; // 1 = person with glasses, 2 = person without glasses
+        personValue = beardDetected ? 2 : 1; // 1 = person with beard, 2 = person without beard
       }
-      /*
-      console.log('Face-api glasses detection result:', {
-        personDetected,
-        currentGlassesDetected,
-        votedGlassesDetected: glassesDetected,
-        confidence: (votedResult.confidence * 100).toFixed(1) + '%',
-        personValue,
-        faceDetected: !!detections,
-      });*/
+
+      //console.log('Face-api beard detection result:', {
+      //  personDetected,
+      //  currentBeardDetected,
+      //  votedBeardDetected: beardDetected,
+      //  confidence: (votedResult.confidence * 100).toFixed(1) + '%',
+      //  personValue,
+      //  faceDetected: !!detections,
+      //});
 
       return {
         personDetected,
-        glassesDetected,
+        beardDetected,
         personValue,
       };
     } catch (error) {
-      console.error('Face-api glasses detection failed:', error);
+      console.error('Face-api beard detection failed:', error);
       // Fallback to COCO-SSD detection
-      return await this.detectGlassesFallback(imageData);
+      return await this.detectBeardFallback(imageData);
     }
   }
 
-  // Fallback method using COCO-SSD
-  private async detectGlassesFallback(imageData: string): Promise<{
+  // Fallback method using COCO-SSD for beard detection
+  private async detectBeardFallback(imageData: string): Promise<{
     personDetected: boolean;
-    glassesDetected: boolean;
+    beardDetected: boolean;
     personValue: number;
   }> {
     try {
@@ -821,47 +821,47 @@ export class DetectionService {
         item => item.class === 'person' && item.score > 0.5
       );
 
-      let glassesDetected = false;
+      let beardDetected = false;
 
       if (personDetected) {
-        // Try to detect glasses using a simple image analysis approach
-        glassesDetected = await this.detectGlassesInImage(imageData);
+        // Try to detect beard using a simple image analysis approach
+        beardDetected = await this.detectBeardInImage(imageData);
 
         // Fallback: If detection fails, use a simple heuristic based on image characteristics
-        if (!glassesDetected) {
-          glassesDetected = await this.detectGlassesFallbackImage(imageData);
+        if (!beardDetected) {
+          beardDetected = await this.detectBeardFallbackImage(imageData);
         }
       }
 
       let personValue = 0; // No person detected
       if (personDetected) {
-        personValue = glassesDetected ? 1 : 2; // 1 = person with glasses, 2 = person without glasses
+        personValue = beardDetected ? 2 : 1; // 1 = person with beard, 2 = person without beard
       }
 
-      /*console.log('Glasses detection result:', {
-        personDetected,
-        glassesDetected,
-        personValue,
-        allClasses: results.map(r => r.class),
-      });*/
+      //console.log('Beard detection result:', {
+      //  personDetected,
+      //  beardDetected,
+      //  personValue,
+      //  allClasses: results.map(r => r.class),
+      //});
 
       return {
         personDetected,
-        glassesDetected,
+        beardDetected,
         personValue,
       };
     } catch (error) {
-      console.error('Fallback glasses detection failed:', error);
+      console.error('Fallback beard detection failed:', error);
       return {
         personDetected: false,
-        glassesDetected: false,
+        beardDetected: false,
         personValue: 0,
       };
     }
   }
 
-  // Enhanced glasses detection using multiple image analysis techniques
-  private async detectGlassesInImage(imageData: string): Promise<boolean> {
+  // Enhanced beard detection using multiple image analysis techniques
+  private async detectBeardInImage(imageData: string): Promise<boolean> {
     try {
       const img = await this.createImageElement(imageData);
       const canvas = document.createElement('canvas');
@@ -964,10 +964,8 @@ export class DetectionService {
     }
   }
 
-  // Simple fallback glasses detection
-  private async detectGlassesFallbackImage(
-    imageData: string
-  ): Promise<boolean> {
+  // Simple fallback beard detection
+  private async detectBeardFallbackImage(imageData: string): Promise<boolean> {
     try {
       const img = await this.createImageElement(imageData);
 
@@ -1006,24 +1004,39 @@ export class DetectionService {
         }
       }
 
-      // Simple heuristic: if there are enough dark pixels, assume glasses
+      // Simple heuristic: if there are enough dark pixels in lower face area, assume beard
       const veryDarkRatio = veryDarkPixels / totalPixels;
       const darkRatio = darkPixels / totalPixels;
 
-      const hasGlasses = veryDarkRatio > 0.02 || darkRatio > 0.1;
+      // Focus on lower half of image for beard detection
+      const lowerHalfPixels = Math.floor(totalPixels / 2);
+      let lowerHalfDarkPixels = 0;
 
-      /*console.log('Fallback glasses detection:', {
-        veryDarkRatio: veryDarkRatio.toFixed(4),
-        darkRatio: darkRatio.toFixed(4),
-        hasGlasses,
-        totalPixels,
-        veryDarkPixels,
-        darkPixels,
-      });*/
+      for (let i = pixels.length / 2; i < pixels.length; i += 4) {
+        const r = pixels[i];
+        const g = pixels[i + 1];
+        const b = pixels[i + 2];
+        const brightness = (r + g + b) / 3;
 
-      return hasGlasses;
+        if (brightness < 80) {
+          lowerHalfDarkPixels++;
+        }
+      }
+
+      const lowerHalfDarkRatio = lowerHalfDarkPixels / lowerHalfPixels;
+      const hasBeard = lowerHalfDarkRatio > 0.15; // Higher threshold for beard detection
+
+      //console.log('Fallback beard detection:', {
+      //  veryDarkRatio: veryDarkRatio.toFixed(4),
+      //  darkRatio: darkRatio.toFixed(4),
+      //  lowerHalfDarkRatio: lowerHalfDarkRatio.toFixed(4),
+      //  hasBeard,
+      //  totalPixels,
+      //});
+
+      return hasBeard;
     } catch (error) {
-      console.error('Fallback glasses detection failed:', error);
+      console.error('Fallback beard detection failed:', error);
       return false;
     }
   }

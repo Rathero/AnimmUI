@@ -32,7 +32,7 @@ export default function FittingRoomPage() {
   const lastProcessTime = useRef<number>(0);
   const fpsInterval = 1000 / TARGET_FPS;
 
-  // Debug mode for testing glasses detection
+  // Debug mode for testing beard detection
   const [debugMode, setDebugMode] = useState(false);
   const [initialized, setInitialized] = useState(false);
   const [manualPersonValue, setManualPersonValue] = useState(0);
@@ -46,8 +46,8 @@ export default function FittingRoomPage() {
     section: '',
     possibleValues: [
       { value: '0', label: 'No Person' },
-      { value: '1', label: 'Person with Glasses' },
-      { value: '2', label: 'Person without Glasses' },
+      { value: '1', label: 'Person with Beard' },
+      { value: '2', label: 'Person without Beard' },
     ],
     defaultValue: '0',
     paths: [],
@@ -61,24 +61,24 @@ export default function FittingRoomPage() {
       functionsToSetNumbers.length > 0 &&
       !initialized
     ) {
-       console.log('initializing detection');
-       const mainCan: any = document.querySelector('#MainCanvas');
-       if (mainCan) {
-         // Ensure full viewport coverage on all devices
-         mainCan.style.width = '100vw';
-         mainCan.style.height = '100vh';
-         mainCan.style.position = 'fixed';
-         mainCan.style.top = '0';
-         mainCan.style.left = '0';
-         mainCan.style.zIndex = '1';
-       }
+      //console.log('initializing detection');
+      const mainCan: any = document.querySelector('#MainCanvas');
+      if (mainCan) {
+        // Ensure full viewport coverage on all devices
+        mainCan.style.width = '100vw';
+        mainCan.style.height = '100vh';
+        mainCan.style.position = 'fixed';
+        mainCan.style.top = '0';
+        mainCan.style.left = '0';
+        mainCan.style.zIndex = '1';
+      }
 
       const initializeDetection = async () => {
         try {
           detectionService.current = new DetectionService();
           await detectionService.current.initialize();
           setIsModelLoading(false);
-          // Start real-time detection for glasses
+          // Start real-time detection for beard
           startRealTimeDetection(functionsToSetNumbers);
           setInitialized(true);
         } catch (error) {
@@ -87,38 +87,38 @@ export default function FittingRoomPage() {
         }
       };
 
-       initializeDetection();
-     }
-   }, [rivesStates, functionsToSetNumbers]);
+      initializeDetection();
+    }
+  }, [rivesStates, functionsToSetNumbers]);
 
-   // Handle window resize and orientation change
-   useEffect(() => {
-     const handleResize = () => {
-       const mainCan: any = document.querySelector('#MainCanvas');
-       if (mainCan) {
-         mainCan.style.width = '100vw';
-         mainCan.style.height = '100vh';
-       }
-     };
+  // Handle window resize and orientation change
+  useEffect(() => {
+    const handleResize = () => {
+      const mainCan: any = document.querySelector('#MainCanvas');
+      if (mainCan) {
+        mainCan.style.width = '100vw';
+        mainCan.style.height = '100vh';
+      }
+    };
 
-     window.addEventListener('resize', handleResize);
-     window.addEventListener('orientationchange', handleResize);
+    window.addEventListener('resize', handleResize);
+    window.addEventListener('orientationchange', handleResize);
 
-     return () => {
-       window.removeEventListener('resize', handleResize);
-       window.removeEventListener('orientationchange', handleResize);
-     };
-   }, []);
+    return () => {
+      window.removeEventListener('resize', handleResize);
+      window.removeEventListener('orientationchange', handleResize);
+    };
+  }, []);
 
   const startRealTimeDetection = (
     functionsToSetNumbers: Array<{ x: number; f: (x: number) => void }>
   ) => {
     // Set up camera for real-time detection
-    // NOTE: Current glasses detection uses a basic image analysis heuristic
-    // For production, consider using a specialized glasses detection model like:
-    // - MediaPipe Face Detection + custom glasses classifier
-    // - TensorFlow.js with a pre-trained glasses detection model
-    // - Face-api.js with glasses detection capabilities
+    // NOTE: Current beard detection uses face landmarks and image analysis
+    // For production, consider using a specialized beard detection model like:
+    // - MediaPipe Face Detection + custom beard classifier
+    // - TensorFlow.js with a pre-trained beard detection model
+    // - Face-api.js with facial hair detection capabilities
     navigator.mediaDevices
       .getUserMedia({ video: true })
       .then(stream => {
@@ -176,7 +176,7 @@ export default function FittingRoomPage() {
     try {
       const imageData = frameQueue.current.shift();
       if (imageData) {
-        await handleGlassesDetection(imageData, functionsToSetNumbers);
+        await handleBeardDetection(imageData, functionsToSetNumbers);
       }
     } finally {
       isProcessing.current = false;
@@ -189,7 +189,7 @@ export default function FittingRoomPage() {
     }
   };
 
-  const handleGlassesDetection = async (
+  const handleBeardDetection = async (
     imageData: string,
     functionsToSetNumbers: Array<{ x: number; f: (x: number) => void }>
   ) => {
@@ -211,28 +211,26 @@ export default function FittingRoomPage() {
         //console.log('Debug mode - using manual value:', newPersonValue);
       } else {
         // Use actual detection
-        const detection = await detectionService.current.detectGlasses(
-          imageData
-        );
+        const detection = await detectionService.current.detectBeard(imageData);
         newPersonValue = detection.personValue;
 
         // Log detection results for debugging
-        //console.log('Glasses detection:', {
+        //console.log('Beard detection:', {
         //  personDetected: detection.personDetected,
-        //  glassesDetected: detection.glassesDetected,
+        //  beardDetected: detection.beardDetected,
         //  personValue: newPersonValue,
         //});
       }
       // Only update if value changed (performance optimization)
       if (personValue.current !== newPersonValue) {
-        console.log('previous value', personValue.current);
+        //console.log('previous value', personValue.current);
         personValue.current = newPersonValue;
-        console.log('sending value', newPersonValue);
+        //console.log('sending value', newPersonValue);
         // Send value to Rive
         setPersonValue(newPersonValue, functionsToSetNumbers);
       }
     } catch (error) {
-      //console.error('Glasses detection failed:', error);
+      //console.error('Beard detection failed:', error);
     }
   };
 
