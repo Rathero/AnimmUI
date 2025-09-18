@@ -112,6 +112,7 @@ export class DetectionService {
     ).length;
     const beardPercentage = beardDetections / recentPersonDetections.length;
 
+    console.log('beardPercentage', beardPercentage);
     const hasBeard = beardPercentage >= this.BEARD_VOTING_THRESHOLD;
 
     return {
@@ -164,7 +165,10 @@ export class DetectionService {
 
       const mouthToJawDistance = jawlineBottom - mouthTop;
 
-      const hasBeard = mouthToJawDistance < 60;
+      console.log('mouthToJawDistance', mouthToJawDistance);
+      console.log('jawlineBottom', mouthTop);
+      console.log('jawlineBottom', mouthTop);
+      const hasBeard = mouthToJawDistance < 65;
 
       return hasBeard;
     } catch (error) {
