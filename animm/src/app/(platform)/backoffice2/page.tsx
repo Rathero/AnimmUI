@@ -23,25 +23,23 @@ import useCollectionsService from '@/app/services/CollectionsService';
 export default function NewBackofficePage() {
   const [collections, setCollections] = useState<Collection[]>([]);
   const [users, setUsers] = useState<User[]>([]);
+  
   const [isLoading, setIsLoading] = useState(true);
   const { setPageTitle } = platformStore(state => state);
   const { getAll } = useCollectionsService();
 
-  /* Puedes agregar aquí tus funciones de edición/eliminación si las necesitas
-  const handleEditCollection = (collection: Collection) => {
+
+
+ /* const handleDeleteCollection = async (id: number) => {
     
   };
 
-  const handleDeleteCollection = async (id: number) => {
+  const handleCreateTemplate = (collectionId: number) => {
     
-  };
-
- // const handleCreateTemplate = (collectionId: number) => {
-    // Implementa la lógica para crear template aquí
   };
 
   const goToTemplates = (collection: Collection) => {
-    
+  
   };*/
 
   const fetchData = async () => {
@@ -89,7 +87,9 @@ export default function NewBackofficePage() {
             </p>
           </div>
         </div>
-        <NewCollectionButton onCreated={fetchData} />
+
+        <NewCollectionButton/>
+
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {collections.length === 0 ? (
             <div className="text-center text-muted-foreground col-span-full">
@@ -133,10 +133,10 @@ export default function NewBackofficePage() {
                       <Button
                         variant="ghost"
                         size="sm"
-                        onClick={e => {
+                        /*onClick={e => {
                           e.stopPropagation();
                           handleDeleteCollection(collection.id);
-                        }}
+                        }}*/
                       >
                         <Trash2 className="w-4 h-4" />
                       </Button>
@@ -171,10 +171,10 @@ export default function NewBackofficePage() {
                       variant="outline"
                       size="sm"
                       className="w-full mt-2"
-                      onClick={e => {
+                      /*onClick={e => {
                         e.stopPropagation();
                         handleCreateTemplate(collection.id);
-                      }}
+                      }}*/
                     >
                       <Plus className="w-4 h-4 mr-2" />
                       Add Template

@@ -6,12 +6,13 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { useCollectionService } from '../../services/useCollectionService';
+import { Collection } from '@/types/collections';
 
 
 export default function NewCollectionButton() {
   const [isEditing, setIsEditing] = useState(false);
   const [editingItem, setEditingItem] = useState<any>(null);
-  const [editMode] = useState<
+  const [editMode, setEditMode] = useState<
     'collection' | 'template' | 'module' | 'variable'
   >('collection');
 
@@ -40,7 +41,12 @@ export default function NewCollectionButton() {
         console.error('Error saving collection:', error);
       }
     };
-  
+
+    const handleEditCollection = (collection: Collection) => {
+        setEditingItem({ ...collection });
+        setEditMode('collection');
+        setIsEditing(true);
+      };
 
   const handleClose = () => {
     setIsEditing(false);
