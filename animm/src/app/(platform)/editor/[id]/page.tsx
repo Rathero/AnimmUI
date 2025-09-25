@@ -400,6 +400,8 @@ export default function Editor() {
           newGeneratedAnimation.modules.push(newModuleToAdd);
         });
         setGeneratedAnimation(newGeneratedAnimation);
+      } else {
+        router.push('/collections');
       }
     } catch (error) {
       console.error('Error fetching template:', error);
