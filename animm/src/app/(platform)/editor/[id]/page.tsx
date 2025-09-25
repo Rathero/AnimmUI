@@ -64,6 +64,14 @@ export default function Editor() {
   const [isCsvDialogOpen, setIsCsvDialogOpen] = useState(false);
   const [selectedSection, setSelectedSection] = useState<string>('');
   const [artBoard, setArtBoard] = useState<string>('Template');
+  const [selectedFormats, setSelectedFormats] = useState<
+    Array<{
+      compositionName: string;
+      width: number;
+      height: number;
+      resolutionId: number;
+    }>
+  >([]);
   const [videoSrc, setVideoSrc] = useState<string | null>(null);
   const [selectedLanguage, setSelectedLanguage] = useState<string>('');
 
@@ -87,6 +95,39 @@ export default function Editor() {
   // Get available languages for this template
   const availableLanguages = languageService.getAvailableLanguages(params.id);
   const hasLanguageConfig = languageService.hasLanguageConfig(params.id);
+
+  // Handle format selection/deselection
+  const toggleFormatSelection = (
+    compositionName: string,
+    width: number,
+    height: number,
+    resolutionId: number
+  ) => {
+    setSelectedFormats(prev => {
+      const existingIndex = prev.findIndex(
+        format =>
+          format.compositionName === compositionName &&
+          format.resolutionId === resolutionId
+      );
+
+      if (existingIndex >= 0) {
+        // Remove if already selected
+        return prev.filter((_, index) => index !== existingIndex);
+      } else {
+        // Add if not selected
+        return [...prev, { compositionName, width, height, resolutionId }];
+      }
+    });
+  };
+
+  // Check if a format is selected
+  const isFormatSelected = (compositionName: string, resolutionId: number) => {
+    return selectedFormats.some(
+      format =>
+        format.compositionName === compositionName &&
+        format.resolutionId === resolutionId
+    );
+  };
 
   // Handle language change
   const handleLanguageChange = (languageId: string) => {
@@ -349,6 +390,16 @@ export default function Editor() {
           ) {
             initialWidth = composition.templateResolutions[0].width;
             initialHeight = composition.templateResolutions[0].height;
+
+            // Set the first format as selected by default
+            setSelectedFormats([
+              {
+                compositionName: composition.name,
+                width: composition.templateResolutions[0].width,
+                height: composition.templateResolutions[0].height,
+                resolutionId: composition.templateResolutions[0].id,
+              },
+            ]);
           }
         } else {
           setArtBoard('Template');
@@ -541,6 +592,10 @@ export default function Editor() {
   const handleResizeStart = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
+
+    // Only allow resizing for single format
+    if (selectedFormats.length !== 1) return;
+
     setIsCanvasResizing(true);
     setResizeStartPos({ x: e.clientX, y: e.clientY });
 
@@ -608,9 +663,9 @@ export default function Editor() {
     document.body.style.userSelect = '';
   };
 
-  // Add global resize event listeners
+  // Add global resize event listeners - only for single format
   useEffect(() => {
-    if (isCanvasResizing) {
+    if (isCanvasResizing && selectedFormats.length === 1) {
       document.addEventListener('mousemove', handleResizeMove);
       document.addEventListener('mouseup', handleResizeEnd);
 
@@ -619,7 +674,12 @@ export default function Editor() {
         document.removeEventListener('mouseup', handleResizeEnd);
       };
     }
-  }, [isCanvasResizing, resizeStartPos, resizeStartDimensions]);
+  }, [
+    isCanvasResizing,
+    resizeStartPos,
+    resizeStartDimensions,
+    selectedFormats.length,
+  ]);
 
   const [isExporting, setIsExporting] = useState(false);
   const [isExportingJpeg, setIsExportingJpeg] = useState(false);
@@ -920,10 +980,14 @@ export default function Editor() {
               {/* Format and Resolution Info */}
               <div className="absolute top-4 left-4 right-4 flex justify-between items-center z-10">
                 <span className="text-sm font-medium text-gray-700">
-                  {artBoard}
+                  {selectedFormats.length === 1
+                    ? selectedFormats[0].compositionName
+                    : `${selectedFormats.length} Formats`}
                 </span>
                 <span className="text-sm font-medium text-gray-700">
-                  {currentWidth}x{currentHeight}
+                  {selectedFormats.length === 1
+                    ? `${selectedFormats[0].width}x${selectedFormats[0].height}`
+                    : `${selectedFormats.length} formats selected`}
                 </span>
               </div>
 
@@ -986,25 +1050,73 @@ export default function Editor() {
                         id="MainCanvas"
                         className="flex rounded-lg border shadow-md shadow-slate-500/10 relative"
                         style={{
-                          width: currentWidth + 'px',
-                          height: currentHeight + 'px',
+                          width:
+                            selectedFormats.length === 1
+                              ? Math.max(
+                                  selectedFormats[0]?.width || currentWidth,
+                                  currentWidth
+                                ) + 'px'
+                              : 'auto',
+                          height:
+                            selectedFormats.length === 1
+                              ? Math.max(
+                                  selectedFormats[0]?.height || currentHeight,
+                                  currentHeight
+                                ) + 'px'
+                              : 'auto',
                         }}
                       >
-                        <div className="size-full">
+                        <div className="size-full flex items-center justify-center p-4 overflow-auto">
                           {template &&
                             template.Result.modules.length > 0 &&
                             template.Result.modules[0].file &&
-                            artBoard && (
+                            selectedFormats.length > 0 && (
                               <>
-                                <RiveComp
-                                  src={template.Result.modules[0].file}
-                                  setAssetsParent={setAssets}
-                                  setRiveStatesParent={setRiveStates}
-                                  artboard={artBoard}
-                                  onStateChange={
-                                    updateAllVariablesAfterResolutionChange
-                                  }
-                                />
+                                {/* Render multiple Rives in a grid layout */}
+                                <div
+                                  className={`grid gap-4 max-w-full max-h-full overflow-auto ${
+                                    selectedFormats.length === 1
+                                      ? 'grid-cols-1'
+                                      : selectedFormats.length === 2
+                                      ? 'grid-cols-2'
+                                      : selectedFormats.length <= 6
+                                      ? 'grid-cols-2'
+                                      : selectedFormats.length <= 9
+                                      ? 'grid-cols-3'
+                                      : 'grid-cols-4'
+                                  }`}
+                                  style={{
+                                    maxWidth: '100%',
+                                    maxHeight: '100%',
+                                    gridAutoRows: 'min-content',
+                                  }}
+                                >
+                                  {selectedFormats.map((format, index) => (
+                                    <div
+                                      key={`${format.compositionName}-${format.resolutionId}`}
+                                      className="relative rounded-lg overflow-hidden bg-white hover:border-blue-500 transition-colors shadow-lg hover:shadow-xl"
+                                      style={{
+                                        width: format.width + 'px',
+                                        height: format.height + 'px',
+                                      }}
+                                    >
+                                      {/* Format label */}
+                                      <div className="absolute top-1 left-1 bg-blue-500 text-white text-xs px-2 py-1 rounded z-10">
+                                        {format.compositionName} -{' '}
+                                        {format.width}x{format.height}
+                                      </div>
+                                      <RiveComp
+                                        src={template.Result.modules[0].file}
+                                        setAssetsParent={setAssets}
+                                        setRiveStatesParent={setRiveStates}
+                                        artboard={format.compositionName}
+                                        onStateChange={
+                                          updateAllVariablesAfterResolutionChange
+                                        }
+                                      />
+                                    </div>
+                                  ))}
+                                </div>
 
                                 {videoSrc && (
                                   <video
@@ -1031,18 +1143,20 @@ export default function Editor() {
                             )}
                         </div>
 
-                        {/* Resize Handle - Bottom Right Corner */}
-                        <div
-                          className="absolute bottom-0 right-0 w-8 h-8 cursor-se-resize z-10"
-                          onMouseDown={handleResizeStart}
-                          style={{
-                            background:
-                              'linear-gradient(135deg, transparent 50%, #000 50%)',
-                            border: '2px solid #000',
-                            borderRadius: '0 0 8px 0',
-                          }}
-                          title="Drag to resize canvas"
-                        />
+                        {/* Resize Handle - Bottom Right Corner - Only show for single format */}
+                        {selectedFormats.length === 1 && (
+                          <div
+                            className="absolute bottom-0 right-0 w-8 h-8 cursor-se-resize z-10"
+                            onMouseDown={handleResizeStart}
+                            style={{
+                              background:
+                                'linear-gradient(135deg, transparent 50%, #000 50%)',
+                              border: '2px solid #000',
+                              borderRadius: '0 0 8px 0',
+                            }}
+                            title="Drag to resize canvas (single format only)"
+                          />
+                        )}
                       </div>
                     </TransformComponent>
                   </>
@@ -1061,6 +1175,9 @@ export default function Editor() {
                 <AccordionCompositions
                   compositions={template.Result.templateCompositions}
                   setResolutionFunction={changeresolution}
+                  selectedFormats={selectedFormats}
+                  toggleFormatSelection={toggleFormatSelection}
+                  isFormatSelected={isFormatSelected}
                 />
               )}
           </div>
@@ -1111,6 +1228,9 @@ export default function Editor() {
 function AccordionCompositions({
   compositions,
   setResolutionFunction,
+  selectedFormats,
+  toggleFormatSelection,
+  isFormatSelected,
 }: {
   compositions: TemplateComposition[];
   setResolutionFunction: (
@@ -1118,6 +1238,19 @@ function AccordionCompositions({
     height: number,
     artBoard: string
   ) => void;
+  selectedFormats: Array<{
+    compositionName: string;
+    width: number;
+    height: number;
+    resolutionId: number;
+  }>;
+  toggleFormatSelection: (
+    compositionName: string,
+    width: number,
+    height: number,
+    resolutionId: number
+  ) => void;
+  isFormatSelected: (compositionName: string, resolutionId: number) => boolean;
 }) {
   const [openIndex, setOpenIndex] = useState<number | null>(null);
   return (
@@ -1142,24 +1275,41 @@ function AccordionCompositions({
           </button>
           {openIndex === idx && (
             <div className="pl-4 py-2 space-y-1">
-              {composition.templateResolutions.map(resolution => (
-                <div
-                  key={resolution.id}
-                  className="cursor-pointer rounded px-2 py-1 hover:bg-accent text-xs flex justify-between items-center"
-                  onClick={() =>
-                    setResolutionFunction(
-                      resolution.width,
-                      resolution.height,
-                      composition.name
-                    )
-                  }
-                >
-                  <span>{resolution.name}</span>
-                  <span>
-                    {resolution.width}x{resolution.height}
-                  </span>
-                </div>
-              ))}
+              {composition.templateResolutions.map(resolution => {
+                const isSelected = isFormatSelected(
+                  composition.name,
+                  resolution.id
+                );
+                return (
+                  <div
+                    key={resolution.id}
+                    className={`cursor-pointer rounded px-2 py-1 hover:bg-accent text-xs flex justify-between items-center ${
+                      isSelected ? 'bg-blue-50 border border-blue-200' : ''
+                    }`}
+                    onClick={() => {
+                      toggleFormatSelection(
+                        composition.name,
+                        resolution.width,
+                        resolution.height,
+                        resolution.id
+                      );
+                    }}
+                  >
+                    <div className="flex items-center gap-2">
+                      <input
+                        type="checkbox"
+                        checked={isSelected}
+                        onChange={() => {}} // Handled by parent div onClick
+                        className="w-3 h-3"
+                      />
+                      <span>{resolution.name}</span>
+                    </div>
+                    <span>
+                      {resolution.width}x{resolution.height}
+                    </span>
+                  </div>
+                );
+              })}
             </div>
           )}
         </div>
