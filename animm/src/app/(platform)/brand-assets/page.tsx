@@ -22,8 +22,9 @@ export default function BrandAssetsPage() {
   const upload = async () => {
     debugger;
     const data = new FormData();
-    data.append('file', file!);
-    addBrandImage({ UserId: parseInt(userId), File: data });
+    data.append('UserId', userId);
+    data.append('File', file!);
+    addBrandImage(data);
   };
 
   const imageUploaded = (e: React.ChangeEvent<HTMLInputElement>) => {
