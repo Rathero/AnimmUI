@@ -16,38 +16,31 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Plus, Edit, Trash2 } from 'lucide-react';
 import { Collection } from '@/types/collections';
-import { User } from '@/types/users';
 import useCollectionsService from '@/app/services/CollectionsService';
-
 
 export default function NewBackofficePage() {
   const [collections, setCollections] = useState<Collection[]>([]);
-  const [users, setUsers] = useState<User[]>([]);
-  
   const [isLoading, setIsLoading] = useState(true);
+
+  const [isEditing, setIsEditing] = useState(false);
+  const [editingItem, setEditingItem] = useState<Collection | null>(null);
+  const [editMode, setEditMode] = useState<
+    'collection' | 'template' | 'module' | 'variable'
+  >('collection');
+
   const { setPageTitle } = platformStore(state => state);
   const { getAll } = useCollectionsService();
 
-
-
- /* const handleDeleteCollection = async (id: number) => {
-    
+  const handleEditCollection = (collection: Collection) => {
+    setEditingItem({ ...collection });
+    setEditMode('collection');
+    setIsEditing(true);
   };
-
-  const handleCreateTemplate = (collectionId: number) => {
-    
-  };
-
-  const goToTemplates = (collection: Collection) => {
-  
-  };*/
 
   const fetchData = async () => {
     setIsLoading(true);
     try {
-      const [collectionsData, usersData] = await Promise.all([
-        getAll(),
-      ]);
+      const collectionsData = await getAll();
       setCollections(collectionsData?.Result || []);
     } catch (error) {
       console.error('Error fetching data:', error);
@@ -88,8 +81,10 @@ export default function NewBackofficePage() {
           </div>
         </div>
 
-        <NewCollectionButton/>
+        {/* Botón de nueva colección */}
+        <NewCollectionButton />
 
+        {/* Grid de colecciones */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {collections.length === 0 ? (
             <div className="text-center text-muted-foreground col-span-full">
@@ -100,7 +95,6 @@ export default function NewBackofficePage() {
               <Card
                 key={collection.id}
                 className="hover:shadow-md transition-shadow cursor-pointer"
-                //onClick={() => goToTemplates(collection)}
               >
                 <CardHeader>
                   <div className="flex items-center justify-between">
@@ -108,16 +102,11 @@ export default function NewBackofficePage() {
                       <CardTitle className="text-lg">
                         {collection.name}
                       </CardTitle>
-                      {collection.userId !== 0 &&
-                        users.find(user => user.id === collection.userId) && (
-                          <Badge variant="outline" className="text-xs">
-                            {
-                              users.find(
-                                user => user.id === collection.userId
-                              )?.email
-                            }
-                          </Badge>
-                        )}
+                      {collection.user && (
+                        <Badge variant="outline" className="text-xs">
+                          {collection.user.email}
+                        </Badge>
+                      )}
                     </div>
                     <div className="flex items-center gap-2">
                       <Button
@@ -133,10 +122,7 @@ export default function NewBackofficePage() {
                       <Button
                         variant="ghost"
                         size="sm"
-                        /*onClick={e => {
-                          e.stopPropagation();
-                          handleDeleteCollection(collection.id);
-                        }}*/
+                        // TODO: implementar delete
                       >
                         <Trash2 className="w-4 h-4" />
                       </Button>
@@ -144,6 +130,7 @@ export default function NewBackofficePage() {
                   </div>
                   <CardDescription>{collection.description}</CardDescription>
                 </CardHeader>
+
                 {collection.thumbnail && (
                   <div className="px-6 py-2">
                     <img
@@ -157,12 +144,11 @@ export default function NewBackofficePage() {
                     />
                   </div>
                 )}
+
                 <CardContent>
                   <div className="space-y-2">
                     <div className="flex items-center justify-between text-sm">
-                      <span className="text-muted-foreground">
-                        Templates:
-                      </span>
+                      <span className="text-muted-foreground">Templates:</span>
                       <Badge variant="secondary">
                         {collection.templates?.length || 0}
                       </Badge>
@@ -171,10 +157,7 @@ export default function NewBackofficePage() {
                       variant="outline"
                       size="sm"
                       className="w-full mt-2"
-                      /*onClick={e => {
-                        e.stopPropagation();
-                        handleCreateTemplate(collection.id);
-                      }}*/
+                      // TODO: implementar create template
                     >
                       <Plus className="w-4 h-4 mr-2" />
                       Add Template
