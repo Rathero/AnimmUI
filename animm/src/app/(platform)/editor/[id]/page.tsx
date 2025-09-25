@@ -560,8 +560,8 @@ export default function Editor() {
   const handleResizeMove = (e: MouseEvent) => {
     if (!isCanvasResizing) return;
 
-    const deltaX = (e.clientX - resizeStartPos.x) * 4;
-    const deltaY = (e.clientY - resizeStartPos.y) * 4;
+    const deltaX = (e.clientX - resizeStartPos.x) * 2;
+    const deltaY = (e.clientY - resizeStartPos.y) * 2;
 
     // Add constraints to prevent extreme values
     const minSize = 200;
