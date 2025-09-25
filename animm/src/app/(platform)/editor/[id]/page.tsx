@@ -405,6 +405,7 @@ export default function Editor() {
       }
     } catch (error) {
       console.error('Error fetching template:', error);
+      router.push('/collections');
     } finally {
       setIsLoading(false);
     }

@@ -10,6 +10,7 @@ import { AppSidebar } from '@/components/app-sidebar';
 import { Toaster } from '@/components/ui/sonner';
 import LoginChecker from './login/LoginChecker';
 import { HeaderTitle } from '@/components/header-title';
+import ConditionalLayout from './ConditionalLayout';
 
 export const metadata: Metadata = {
   title: 'Animm.',
@@ -24,20 +25,9 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <body>
-        <SidebarProvider>
-          <AppSidebar />
-          <LoginChecker>
-            <SidebarInset>
-              <header className="flex h-16 shrink-0 items-center gap-4 px-4 border-b">
-                <SidebarTrigger className="-ml-1" />
-                <div className="flex-1">
-                  <HeaderTitle />
-                </div>
-              </header>
-              <div className="flex-1 min-h-0 overflow-auto">{children}</div>
-            </SidebarInset>
-          </LoginChecker>
-        </SidebarProvider>
+        <LoginChecker>
+          <ConditionalLayout>{children}</ConditionalLayout>
+        </LoginChecker>
         <Toaster position="top-right" />
       </body>
     </html>
