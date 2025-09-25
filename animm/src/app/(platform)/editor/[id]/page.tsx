@@ -956,7 +956,7 @@ export default function Editor() {
               <TransformWrapper
                 disablePadding={true}
                 centerOnInit={true}
-                initialScale={1}
+                initialScale={0.5}
                 wheel={{ step: 0.1 }}
                 minScale={0.1}
                 maxScale={3}
