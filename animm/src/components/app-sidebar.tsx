@@ -129,7 +129,7 @@ export function AppSidebar() {
                 </SidebarMenuButton>
               </SidebarMenuItem>
 
-              {/* Brand Assets */}
+              {/* Brand Assets 
               <SidebarMenuItem>
                 <SidebarMenuButton asChild>
                   <Link href="#">
@@ -139,7 +139,6 @@ export function AppSidebar() {
                 </SidebarMenuButton>
               </SidebarMenuItem>
 
-              {/* Data */}
               <SidebarMenuItem>
                 <SidebarMenuButton asChild>
                   <Link href="#">
@@ -149,7 +148,6 @@ export function AppSidebar() {
                 </SidebarMenuButton>
               </SidebarMenuItem>
 
-              {/* Settings */}
               <SidebarMenuItem>
                 <SidebarMenuButton asChild>
                   <Link href="#">
@@ -157,7 +155,7 @@ export function AppSidebar() {
                     <span>Settings (Coming Soon)</span>
                   </Link>
                 </SidebarMenuButton>
-              </SidebarMenuItem>
+              </SidebarMenuItem>*/}
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
