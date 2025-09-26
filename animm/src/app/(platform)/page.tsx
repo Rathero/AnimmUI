@@ -1,3 +1,4 @@
+'use client';
 import { HeaderPage } from '@/components/header-page';
 import { useRouter } from 'next/navigation';
 import { useEffect } from 'react';
