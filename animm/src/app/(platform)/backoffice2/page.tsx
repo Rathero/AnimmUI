@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import { LoadingSpinner } from '@/components/ui/loading-spinner';
 import { ContentWrapper } from '@/components/ui/content-wrapper';
 import { platformStore } from '@/stores/platformStore';
-import NewCollectionButton from './components/collections/NewCollectionButton';
+import NewCollectionButton from './components/collections/NewCollection';
 import {
   Card,
   CardDescription,
@@ -32,7 +32,6 @@ export default function NewBackofficePage() {
   const { setPageTitle } = platformStore(state => state);
   const {
     getAllBackoffice: getAllBackoffice,
-    create: createCollection,
     update: updateCollection,
     delete: deleteCollection,
   } = useCollectionsService();
@@ -41,7 +40,22 @@ export default function NewBackofficePage() {
     setEditingItem({ ...collection });
     setEditMode('collection');
     setIsEditing(true);
+    updateCollection(collection.id, collection).catch(error => {
+      console.error('Error updating collection:', error);
+    });
   };
+
+  const handleDeleteCollection = async (collectionId: number) => {
+  if (!confirm('Are you sure you want to delete this collection?')) return;
+
+  try {
+    await deleteCollection(collectionId);  
+    await fetchData(); 
+  } catch (error) {
+    console.error('Error deleting collection:', error);
+  }
+};
+
 
   useEffect(() => {
     setPageTitle('Backoffice');
@@ -128,7 +142,10 @@ export default function NewBackofficePage() {
                       <Button
                         variant="ghost"
                         size="sm"
-                        // TODO: implementar delete
+                        onClick={e => {
+                          e.stopPropagation();
+                          handleDeleteCollection(collection.id);
+                        }}
                       >
                         <Trash2 className="w-4 h-4" />
                       </Button>
