@@ -18,6 +18,7 @@ import { Plus, Edit, Trash2 } from 'lucide-react';
 import { Collection } from '@/types/collections';
 import useCollectionsService from '@/app/services/CollectionsService';
 
+
 export default function NewBackofficePage() {
   const [collections, setCollections] = useState<Collection[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -29,7 +30,12 @@ export default function NewBackofficePage() {
   >('collection');
 
   const { setPageTitle } = platformStore(state => state);
-  const { getAll } = useCollectionsService();
+  const {
+    getAllBackoffice: getAllBackoffice,
+    create: createCollection,
+    update: updateCollection,
+    delete: deleteCollection,
+  } = useCollectionsService();
 
   const handleEditCollection = (collection: Collection) => {
     setEditingItem({ ...collection });
@@ -37,11 +43,20 @@ export default function NewBackofficePage() {
     setIsEditing(true);
   };
 
+  useEffect(() => {
+    setPageTitle('Backoffice');
+    return () => setPageTitle(undefined);
+  }, [setPageTitle]);
+  
   const fetchData = async () => {
     setIsLoading(true);
     try {
-      const collectionsData = await getAll();
+      const [collectionsData] = await Promise.all([
+        getAllBackoffice(),
+      
+      ]);
       setCollections(collectionsData?.Result || []);
+      
     } catch (error) {
       console.error('Error fetching data:', error);
     } finally {
@@ -49,12 +64,7 @@ export default function NewBackofficePage() {
     }
   };
 
-  useEffect(() => {
-    setPageTitle('Backoffice');
-    return () => setPageTitle(undefined);
-  }, [setPageTitle]);
-
-  useEffect(() => {
+ useEffect(() => {
     fetchData();
   }, []);
 
@@ -102,11 +112,7 @@ export default function NewBackofficePage() {
                       <CardTitle className="text-lg">
                         {collection.name}
                       </CardTitle>
-                      {collection.user && (
-                        <Badge variant="outline" className="text-xs">
-                          {collection.user.email}
-                        </Badge>
-                      )}
+                      
                     </div>
                     <div className="flex items-center gap-2">
                       <Button
