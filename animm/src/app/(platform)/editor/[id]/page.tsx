@@ -8,7 +8,11 @@ import { getBaseNameFromPath, replaceRiveImageFromUrl } from '@/lib/rive-image';
 import { getVideoSource, getVideoElementProps } from '@/lib/video-utils';
 import { Separator } from '@/components/ui/separator';
 
-import { TransformWrapper, TransformComponent } from 'react-zoom-pan-pinch';
+import {
+  TransformWrapper,
+  TransformComponent,
+  useControls,
+} from 'react-zoom-pan-pinch';
 
 import { EditorZoom } from '@/components/editor/editor-zoom';
 import { EditorPlay } from '@/components/editor/editor-play';
@@ -47,7 +51,6 @@ import { toast } from 'sonner';
 import { EditorCheckbox } from '@/components/editor/editor-checkbox';
 import { VariableStringSetter } from '@/components/editor/variable-string-setter';
 import { LoadingSpinner } from '@/components/ui/loading-spinner';
-import { useLanguageContent } from '@/hooks/useLanguageContent';
 import languageService from '@/app/services/LanguageService';
 
 export default function Editor() {
@@ -529,7 +532,6 @@ export default function Editor() {
 
     document.body.addEventListener('mousemove', handleMouseEvent);
     mainCanvas.addEventListener('mousedown', handleMouseEvent);
-
     // Cleanup function
     return () => {
       mainCanvas.removeEventListener('mousedown', handleMouseEvent);
@@ -956,7 +958,7 @@ export default function Editor() {
               <TransformWrapper
                 disablePadding={true}
                 centerOnInit={true}
-                initialScale={0.5}
+                initialScale={1}
                 wheel={{ step: 0.1 }}
                 minScale={0.1}
                 maxScale={3}
@@ -968,19 +970,24 @@ export default function Editor() {
                   resetTransform,
                   centerView,
                   zoomToElement,
+                  ...rest
                 }) => (
                   <>
                     {!template?.Result.static && (
                       <EditorPlay playRive={playRive} playing={playing} />
                     )}
-                    <EditorZoom
-                      zoomIn={zoomIn}
-                      zoomOut={zoomOut}
-                      setTransform={setTransform}
-                      resetTransform={resetTransform}
-                      centerView={centerView}
-                      zoomToElement={zoomToElement}
-                    />
+                    <>
+                      {rivesStates[0] && (
+                        <EditorZoom
+                          zoomIn={zoomIn}
+                          zoomOut={zoomOut}
+                          setTransform={setTransform}
+                          resetTransform={resetTransform}
+                          centerView={centerView}
+                          zoomToElement={zoomToElement}
+                        />
+                      )}
+                    </>
                     <TransformComponent wrapperClass="!w-full !h-full">
                       <div
                         id="MainCanvas"

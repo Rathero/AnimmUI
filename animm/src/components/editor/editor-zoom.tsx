@@ -1,8 +1,9 @@
 import { Plus, Minus } from 'lucide-react';
 import { Button } from '../ui/button';
 import { useTransformEffect } from 'react-zoom-pan-pinch';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { ReactZoomPanPinchHandlers } from 'react-zoom-pan-pinch';
+import { ApiTemplate } from '@/types/collections';
 
 export function EditorZoom(props: ReactZoomPanPinchHandlers) {
   const step = 0.2;
@@ -11,6 +12,10 @@ export function EditorZoom(props: ReactZoomPanPinchHandlers) {
   useTransformEffect(({ state }) => {
     setZoom(Math.floor(state.scale * 100));
   });
+
+  useEffect(() => {
+    props.centerView(0.5);
+  }, []);
 
   return (
     <div className="absolute right-0 bottom-0 z-50 p-4">
