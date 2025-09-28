@@ -52,7 +52,10 @@ import { EditorCheckbox } from '@/components/editor/editor-checkbox';
 import { VariableStringSetter } from '@/components/editor/variable-string-setter';
 import { LoadingSpinner } from '@/components/ui/loading-spinner';
 import languageService from '@/app/services/LanguageService';
+import { EditorTemplateSelector } from '@/components/editor/editor-template-selector';
+import { TemplateSelector, SelectorsConfig } from '@/types/selectors';
 
+import selectorsConfig from '@/data/SelectorsConfig.json';
 export default function Editor() {
   const params = useParams<{ id: string }>();
   const router = useRouter();
@@ -69,6 +72,34 @@ export default function Editor() {
   const [artBoard, setArtBoard] = useState<string>('Template');
   const [videoSrc, setVideoSrc] = useState<string | null>(null);
   const [selectedLanguage, setSelectedLanguage] = useState<string>('');
+  const [currentSelectors, setCurrentSelectors] = useState<TemplateSelector[]>(
+    []
+  );
+
+  // Load selectors configuration
+  const loadSelectorsConfig = async () => {
+    try {
+      // Find selectors for current template
+      if (template?.Result?.id) {
+        const templateSelectors = selectorsConfig.selectors.filter(
+          selector => selector.TemplateId === template.Result.id
+        );
+        setCurrentSelectors(templateSelectors as TemplateSelector[]);
+      }
+    } catch (error) {
+      console.error('Failed to load selectors configuration:', error);
+    }
+  };
+
+  // Update current selectors when template changes
+  useEffect(() => {
+    if (selectorsConfig && template?.Result?.id) {
+      const templateSelectors = selectorsConfig.selectors.filter(
+        selector => selector.TemplateId === template.Result.id
+      );
+      setCurrentSelectors(templateSelectors as TemplateSelector[]);
+    }
+  }, [selectorsConfig, template?.Result?.id]);
 
   // Get all text variables for language switching
   const getAllTextVariables = () => {
@@ -210,6 +241,31 @@ export default function Editor() {
       );
     }
 
+    if (tabId === 'triggers') {
+      // Check for template selectors
+      if (currentSelectors.length > 0) {
+        return true;
+      }
+
+      // Check for regular variables
+      return template.Result.modules.some(module =>
+        module.variables.some(variable => {
+          // If we have an artboard, check if it's included in the variable's section
+          if (artBoard != 'Template' && artBoard != 'Main') {
+            const variableSection = variable.section || 'Variables';
+            if (!variableSection.includes(artBoard)) {
+              return false;
+            }
+          }
+
+          return (
+            variable.type === TemplateVariableTypeEnum.Selector ||
+            variable.type === TemplateVariableTypeEnum.Boolean
+          );
+        })
+      );
+    }
+
     return template.Result.modules.some(module =>
       module.variables.some(variable => {
         // If we have an artboard, check if it's included in the variable's section
@@ -224,11 +280,6 @@ export default function Editor() {
           return (
             variable.type === TemplateVariableTypeEnum.TextArea ||
             variable.type === TemplateVariableTypeEnum.Input
-          );
-        } else if (tabId === 'triggers') {
-          return (
-            variable.type === TemplateVariableTypeEnum.Selector ||
-            variable.type === TemplateVariableTypeEnum.Boolean
           );
         }
         return false;
@@ -265,6 +316,27 @@ export default function Editor() {
     if (!baseName) return;
     await replaceRiveImageFromUrl(assets, baseName, url);
   };
+
+  async function handleImageChange(imageName: string, newImageUrl: string) {
+    await replaceRiveImageFromUrl(assets, imageName, newImageUrl);
+  }
+
+  async function handleTextChange(textName: string, newText: string) {
+    // Find the text variable by name and update it
+    if (template?.Result?.modules) {
+      for (const module of template.Result.modules) {
+        for (const variable of module.variables) {
+          if (
+            variable.name === textName &&
+            (variable.type === TemplateVariableTypeEnum.Input ||
+              variable.type === TemplateVariableTypeEnum.TextArea)
+          ) {
+            await changeText(newText, variable);
+          }
+        }
+      }
+    }
+  }
   const [playing, setPlaying] = useState(true);
   async function playRive() {
     if (rivesStates) {
@@ -403,6 +475,9 @@ export default function Editor() {
           newGeneratedAnimation.modules.push(newModuleToAdd);
         });
         setGeneratedAnimation(newGeneratedAnimation);
+
+        // Load selectors configuration after template is loaded
+        await loadSelectorsConfig();
       } else {
         router.push('/collections');
       }
@@ -834,26 +909,51 @@ export default function Editor() {
                         )}
 
                         {/* Trigger Variables */}
-                        {activeTab === 'triggers' &&
-                          getVariablesForSection(
-                            selectedSection || getAllSections()[0],
-                            'triggers'
-                          ).map((v: TemplateVariable, vIdx: number) => (
-                            <div key={v.id} className="space-y-2">
-                              {v.type === TemplateVariableTypeEnum.Selector && (
-                                <EditorSelect
-                                  variable={v}
-                                  changeInput={changeSelect}
-                                />
-                              )}
-                              {v.type === TemplateVariableTypeEnum.Boolean && (
-                                <EditorCheckbox
-                                  variable={v}
-                                  changeCheckbox={changeCheckbox}
-                                />
-                              )}
-                            </div>
-                          ))}
+                        {activeTab === 'triggers' && (
+                          <div className="space-y-4">
+                            {/* Template Selectors */}
+                            {currentSelectors.length > 0 && (
+                              <div className="space-y-4">
+                                <div className="text-sm font-medium text-gray-700">
+                                  Template Selectors
+                                </div>
+                                <Separator />
+                                {currentSelectors.map((selector, idx) => (
+                                  <EditorTemplateSelector
+                                    key={`selector-${selector.TemplateId}-${idx}`}
+                                    selector={selector}
+                                    assets={assets}
+                                    onImageChange={handleImageChange}
+                                    onTextChange={handleTextChange}
+                                  />
+                                ))}
+                              </div>
+                            )}
+
+                            {/* Regular Variables */}
+                            {getVariablesForSection(
+                              selectedSection || getAllSections()[0],
+                              'triggers'
+                            ).map((v: TemplateVariable, vIdx: number) => (
+                              <div key={v.id} className="space-y-2">
+                                {v.type ===
+                                  TemplateVariableTypeEnum.Selector && (
+                                  <EditorSelect
+                                    variable={v}
+                                    changeInput={changeSelect}
+                                  />
+                                )}
+                                {v.type ===
+                                  TemplateVariableTypeEnum.Boolean && (
+                                  <EditorCheckbox
+                                    variable={v}
+                                    changeCheckbox={changeCheckbox}
+                                  />
+                                )}
+                              </div>
+                            ))}
+                          </div>
+                        )}
 
                         {/* Products Tab */}
                         {activeTab === 'cms' && (

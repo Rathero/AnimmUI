@@ -1,0 +1,108 @@
+{
+  "selectors": [
+    {
+      "TemplateId": 18,
+      "Name": "Client",
+      "Values": ["Albert", "Marta"],
+      "ImagesToChange": [
+        {
+          "MOBILE_IMG_04": ["MOBILE_IMG_04", "MOBILE_IMG_04_Marta"]
+        }
+      ],
+      "TextToChange": [
+        {
+          "Welcome": ["BIENVENIDO", "BIENVENIDA"],
+          "Name": ["ALBERT", "MARTA"]
+        }
+      ]
+    },
+    {
+      "TemplateId": 19,
+      "Name": "Client",
+      "Values": ["Albert", "Marta"],
+      "ImagesToChange": [
+        {
+          "SCREEN_IMG_01": ["SCREEN_IMG_01", "SCREEN_IMG_01_marta"]
+        },
+        {
+          "SCREEN_IMG_02": ["SCREEN_IMG_02", "SCREEN_IMG_02_marta"]
+        },
+        {
+          "SCREEN_IMG_03": ["SCREEN_IMG_03", "SCREEN_IMG_03_marta"]
+        },
+        {
+          "SCREEN_IMG_04": ["SCREEN_IMG_04", "SCREEN_IMG_04_marta"]
+        },
+        {
+          "SCREEN_IMG_05": ["SCREEN_IMG_05", "SCREEN_IMG_05_marta"]
+        },
+        {
+          "SCREEN_IMG_06": ["SCREEN_IMG_06", "SCREEN_IMG_06_marta"]
+        },
+        {
+          "SCREEN_IMG_07": ["SCREEN_IMG_07", "SCREEN_IMG_07_marta"]
+        }
+      ],
+      "TextToChange": [
+        {
+          "Main": ["HOLA ALBERT", "HOLA MARTA"],
+          "Subtitle": [
+            "OFERTAS ESPECIALES PARA TI",
+            "OFERTAS ESPECIALES PARA TI"
+          ],
+          "Product_name": ["IMPERIAL BLUE HAPPO ONE TEE", "JAY BLUE ATLAS TEE"],
+          "Product_info": [
+            "Striped T-shirt with front embroidery on the chest.",
+            "T-shirt with front and back print. Made from 100% organic cotton."
+          ],
+          "Product_price": ["32,90€", "29,90€"]
+        }
+      ]
+    },
+    {
+      "TemplateId": 19,
+      "Name": "RFID — Oferta Flash",
+      "Values": ["Sweatshirts", "Athletics", "Jackets"],
+      "ImagesToChange": [
+        {
+          "SCREEN_IMG_01": [
+            "SCREEN_IMG_01_sweatshirt",
+            "SCREEN_IMG_01_athletics",
+            "SCREEN_IMG_01_jacket"
+          ]
+        },
+        {
+          "SCREEN_IMG_02": [
+            "SCREEN_IMG_02_sweatshirt",
+            "SCREEN_IMG_02_athletics",
+            "SCREEN_IMG_02_jacket"
+          ]
+        },
+        {
+          "SCREEN_IMG_03": [
+            "SCREEN_IMG_03_sweatshirt",
+            "SCREEN_IMG_03_athletics",
+            "SCREEN_IMG_03_jacket"
+          ]
+        },
+        {
+          "SCREEN_IMG_04": [
+            "SCREEN_IMG_04_sweatshirt",
+            "SCREEN_IMG_04_athletics",
+            "SCREEN_IMG_04_jacket"
+          ]
+        }
+      ],
+      "TextToChange": [
+        {
+          "Main": ["OFERTA FLASH", "OFERTA FLASH", "OFERTA FLASH"],
+          "Subtitle": [
+            "Liquidación de sudaderas",
+            "Liquidación de Athletics",
+            "Liquidación de chaquetas"
+          ]
+        }
+      ]
+    }
+  ]
+}
