@@ -89,7 +89,7 @@ class MediaRecorder {
 
     // Stop any existing animation
     try {
-      //this.riveInstance.stop();
+      this.riveInstance.stop();
       await new Promise(resolve => setTimeout(resolve, 100));
     } catch (error) {
       console.warn('Could not prepare Rive animation:', error);
@@ -112,7 +112,7 @@ class MediaRecorder {
 
         // Start the Rive animation
         if (this.riveInstance && typeof this.riveInstance.play === 'function') {
-          //this.riveInstance.play('SM');
+          this.riveInstance.play('SM');
         }
 
         // Get canvas stream with correct FPS matching target
