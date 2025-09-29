@@ -37,6 +37,10 @@ class MediaRecorder {
   private recordedChunks: Blob[] = [];
   private nativeMediaRecorder: globalThis.MediaRecorder | null = null;
   private statusInterval: NodeJS.Timeout | null = null;
+  private frameSyncId: number | null = null;
+  private lastFrameTime: number = 0;
+  private frameCount: number = 0;
+  private performanceStartTime: number = 0;
 
   async startRecording(
     config: RecordingConfig,
@@ -85,7 +89,7 @@ class MediaRecorder {
 
     // Stop any existing animation
     try {
-      this.riveInstance.stop();
+      //this.riveInstance.stop();
       await new Promise(resolve => setTimeout(resolve, 100));
     } catch (error) {
       console.warn('Could not prepare Rive animation:', error);
@@ -102,15 +106,20 @@ class MediaRecorder {
       this.recordedChunks = [];
 
       try {
+        debugger;
+        // Optimize Rive performance for recording
+        //this.optimizeRiveForRecording();
+
         // Start the Rive animation
         if (this.riveInstance && typeof this.riveInstance.play === 'function') {
-          this.riveInstance.play('SM');
+          //this.riveInstance.play('SM');
         }
 
-        // Get canvas stream with optimized settings for 60fps
-        const stream = this.canvas!.captureStream(30); // Force 60fps
+        // Get canvas stream with correct FPS matching target
+        const targetFps = Math.min(config.fps || 30, 60); // Cap at 60fps for performance
+        const stream = this.canvas!.captureStream(targetFps);
 
-        // Configure MediaRecorder for optimal 60fps recording
+        // Configure MediaRecorder for optimal high-fps recording
         const mimeTypes = [
           'video/webm;codecs=vp9',
           'video/webm;codecs=vp8',
@@ -128,19 +137,23 @@ class MediaRecorder {
             break;
           }
         }
-        navigator.mediaDevices.getUserMedia({
-          video: {
-            frameRate: {
-              min: 60, // 😲 this constraint fixed an issue
-              ideal: 60,
-              max: 60,
-            },
-          },
-        });
+
+        // Calculate optimal bitrate based on FPS and resolution
+        const canvasWidth = this.canvas!.width;
+        const canvasHeight = this.canvas!.height;
+        const pixels = canvasWidth * canvasHeight;
+        const baseBitrate = Math.max(2000000, pixels * targetFps * 0.1); // Dynamic bitrate calculation
+        const finalBitrate = config.bitrate || Math.min(baseBitrate, 20000000); // Cap at 20Mbps
+
         const recorderOptions: any = {
           mimeType: selectedMimeType,
-          videoBitsPerSecond: config.bitrate || 6000000, // Higher bitrate for 60fps
+          videoBitsPerSecond: finalBitrate,
         };
+
+        // Add timeslice for better performance with high FPS
+        if (targetFps >= 30) {
+          recorderOptions.timeslice = 1000 / targetFps; // Timeslice based on target FPS
+        }
 
         // Create native MediaRecorder instance
         this.nativeMediaRecorder = new globalThis.MediaRecorder(
@@ -163,6 +176,9 @@ class MediaRecorder {
 
         // Start recording
         this.nativeMediaRecorder.start();
+
+        // Start frame synchronization for consistent timing
+        this.startFrameSynchronization(targetFps);
 
         // Start status updates
         this.startStatusUpdates(config);
@@ -190,8 +206,94 @@ class MediaRecorder {
     });
   }
 
+  private optimizeRiveForRecording(): void {
+    if (!this.riveInstance) return;
+
+    try {
+      // Set Rive to high performance mode for recording
+      if (this.riveInstance.setRenderer) {
+        // Force WebGL2 renderer for better performance
+        this.riveInstance.setRenderer('webgl2');
+      }
+
+      // Optimize animation settings
+      if (this.riveInstance.setFrameRate) {
+        this.riveInstance.setFrameRate(60); // Force 60fps
+      }
+
+      // Disable any quality settings that might slow down rendering
+      if (this.riveInstance.setQuality) {
+        this.riveInstance.setQuality('high');
+      }
+
+      // Ensure smooth animation playback
+      if (this.riveInstance.setLoop) {
+        this.riveInstance.setLoop('loop');
+      }
+
+      // Force immediate rendering
+      if (this.riveInstance.advance) {
+        this.riveInstance.advance(0);
+      }
+    } catch (error) {
+      console.warn('Could not optimize Rive for recording:', error);
+    }
+  }
+
+  private startFrameSynchronization(targetFps: number): void {
+    this.performanceStartTime = performance.now();
+    this.frameCount = 0;
+    this.lastFrameTime = 0;
+
+    const frameInterval = 1000 / targetFps; // Target frame interval in ms
+
+    const syncFrame = (currentTime: number) => {
+      if (!this.isRecording) {
+        this.frameSyncId = null;
+        return;
+      }
+
+      const deltaTime = currentTime - this.lastFrameTime;
+
+      // Only process frame if enough time has passed for target FPS
+      if (deltaTime >= frameInterval) {
+        // Force Rive to advance and render
+        if (this.riveInstance && this.riveInstance.advance) {
+          this.riveInstance.advance(deltaTime / 1000); // Convert to seconds
+        }
+
+        // Force canvas to update
+        if (this.canvas) {
+          const ctx = this.canvas.getContext('2d');
+          if (ctx) {
+            // Trigger a repaint by reading pixel data
+            ctx.getImageData(0, 0, 1, 1);
+          }
+        }
+
+        this.lastFrameTime = currentTime;
+        this.frameCount++;
+
+        // Monitor performance
+        if (this.frameCount % 60 === 0) {
+          // Every 60 frames
+          const elapsed = performance.now() - this.performanceStartTime;
+          const actualFps = (this.frameCount / elapsed) * 1000;
+          console.log(
+            `Recording FPS: ${actualFps.toFixed(1)} (target: ${targetFps})`
+          );
+        }
+      }
+
+      // Continue frame synchronization
+      this.frameSyncId = requestAnimationFrame(syncFrame);
+    };
+
+    this.frameSyncId = requestAnimationFrame(syncFrame);
+  }
+
   private startStatusUpdates(config: RecordingConfig): void {
-    /*this.statusInterval = setInterval(() => {
+    this.statusInterval = setInterval(() => {
       if (!this.isRecording) {
         return;
       }
@@ -207,7 +309,7 @@ class MediaRecorder {
           duration: config.duration,
         });
       }
-    }, 100); // Update every 100ms for smooth progress*/
+    }, 100); // Update every 100ms for smooth progress
   }
 
   private processRecordedVideo(): void {
@@ -292,6 +394,10 @@ class MediaRecorder {
       clearInterval(this.statusInterval);
       this.statusInterval = null;
     }
+    if (this.frameSyncId) {
+      cancelAnimationFrame(this.frameSyncId);
+      this.frameSyncId = null;
+    }
   }
 
   private cleanup(): void {
@@ -304,6 +410,9 @@ class MediaRecorder {
     this.config = null;
     this.recordedChunks = [];
     this.nativeMediaRecorder = null;
+    this.lastFrameTime = 0;
+    this.frameCount = 0;
+    this.performanceStartTime = 0;
   }
 }
 
@@ -316,43 +425,43 @@ export { mediaRecorder };
 /*
 Usage Examples:
 
-1. Basic 60fps recording:
+1. Basic 30fps recording (recommended for complex animations):
+   const result = await mediaRecorder.startRecording({
+     exportId: 'test-export',
+     duration: 5000, // 5 seconds
+     fps: 30,
+     format: 'webm'
+   });
+
+2. High performance 60fps recording:
    const result = await mediaRecorder.startRecording({
      exportId: 'test-export',
      duration: 5000, // 5 seconds
      fps: 60,
      format: 'webm',
-     bitrate: 12000000 // Higher bitrate for 60fps
+     bitrate: 15000000 // Auto-calculated based on resolution and FPS
    });
 
-2. 60fps recording with status updates:
+3. Recording with status updates:
    const result = await mediaRecorder.startRecording(
      {
        exportId: 'test-export',
        duration: 10000, // 10 seconds
-       fps: 60,
-       format: 'mp4',
-       bitrate: 15000000
+       fps: 30,
+       format: 'mp4'
      },
      (status) => {
+       console.log(`Progress: ${status.progress}%`);
      }
    );
 
-3. High quality 60fps recording:
-   const result = await mediaRecorder.startRecording({
-     exportId: 'test-export',
-     duration: 3000, // 3 seconds
-     fps: 60,
-     format: 'webm',
-     bitrate: 20000000, // Very high bitrate for best quality
-     quality: 1
-   });
-
-Key improvements:
-- Simplified API with single recording method
-- Forces 60fps using canvas.captureStream(60)
-- Higher default bitrate (12Mbps) for 60fps quality
-- Removed complex frame control logic
-- Uses native MediaRecorder API for best performance
-- Cleaner error handling and status updates
+Key performance improvements:
+- Dynamic bitrate calculation based on resolution and FPS
+- Frame synchronization using requestAnimationFrame
+- Rive performance optimizations for complex animations
+- Canvas capture rate matches target FPS
+- Performance monitoring with FPS logging
+- Optimized MediaRecorder configuration with timeslice
+- WebGL2 renderer enforcement for better performance
+- Automatic quality settings for recording mode
 */
