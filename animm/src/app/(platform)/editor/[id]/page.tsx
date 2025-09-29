@@ -72,6 +72,7 @@ export default function Editor() {
   const [artBoard, setArtBoard] = useState<string>('Template');
   const [videoSrc, setVideoSrc] = useState<string | null>(null);
   const [selectedLanguage, setSelectedLanguage] = useState<string>('');
+  const [selectedProduct, setSelectedProduct] = useState<number | null>(null);
   const [currentSelectors, setCurrentSelectors] = useState<TemplateSelector[]>(
     []
   );
@@ -118,35 +119,73 @@ export default function Editor() {
     return textVariables;
   };
 
-  // Get available languages for this template
-  const availableLanguages = languageService.getAvailableLanguages(params.id);
-  const hasLanguageConfig = languageService.hasLanguageConfig(params.id);
+  // Get available languages and products for this template
+  const availableLanguages = languageService.getAvailableLanguages();
+  const availableProducts = languageService.getAvailableProducts();
+  const hasLanguageConfig = languageService.hasLanguageConfig();
+  const hasProducts = languageService.hasProducts();
+
+  // Initialize language service with template data
+  useEffect(() => {
+    if (template?.Result) {
+      languageService.setTemplate(template.Result);
+
+      // Set image change callback
+      languageService.setImageChangeCallback(handleImageChange);
+
+      // Auto-select first product if available
+      if (
+        template.Result.products &&
+        template.Result.products.length > 0 &&
+        !selectedProduct
+      ) {
+        setSelectedProduct(template.Result.products[0].id);
+        languageService.setSelectedProduct(template.Result.products[0]);
+
+        // Apply image variables for the selected product
+        languageService.applyImageVariables();
+      }
+    }
+  }, [template, selectedProduct]);
 
   // Handle language change
-  const handleLanguageChange = (languageId: string) => {
-    setSelectedLanguage(languageId);
+  const handleLanguageChange = (languageName: string) => {
+    setSelectedLanguage(languageName);
 
-    if (!languageId || !params.id) return;
+    if (!languageName) return;
 
-    const languageContent = languageService.getLanguageContent(
-      params.id,
-      languageId
-    );
+    const languageContent = languageService.getLanguageContent(languageName);
     if (!languageContent) {
-      console.warn(
-        `No language content found for template ${params.id} and language ${languageId}`
-      );
+      console.warn(`No language content found for language ${languageName}`);
       return;
     }
 
     // Apply language content to all text variables
     const textVariables = getAllTextVariables();
     textVariables.forEach(variable => {
-      const content = languageContent.variables[variable.id.toString()];
+      const content = languageContent.variables[variable.name];
       if (content !== undefined) {
         changeText(content, variable);
       }
     });
+  };
+
+  // Handle product change
+  const handleProductChange = (productId: number) => {
+    setSelectedProduct(productId);
+
+    const product = availableProducts.find(p => p.id === productId);
+    if (product) {
+      languageService.setSelectedProduct(product);
+
+      // Apply image variables for the new product (language-independent)
+      languageService.applyImageVariables();
+
+      // If a language is already selected, reapply the language content
+      if (selectedLanguage) {
+        handleLanguageChange(selectedLanguage);
+      }
+    }
   };
 
   // Get all unique sections from all modules
@@ -959,25 +998,27 @@ export default function Editor() {
                         {activeTab === 'cms' && (
                           <div className="space-y-4">
                             {/* Products Dropdown */}
-                            {template?.Result?.products &&
-                              template.Result.products.length > 0 && (
-                                <div className="space-y-2">
-                                  <label className="text-sm font-medium text-gray-700">
-                                    CMS
-                                  </label>
-                                  <select className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
-                                    <option value="">Select a product</option>
-                                    {template.Result.products.map(product => (
-                                      <option
-                                        key={product.id}
-                                        value={product.id}
-                                      >
-                                        {product.name}
-                                      </option>
-                                    ))}
-                                  </select>
-                                </div>
-                              )}
+                            {hasProducts && availableProducts.length > 0 && (
+                              <div className="space-y-2">
+                                <label className="text-sm font-medium text-gray-700">
+                                  Products
+                                </label>
+                                <select
+                                  value={selectedProduct || ''}
+                                  onChange={e =>
+                                    handleProductChange(Number(e.target.value))
+                                  }
+                                  className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                >
+                                  <option value="">Select a product</option>
+                                  {availableProducts.map(product => (
+                                    <option key={product.id} value={product.id}>
+                                      {product.name}
+                                    </option>
+                                  ))}
+                                </select>
+                              </div>
+                            )}
 
                             {/* Languages Dropdown */}
                             {hasLanguageConfig &&
@@ -994,12 +1035,12 @@ export default function Editor() {
                                     className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                                   >
                                     <option value="">Select a language</option>
-                                    {availableLanguages.map(languageId => (
+                                    {availableLanguages.map(language => (
                                       <option
-                                        key={languageId}
-                                        value={languageId}
+                                        key={language.id}
+                                        value={language.name}
                                       >
-                                        {languageId}
+                                        {language.name}
                                       </option>
                                     ))}
                                   </select>

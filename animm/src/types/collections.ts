@@ -51,9 +51,17 @@ export interface Tag {
 }
 export interface ApiTemplate extends BaseApiResponse<Template> {}
 
+export interface ProductVariable {
+  id: number;
+  name: string;
+  value: string;
+  language: string;
+}
+
 export interface Product {
   id: number;
   name: string;
+  productVariables: ProductVariable[];
 }
 
 export interface Language {
