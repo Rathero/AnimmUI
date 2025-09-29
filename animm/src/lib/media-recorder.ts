@@ -108,7 +108,7 @@ class MediaRecorder {
         }
 
         // Get canvas stream with optimized settings for 60fps
-        const stream = this.canvas!.captureStream(60); // Force 60fps
+        const stream = this.canvas!.captureStream(30); // Force 60fps
 
         // Configure MediaRecorder for optimal 60fps recording
         const mimeTypes = [
@@ -139,7 +139,7 @@ class MediaRecorder {
         });
         const recorderOptions: any = {
           mimeType: selectedMimeType,
-          videoBitsPerSecond: config.bitrate || 12000000, // Higher bitrate for 60fps
+          videoBitsPerSecond: config.bitrate || 6000000, // Higher bitrate for 60fps
         };
 
         // Create native MediaRecorder instance
@@ -191,7 +191,7 @@ class MediaRecorder {
   }
 
   private startStatusUpdates(config: RecordingConfig): void {
-    this.statusInterval = setInterval(() => {
+    /*this.statusInterval = setInterval(() => {
       if (!this.isRecording) {
         return;
       }
@@ -207,7 +207,7 @@ class MediaRecorder {
           duration: config.duration,
         });
       }
-    }, 100); // Update every 100ms for smooth progress
+    }, 100); // Update every 100ms for smooth progress*/
   }
 
   private processRecordedVideo(): void {
@@ -215,7 +215,6 @@ class MediaRecorder {
       // Create blob from recorded chunks
       const blob = new Blob(this.recordedChunks, { type: 'video/webm' });
       const recordedFormat = blob.type.includes('webm') ? 'webm' : 'mp4';
-
 
       // Convert to Uint8Array
       blob
@@ -229,7 +228,6 @@ class MediaRecorder {
             size: uint8Array.length,
             duration: Date.now() - this.startTime,
           };
-
 
           if (this.resolvePromise) {
             this.resolvePromise(result);
