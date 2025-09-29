@@ -9,6 +9,7 @@ import {
 import { Label } from '@/components/ui/label';
 import { TemplateSelector } from '@/types/selectors';
 import { FileAsset } from '@rive-app/react-webgl2';
+import { useEffect, useState } from 'react';
 
 export function EditorTemplateSelector({
   selector,
@@ -21,9 +22,23 @@ export function EditorTemplateSelector({
   onImageChange: (imageName: string, newImageUrl: string) => void;
   onTextChange: (textName: string, newText: string) => void;
 }) {
-  const handleValueChange = async (selectedValue: string) => {
+  const [selectedValue, setSelectedValue] = useState<string>('');
+
+  // Auto-select the first value when component mounts
+  useEffect(() => {
+    if (selector.Values && selector.Values.length > 0 && !selectedValue) {
+      const firstValue = selector.Values[0];
+      setSelectedValue(firstValue);
+      handleValueChange(firstValue);
+    }
+  }, [selector.Values, selectedValue]);
+
+  const handleValueChange = async (newValue: string) => {
+    // Update local state
+    setSelectedValue(newValue);
+
     // Find the index of the selected value
-    const valueIndex = selector.Values.indexOf(selectedValue);
+    const valueIndex = selector.Values.indexOf(newValue);
 
     if (valueIndex === -1) return;
 
@@ -62,7 +77,7 @@ export function EditorTemplateSelector({
   return (
     <div className="grid w-full gap-1.5">
       <Label className="text-sm text-muted-foreground">{selector.Name}</Label>
-      <Select onValueChange={handleValueChange}>
+      <Select value={selectedValue} onValueChange={handleValueChange}>
         <SelectTrigger className="w-full !text-left">
           <SelectValue placeholder={`Select ${selector.Name}`} />
         </SelectTrigger>
