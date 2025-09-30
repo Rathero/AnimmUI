@@ -20,7 +20,6 @@ export function BrandImageUploader({ buttonText }: { buttonText: string }) {
   }, [setPageTitle]);
 
   const upload = async () => {
-    debugger;
     const data = new FormData();
     data.append('UserId', userId);
     data.append('File', file!);
