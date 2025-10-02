@@ -12,6 +12,7 @@ import { LoadingSpinner } from '@/components/ui/loading-spinner';
 import useCollectionsService from '@/app/services/CollectionsService';
 import { User } from '@/types/users';
 import useUsersService from '@/app/services/UsersService';
+import { teardownHeapProfiler } from 'next/dist/build/swc/generated-native';
 
 export default function NewCollectionButton() {
   const [isEditing, setIsEditing] = useState(false);
@@ -68,7 +69,7 @@ export default function NewCollectionButton() {
         description: editingItem.description,
         thumbnail: editingItem.thumbnail,
         userId: editingItem.userId,
-        animation: editingItem.animation || undefined,
+        templates: editingItem.templates || [],
       };
 
       if (editingItem.id === 0) {
