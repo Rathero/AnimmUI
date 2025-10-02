@@ -1,5 +1,3 @@
-'use client';
-
 const useBrandService = () => {
   const addBrandImage = async (data: FormData) => {
     await fetch(process.env.NEXT_PUBLIC_API_URL + '/brand/image', {

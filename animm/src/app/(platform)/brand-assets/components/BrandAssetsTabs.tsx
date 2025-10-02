@@ -4,33 +4,17 @@ import { ImageIcon, Video, Music, Palette, Settings, Plus } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { UploadModal } from "./UploadModal";
-
-interface Tab {
-  id: string;
-  label: string;
-  icon: React.ElementType;
-}
-
-interface BrandAssetsTabsProps {
-  activeTab: string;
-  setActiveTab: (tab: string) => void;
-}
+import { BrandAssetsTabsProps, Tab } from "@/types/brandImageRequest";
 
 export function BrandAssetsTabs({ activeTab, setActiveTab }: BrandAssetsTabsProps) {
   const tabs: Tab[] = [
-    { id: "images", label: "Images", icon: ImageIcon },
-    { id: "videos", label: "Videos", icon: Video },
-    { id: "audios", label: "Audios", icon: Music },
-    { id: "colors", label: "Colors", icon: Palette },
-    { id: "settings", label: "Settings", icon: Settings },
+    { id: "images", label: "Images", icon: ImageIcon, buttonText: "Upload Image", modalTitle: "Upload Image" },
+    { id: "videos", label: "Videos", icon: Video, buttonText: "Upload Video", modalTitle: "Upload Video" },
+    { id: "audios", label: "Audios", icon: Music, buttonText: "Upload Audio", modalTitle: "Upload Audio" },
+    { id: "colors", label: "Colors", icon: Palette, buttonText: "Upload Color", modalTitle: "Upload Color" },
+    { id: "settings", label: "Settings", icon: Settings, buttonText: "Settings", modalTitle: "Settings" },
   ];
-
-  let buttonText = "Upload";
-  if (activeTab === "images") buttonText = "Upload Image";
-  else if (activeTab === "videos") buttonText = "Upload Video";
-  else if (activeTab === "audios") buttonText = "Upload Audio";
-  else if (activeTab === "colors") buttonText = "Upload Color";
-  else if (activeTab === "settings") buttonText = "Settings";
+  const activeTabConfig = tabs.find(tab => tab.id === activeTab) || tabs[0];
   const [modalOpen, setModalOpen] = useState(false);
   return (
     <nav className="border-b border-border px-6">
@@ -60,9 +44,9 @@ export function BrandAssetsTabs({ activeTab, setActiveTab }: BrandAssetsTabsProp
           onClick={() => setModalOpen(true)}
         >
           <Plus className="w-4 h-4" />
-          {buttonText}
+          {activeTabConfig.buttonText}
         </Button>
-        <UploadModal open={modalOpen} onOpenChange={setModalOpen} activeTab={activeTab} />
+        <UploadModal open={modalOpen} onOpenChange={setModalOpen} activeTabConfig={activeTabConfig} />
       </div>
     </nav>
   );

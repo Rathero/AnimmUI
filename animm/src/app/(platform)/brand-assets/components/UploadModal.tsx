@@ -6,26 +6,9 @@ import { CloudUpload, Trash2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { platformStore } from '@/stores/platformStore';
 import useBrandService from '@/app/services/BrandService';
+import { UploadModalProps, UploadedFile } from "@/types/brandImageRequest";
 
-interface UploadModalProps {
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
-  activeTab: string;
-}
-
-interface UploadedFile {
-  id: string;
-  file: File;
-  preview: string;
-}
-
-export function UploadModal({ open, onOpenChange, activeTab }: UploadModalProps) {
-  let title = "Upload";
-  if (activeTab === "images") title = "Upload Image";
-  else if (activeTab === "videos") title = "Upload Video";
-  else if (activeTab === "audios") title = "Upload Audio";
-  else if (activeTab === "colors") title = "Upload Color";
-  else if (activeTab === "settings") title = "Settings";
+export function UploadModal({ open, onOpenChange, activeTabConfig }: UploadModalProps) {
 
   const hiddenFileInput = useRef<HTMLInputElement>(null);
   const [uploadedFiles, setUploadedFiles] = useState<UploadedFile[]>([]);
@@ -34,10 +17,12 @@ export function UploadModal({ open, onOpenChange, activeTab }: UploadModalProps)
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (!e.target.files) return;
     const filesArray = Array.from(e.target.files).map(file => ({
-      id: Math.random().toString(36).substr(2, 9),
+      id: Date.now().toString(),
       file,
       preview: URL.createObjectURL(file),
     }));
+    console.log(filesArray);
+    debugger
     setUploadedFiles(prev => [...prev, ...filesArray]);
     if (hiddenFileInput.current) hiddenFileInput.current.value = "";
   };
@@ -46,7 +31,7 @@ export function UploadModal({ open, onOpenChange, activeTab }: UploadModalProps)
     e.preventDefault();
     const files = e.dataTransfer.files;
     const filesArray = Array.from(files).map(file => ({
-      id: Math.random().toString(36).substr(2, 9),
+      id: Date.now().toString(),
       file,
       preview: URL.createObjectURL(file),
     }));
@@ -87,7 +72,7 @@ export function UploadModal({ open, onOpenChange, activeTab }: UploadModalProps)
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-2xl">
         <DialogHeader>
-          <DialogTitle className="text-xl font-semibold">{title}</DialogTitle>
+          <DialogTitle className="text-xl font-semibold">{activeTabConfig.modalTitle}</DialogTitle>
         </DialogHeader>
         <div className="space-y-6">
           <div onDrop={handleDrop} onDragOver={e => e.preventDefault()}
@@ -97,7 +82,7 @@ export function UploadModal({ open, onOpenChange, activeTab }: UploadModalProps)
             )}
           >
             <CloudUpload className="w-12 h-12 mx-auto mb-4 text-muted-foreground" />
-            <h3 className="text-lg font-medium mb-2">Drop your {activeTab} here</h3>
+            <h3 className="text-lg font-medium mb-2">Drop your {activeTabConfig.id} here</h3>
             <p className="text-muted-foreground mb-4">or click to browse from your computer</p>
             <input
               ref={hiddenFileInput}
