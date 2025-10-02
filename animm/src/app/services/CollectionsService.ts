@@ -104,7 +104,6 @@ const useCollectionsService = () => {
     return response.ok;
   };
 
- 
 
   return {
     get,

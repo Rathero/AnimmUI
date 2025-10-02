@@ -1,4 +1,6 @@
-import React, { useState } from 'react';
+'use client';
+
+import { useEffect, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Plus, Save, X } from 'lucide-react';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
@@ -6,60 +8,81 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
-import CollectionsService from '@/app/services/CollectionsService';
+import { LoadingSpinner } from '@/components/ui/loading-spinner';
+import useCollectionsService from '@/app/services/CollectionsService';
 import { User } from '@/types/users';
+import useUsersService from '@/app/services/UsersService';
 
 export default function NewCollectionButton() {
   const [isEditing, setIsEditing] = useState(false);
   const [editingItem, setEditingItem] = useState<any>(null);
   const [error, setError] = useState<string | null>(null);
-  const [users, setUsers] = useState<User[]>([]);
 
-  const { addCollection } = CollectionsService().create();
-  const { update } = CollectionsService();
+  const [users, setUsers] = useState<User[]>([]);
+  const [isLoadingUsers, setIsLoadingUsers] = useState(true);
+
+  const { create, update } = useCollectionsService();
+  const { addCollection } = create();
+  const { getAll: getAllUsers } = useUsersService();
+
+  // 🔹 Cargar usuarios igual que haces con colecciones en page.tsx
+  const fetchUsers = async () => {
+    setIsLoadingUsers(true);
+    try {
+      const usersData = await getAllUsers();
+      setUsers(usersData?.Result || []);
+    } catch (error) {
+      console.error('Error fetching users:', error);
+    } finally {
+      setIsLoadingUsers(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchUsers();
+  }, []);
 
   const handleCreateCollection = () => {
     setEditingItem({
-      id: 0, 
+      id: 0,
       name: '',
       description: '',
       thumbnail: '',
       userId: 0,
-      animation: '',
+      templates: [],
     });
     setIsEditing(true);
     setError(null);
   };
 
   const handleSaveCollection = async () => {
-    if (editingItem) {
-      try {
-        if (!editingItem.name) {
-          setError('Name is required');
-          return;
-        }
-
-        const collectionData = {
-          name: editingItem.name,
-          description: editingItem.description,
-          thumbnail: editingItem.thumbnail,
-          userId: editingItem.userId,
-          animation: editingItem.animation || undefined,
-        };
-
-        if (editingItem.id === 0) {
-          await addCollection(collectionData);
-        } else {
-          await update(editingItem.id, collectionData);
-        }
-
-        setIsEditing(false);
-        setEditingItem(null);
-        setError(null);
-      } catch (err) {
-        setError('Failed to save collection. Please try again.');
-        console.error('Error saving collection:', err);
+    if (!editingItem) return;
+    try {
+      if (!editingItem.name) {
+        setError('Name is required');
+        return;
       }
+
+      const collectionData = {
+        name: editingItem.name,
+        description: editingItem.description,
+        thumbnail: editingItem.thumbnail,
+        userId: editingItem.userId,
+        animation: editingItem.animation || undefined,
+      };
+
+      if (editingItem.id === 0) {
+        await addCollection(collectionData);
+      } else {
+        await update(editingItem.id, collectionData);
+      }
+
+      setIsEditing(false);
+      setEditingItem(null);
+      setError(null);
+    } catch (err) {
+      setError('Failed to save collection. Please try again.');
+      console.error('Error saving collection:', err);
     }
   };
 
@@ -85,7 +108,9 @@ export default function NewCollectionButton() {
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <Card className="w-full max-w-2xl mx-4 max-h-[90vh] overflow-y-auto">
             <CardHeader>
-              <CardTitle>{editingItem.id === 0 ? 'Create' : 'Edit'} Collection</CardTitle>
+              <CardTitle>
+                {editingItem.id === 0 ? 'Create' : 'Edit'} Collection
+              </CardTitle>
               {editingItem.userId !== 0 &&
                 users.find(user => user.id === editingItem.userId) && (
                   <Badge variant="outline" className="text-xs mt-2">
@@ -94,9 +119,8 @@ export default function NewCollectionButton() {
                 )}
             </CardHeader>
             <CardContent className="space-y-4">
-              {error && (
-                <div className="text-red-500 text-sm">{error}</div>
-              )}
+              {error && <div className="text-red-500 text-sm">{error}</div>}
+
               <div>
                 <Label htmlFor="name">Name</Label>
                 <Input
@@ -107,55 +131,61 @@ export default function NewCollectionButton() {
                   }
                 />
               </div>
+
               <div>
                 <Label htmlFor="description">Description</Label>
                 <Textarea
                   id="description"
                   value={editingItem.description}
                   onChange={e =>
-                    setEditingItem({ ...editingItem, description: e.target.value })
+                    setEditingItem({
+                      ...editingItem,
+                      description: e.target.value,
+                    })
                   }
                 />
               </div>
+
               <div>
                 <Label htmlFor="thumbnail">Thumbnail URL</Label>
                 <Input
                   id="thumbnail"
                   value={editingItem.thumbnail}
                   onChange={e =>
-                    setEditingItem({ ...editingItem, thumbnail: e.target.value })
+                    setEditingItem({
+                      ...editingItem,
+                      thumbnail: e.target.value,
+                    })
                   }
                 />
-                {editingItem.thumbnail && (
-                  <img
-                    src={editingItem.thumbnail}
-                    alt="Thumbnail preview"
-                    className="w-full max-w-xs h-32 object-cover rounded-md border mt-2"
-                    onError={e => {
-                      const target = e.target as HTMLImageElement;
-                      target.style.display = 'none';
-                    }}
-                  />
-                )}
               </div>
+
               <div>
                 <Label htmlFor="userId">User</Label>
-                <select
-                  id="userId"
-                  value={editingItem.userId}
-                  onChange={e =>
-                    setEditingItem({ ...editingItem, userId: parseInt(e.target.value) })
-                  }
-                  className="w-full border rounded px-2 py-1"
-                >
-                  <option value={0}>Select a user</option>
-                  {users.map(user => (
-                    <option key={user.id} value={user.id}>
-                      {user.email}
-                    </option>
-                  ))}
-                </select>
+                {isLoadingUsers ? (
+                  <LoadingSpinner size="sm" />
+                ) : (
+                  <select
+                    id="userId"
+                    value={editingItem.userId}
+                    onChange={e =>
+                      setEditingItem({
+                        ...editingItem,
+                        userId: parseInt(e.target.value),
+                      })
+                    }
+                    className="w-full border rounded px-2 py-1"
+                  >
+                    <option value={0}>Select a user</option>
+                    {users.map(user => (
+                      <option key={user.id} value={user.id}>
+                        {user.email}
+                      </option>
+                    ))}
+                  </select>
+                )}
               </div>
+
               <div className="flex items-center gap-2 pt-4">
                 <Button onClick={handleSaveCollection}>
                   <Save className="w-4 h-4 mr-2" />
