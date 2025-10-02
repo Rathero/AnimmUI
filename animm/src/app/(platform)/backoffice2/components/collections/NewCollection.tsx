@@ -5,18 +5,22 @@ import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
+import { Badge } from '@/components/ui/badge';
 import CollectionsService from '@/app/services/CollectionsService';
+import { User } from '@/types/users';
 
 export default function NewCollectionButton() {
   const [isEditing, setIsEditing] = useState(false);
   const [editingItem, setEditingItem] = useState<any>(null);
   const [error, setError] = useState<string | null>(null);
+  const [users, setUsers] = useState<User[]>([]);
 
-  
   const { addCollection } = CollectionsService().create();
+  const { update } = CollectionsService();
 
   const handleCreateCollection = () => {
     setEditingItem({
+      id: 0, 
       name: '',
       description: '',
       thumbnail: '',
@@ -30,7 +34,6 @@ export default function NewCollectionButton() {
   const handleSaveCollection = async () => {
     if (editingItem) {
       try {
-        
         if (!editingItem.name) {
           setError('Name is required');
           return;
@@ -44,10 +47,12 @@ export default function NewCollectionButton() {
           animation: editingItem.animation || undefined,
         };
 
-      
-        await addCollection(collectionData);
+        if (editingItem.id === 0) {
+          await addCollection(collectionData);
+        } else {
+          await update(editingItem.id, collectionData);
+        }
 
-       
         setIsEditing(false);
         setEditingItem(null);
         setError(null);
@@ -80,7 +85,13 @@ export default function NewCollectionButton() {
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <Card className="w-full max-w-2xl mx-4 max-h-[90vh] overflow-y-auto">
             <CardHeader>
-              <CardTitle>Create Collection</CardTitle>
+              <CardTitle>{editingItem.id === 0 ? 'Create' : 'Edit'} Collection</CardTitle>
+              {editingItem.userId !== 0 &&
+                users.find(user => user.id === editingItem.userId) && (
+                  <Badge variant="outline" className="text-xs mt-2">
+                    {users.find(user => user.id === editingItem.userId)?.email}
+                  </Badge>
+                )}
             </CardHeader>
             <CardContent className="space-y-4">
               {error && (
@@ -126,6 +137,24 @@ export default function NewCollectionButton() {
                     }}
                   />
                 )}
+              </div>
+              <div>
+                <Label htmlFor="userId">User</Label>
+                <select
+                  id="userId"
+                  value={editingItem.userId}
+                  onChange={e =>
+                    setEditingItem({ ...editingItem, userId: parseInt(e.target.value) })
+                  }
+                  className="w-full border rounded px-2 py-1"
+                >
+                  <option value={0}>Select a user</option>
+                  {users.map(user => (
+                    <option key={user.id} value={user.id}>
+                      {user.email}
+                    </option>
+                  ))}
+                </select>
               </div>
               <div className="flex items-center gap-2 pt-4">
                 <Button onClick={handleSaveCollection}>
