@@ -106,7 +106,7 @@ export default function NewBackofficePage() {
         </div>
 
         {/* Botón de nueva colección */}
-        <NewCollectionButton />
+        <NewCollectionButton onCreated={fetchData} />
 
         {/* Grid de colecciones */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">

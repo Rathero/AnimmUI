@@ -12,13 +12,15 @@ import { LoadingSpinner } from '@/components/ui/loading-spinner';
 import useCollectionsService from '@/app/services/CollectionsService';
 import { User } from '@/types/users';
 import useUsersService from '@/app/services/UsersService';
-import { teardownHeapProfiler } from 'next/dist/build/swc/generated-native';
 
-export default function NewCollectionButton() {
+interface NewCollectionButtonProps {
+  onCreated?: () => void; 
+}
+
+export default function NewCollectionButton({ onCreated }: NewCollectionButtonProps) {
   const [isEditing, setIsEditing] = useState(false);
   const [editingItem, setEditingItem] = useState<any>(null);
   const [error, setError] = useState<string | null>(null);
-
   const [users, setUsers] = useState<User[]>([]);
   const [isLoadingUsers, setIsLoadingUsers] = useState(true);
 
@@ -26,7 +28,6 @@ export default function NewCollectionButton() {
   const { addCollection } = create();
   const { getAll: getAllUsers } = useUsersService();
 
-  // 🔹 Cargar usuarios igual que haces con colecciones en page.tsx
   const fetchUsers = async () => {
     setIsLoadingUsers(true);
     try {
@@ -78,9 +79,14 @@ export default function NewCollectionButton() {
         await update(editingItem.id, collectionData);
       }
 
+      
       setIsEditing(false);
       setEditingItem(null);
       setError(null);
+
+      
+      if (onCreated) onCreated();
+
     } catch (err) {
       setError('Failed to save collection. Please try again.');
       console.error('Error saving collection:', err);

@@ -43,7 +43,7 @@ const useCollectionsService = () => {
       thumbnail: string;
       animation?: string;
     }) => {
-      await fetch(process.env.NEXT_PUBLIC_API_URL + '/collections', {
+      await fetchWithAuth (process.env.NEXT_PUBLIC_API_URL + '/collections', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -51,7 +51,7 @@ const useCollectionsService = () => {
         body: JSON.stringify(data),
       });
     };
-    return { addCollection};
+    return {addCollection};
   };
 
   const update = async (
