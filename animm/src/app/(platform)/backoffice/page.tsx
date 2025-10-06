@@ -61,6 +61,7 @@ export default function BackofficePage() {
   const [collections, setCollections] = useState<Collection[]>([]);
   const [users, setUsers] = useState<User[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  
 
   // Navigation state
   const [viewMode, setViewMode] = useState<ViewMode>('collections');
@@ -80,7 +81,7 @@ export default function BackofficePage() {
 
   const {
     getAllBackoffice: getAllBackoffice,
-    create: createCollection,
+    create: addCollection,
     update: updateCollection,
     delete: deleteCollection,
   } = useCollectionsService();
@@ -99,21 +100,23 @@ export default function BackofficePage() {
     return () => setPageTitle(undefined);
   }, [setPageTitle]);
 
-  const fetchData = async () => {
-    setIsLoading(true);
-    try {
-      const [collectionsData, usersData] = await Promise.all([
-        getAllBackoffice(),
-        getAllUsers(),
-      ]);
-      setCollections(collectionsData?.Result || []);
-      setUsers(usersData?.Result || []);
-    } catch (error) {
-      console.error('Error fetching data:', error);
-    } finally {
-      setIsLoading(false);
-    }
-  };
+const fetchData = async () => {
+  setIsLoading(true);
+  try {
+    const [collectionsData, usersData] = await Promise.all([
+      getAllBackoffice(),
+      getAllUsers(),
+    ]);
+
+    setCollections(collectionsData?.Result || []);
+    setUsers(usersData?.Result || []);
+  } catch (error) {
+    console.error('Error fetching data:', error);
+  } finally {
+    setIsLoading(false);
+  }
+};
+
 
   useEffect(() => {
     fetchData();
@@ -168,7 +171,8 @@ export default function BackofficePage() {
   const handleSaveCollection = async () => {
     try {
       if (editingItem.id === 0) {
-        await createCollection(editingItem);
+      
+        await addCollection(editingItem);
       } else {
         await updateCollection(editingItem.id, editingItem);
       }
