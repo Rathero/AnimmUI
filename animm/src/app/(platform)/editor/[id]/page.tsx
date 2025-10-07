@@ -1005,6 +1005,7 @@ export default function Editor() {
                                 </label>
                                 <select
                                   value={selectedProduct || ''}
+                                  defaultValue={availableProducts[0].name}
                                   onChange={e =>
                                     handleProductChange(Number(e.target.value))
                                   }
@@ -1029,6 +1030,7 @@ export default function Editor() {
                                   </label>
                                   <select
                                     value={selectedLanguage}
+                                    defaultValue={availableLanguages[0].name}
                                     onChange={e =>
                                       handleLanguageChange(e.target.value)
                                     }
