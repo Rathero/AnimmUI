@@ -17,7 +17,9 @@ import { Badge } from '@/components/ui/badge';
 import { Plus, Edit, Trash2 } from 'lucide-react';
 import { Collection } from '@/types/collections';
 import useCollectionsService from '@/app/services/CollectionsService';
-
+import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
+import { X, Save } from 'lucide-react';
 
 export default function NewBackofficePage() {
   const [collections, setCollections] = useState<Collection[]>([]);
@@ -40,37 +42,49 @@ export default function NewBackofficePage() {
     setEditingItem({ ...collection });
     setEditMode('collection');
     setIsEditing(true);
-    updateCollection(collection.id, collection).catch(error => {
+  };
+
+  const handleSaveEdit = async () => {
+    if (!editingItem) return;
+    try {
+      await updateCollection(editingItem.id, editingItem);
+      setIsEditing(false);
+      setEditingItem(null);
+      await fetchData(); 
+    } catch (error) {
       console.error('Error updating collection:', error);
-    });
+      
+    }
+  };
+
+  const handleCloseEdit = () => {
+    setIsEditing(false);
+    setEditingItem(null);
   };
 
   const handleDeleteCollection = async (collectionId: number) => {
-  if (!confirm('Are you sure you want to delete this collection?')) return;
+    if (!confirm('Are you sure you want to delete this collection?')) return;
 
-  try {
-    await deleteCollection(collectionId);  
-    await fetchData(); 
-  } catch (error) {
-    console.error('Error deleting collection:', error);
-  }
-};
-
+    try {
+      await deleteCollection(collectionId);
+      await fetchData();
+    } catch (error) {
+      console.error('Error deleting collection:', error);
+    }
+  };
 
   useEffect(() => {
     setPageTitle('Backoffice');
     return () => setPageTitle(undefined);
   }, [setPageTitle]);
-  
+
   const fetchData = async () => {
     setIsLoading(true);
     try {
       const [collectionsData] = await Promise.all([
         getAllBackoffice(),
-      
       ]);
       setCollections(collectionsData?.Result || []);
-      
     } catch (error) {
       console.error('Error fetching data:', error);
     } finally {
@@ -78,7 +92,7 @@ export default function NewBackofficePage() {
     }
   };
 
- useEffect(() => {
+  useEffect(() => {
     fetchData();
   }, []);
 
@@ -108,6 +122,93 @@ export default function NewBackofficePage() {
         {/* Botón de nueva colección */}
         <NewCollectionButton onCreated={fetchData} />
 
+        {/* Formulario modal para editar colección */}
+        {isEditing && editMode === 'collection' && editingItem && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+            <Card className="w-full max-w-md mx-4">
+              <CardHeader>
+                <CardTitle>Edit Collection</CardTitle>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={handleCloseEdit}
+                  className="absolute top-2 right-2"
+                >
+                  <X className="w-5 h-5" />
+                </Button>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div>
+                  <label
+                    htmlFor="name"
+                    className="block text-sm font-medium"
+                  >
+                    Name
+                  </label>
+                  <Input
+                    id="name"
+                    value={editingItem.name}
+                    onChange={e =>
+                      setEditingItem({ ...editingItem, name: e.target.value })
+                    }
+                  />
+                </div>
+                <div>
+                  <label
+                    htmlFor="description"
+                    className="block text-sm font-medium"
+                  >
+                    Description
+                  </label>
+                  <Textarea
+                    id="description"
+                    value={editingItem.description}
+                    onChange={e =>
+                      setEditingItem({ ...editingItem, description: e.target.value })
+                    }
+                  />
+                </div>
+                <div>
+                  <label
+                    htmlFor="thumbnail"
+                    className="block text-sm font-medium"
+                  >
+                    Thumbnail URL
+                  </label>
+                  <Input
+                    id="thumbnail"
+                    value={editingItem.thumbnail}
+                    onChange={e =>
+                      setEditingItem({ ...editingItem, thumbnail: e.target.value })
+                    }
+                  />
+                  {editingItem.thumbnail && (
+                    <img
+                      src={editingItem.thumbnail}
+                      alt="Thumbnail preview"
+                      className="w-full max-w-xs h-32 object-cover rounded-md border mt-2"
+                      onError={e => {
+                        const target = e.target as HTMLImageElement;
+                        target.style.display = 'none';
+                      }}
+                    />
+                  )}
+                </div>
+                <div className="flex items-center gap-2 pt-4">
+                  <Button onClick={handleSaveEdit}>
+                    <Save className="w-4 h-4 mr-2" />
+                    Save
+                  </Button>
+                  <Button variant="outline" onClick={handleCloseEdit}>
+                    <X className="w-4 h-4 mr-2" />
+                    Cancel
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        )}
+
         {/* Grid de colecciones */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {collections.length === 0 ? (
@@ -126,7 +227,6 @@ export default function NewBackofficePage() {
                       <CardTitle className="text-lg">
                         {collection.name}
                       </CardTitle>
-                      
                     </div>
                     <div className="flex items-center gap-2">
                       <Button
