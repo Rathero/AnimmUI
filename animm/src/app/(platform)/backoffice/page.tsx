@@ -168,21 +168,7 @@ const fetchData = async () => {
     setIsEditing(true);
   };
 
-  const handleSaveCollection = async () => {
-    try {
-      if (editingItem.id === 0) {
-      
-        await addCollection(editingItem);
-      } else {
-        await updateCollection(editingItem.id, editingItem);
-      }
-      setIsEditing(false);
-      setEditingItem(null);
-      fetchData();
-    } catch (error) {
-      console.error('Error saving collection:', error);
-    }
-  };
+ 
 
   const handleDeleteCollection = async (id: number) => {
     if (confirm('Are you sure you want to delete this collection?')) {
@@ -1105,15 +1091,7 @@ const fetchData = async () => {
 
                 <div className="flex items-center gap-2 pt-4">
                   <Button
-                    onClick={
-                      editMode === 'collection'
-                        ? handleSaveCollection
-                        : editMode === 'template'
-                        ? handleSaveTemplate
-                        : editMode === 'module'
-                        ? handleSaveModule
-                        : handleSaveVariable
-                    }
+                 
                   >
                     <Save className="w-4 h-4 mr-2" />
                     Save
