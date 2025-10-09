@@ -145,6 +145,20 @@ export default function Editor() {
         // Apply image variables for the selected product
         languageService.applyImageVariables();
       }
+      if (
+        template?.Result.languages &&
+        template.Result.languages.length > 0 &&
+        !selectedLanguage
+      ) {
+        setSelectedLanguage(template.Result.languages[0].name);
+      }
+      if (
+        template?.Result.products &&
+        template.Result.products.length > 0 &&
+        !selectedProduct
+      ) {
+        setSelectedProduct(template.Result.products[0].id);
+      }
     }
   }, [template, selectedProduct]);
 
@@ -1005,13 +1019,13 @@ export default function Editor() {
                                 </label>
                                 <select
                                   value={selectedProduct || ''}
-                                  defaultValue={availableProducts[0].name}
-                                  onChange={e =>
-                                    handleProductChange(Number(e.target.value))
-                                  }
+                                  defaultValue={availableProducts[0].id}
+                                  onChange={e => {
+                                    debugger;
+                                    handleProductChange(Number(e.target.value));
+                                  }}
                                   className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                                 >
-                                  <option value="">Select a product</option>
                                   {availableProducts.map(product => (
                                     <option key={product.id} value={product.id}>
                                       {product.name}
@@ -1031,12 +1045,11 @@ export default function Editor() {
                                   <select
                                     value={selectedLanguage}
                                     defaultValue={availableLanguages[0].name}
-                                    onChange={e =>
-                                      handleLanguageChange(e.target.value)
-                                    }
+                                    onChange={e => {
+                                      handleLanguageChange(e.target.value);
+                                    }}
                                     className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                                   >
-                                    <option value="">Select a language</option>
                                     {availableLanguages.map(language => (
                                       <option
                                         key={language.id}
