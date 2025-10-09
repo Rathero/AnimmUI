@@ -65,6 +65,7 @@ export default function Editor() {
     GeneratedAnimation | undefined
   >(undefined);
   const [isLoading, setIsLoading] = useState(true);
+  const [finishedLoading, setFinishedLoading] = useState(false);
   const [activeTab, setActiveTab] = useState('text');
   const [isEditMode, setIsEditMode] = useState(true);
   const [isCsvDialogOpen, setIsCsvDialogOpen] = useState(false);
@@ -159,6 +160,7 @@ export default function Editor() {
       ) {
         setSelectedProduct(template.Result.products[0].id);
       }
+      setFinishedLoading(true);
     }
   }, [template, selectedProduct]);
 
@@ -629,8 +631,6 @@ export default function Editor() {
     }
   }
 
-  // EventListener to Deactivate Zoom Pan to be able to Resize
-  const [isResizing, setIsResizing] = useState(false);
   const [isCanvasResizing, setIsCanvasResizing] = useState(false);
   const [resizeStartPos, setResizeStartPos] = useState({ x: 0, y: 0 });
   const [resizeStartDimensions, setResizeStartDimensions] = useState({
@@ -642,30 +642,6 @@ export default function Editor() {
   useEffect(() => {
     initializeTemplate();
   }, []);
-
-  // Set up event listeners after template is loaded
-  useEffect(() => {
-    if (!template) return; // Wait for template to be loaded
-
-    const mainCanvas = document.getElementById('MainCanvas');
-    if (!mainCanvas) return;
-
-    const handleMouseEvent = (event: any) => {
-      if (event.target.classList.contains('resizeItem')) {
-        setIsResizing(true);
-      } else {
-        setIsResizing(false);
-      }
-    };
-
-    document.body.addEventListener('mousemove', handleMouseEvent);
-    mainCanvas.addEventListener('mousedown', handleMouseEvent);
-    // Cleanup function
-    return () => {
-      mainCanvas.removeEventListener('mousedown', handleMouseEvent);
-      document.body.removeEventListener('mousemove', handleMouseEvent);
-    };
-  }, [template]); // Re-run when template changes
 
   // Canvas resize handlers
   const handleResizeStart = (e: React.MouseEvent) => {
@@ -751,8 +727,6 @@ export default function Editor() {
     }
   }, [isCanvasResizing, resizeStartPos, resizeStartDimensions]);
 
-  const [isExporting, setIsExporting] = useState(false);
-  const [isExportingJpeg, setIsExportingJpeg] = useState(false);
   const [isSavingImage, setIsSavingImage] = useState(false);
 
   if (isLoading) {
@@ -1021,7 +995,6 @@ export default function Editor() {
                                   value={selectedProduct || ''}
                                   defaultValue={availableProducts[0].id}
                                   onChange={e => {
-                                    debugger;
                                     handleProductChange(Number(e.target.value));
                                   }}
                                   className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
@@ -1238,10 +1211,14 @@ export default function Editor() {
               variable={variable}
               rive={rivesStates[0]}
               onSetFunctionString={setValueFunction => {
-                setFunctionsToSetStrings(prev => [
-                  { x: variable.id, f: setValueFunction },
-                  ...prev,
-                ]);
+                console.log(finishedLoading);
+                if (!finishedLoading) {
+                  console.log('added');
+                  setFunctionsToSetStrings(prev => [
+                    { x: variable.id, f: setValueFunction },
+                    ...prev,
+                  ]);
+                }
               }}
               onSetFunctionBoolean={setValueFunction => {
                 setFunctionsToSetBoolean(prev => [
