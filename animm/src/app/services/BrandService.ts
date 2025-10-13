@@ -19,6 +19,7 @@ const useBrandService = () => {
         method: 'GET',
       }
     );
+    return await response.json();
   };
 
   return { addBrandImage, getBrandImages };

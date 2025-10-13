@@ -26,3 +26,9 @@ export interface UploadedFile {
   file: File;
   preview: string;
 }
+
+export interface BrandImage {
+  id: number
+  url: string
+  userId: number
+}
