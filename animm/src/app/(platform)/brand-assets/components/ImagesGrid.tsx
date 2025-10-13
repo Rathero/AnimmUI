@@ -78,15 +78,19 @@ export function ImageGrid() {
                   className="opacity-100 transition-opacity h-8 w-8 text-muted-foreground hover:text-foreground"
                 >
                   <MoreVertical className="w-4 h-4" />
-                  <span className="sr-only">Más opciones</span>
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
-                <DropdownMenuItem>Open</DropdownMenuItem>
-                <DropdownMenuItem>Download</DropdownMenuItem>
-                <DropdownMenuItem>Rename</DropdownMenuItem>
-                <DropdownMenuItem className="text-destructive">Delete</DropdownMenuItem>
-              </DropdownMenuContent>
+                <DropdownMenuItem asChild>
+                    <a
+                        href={item.url}
+                        target="_blank"
+                    >
+                        Open
+                    </a>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem className="text-destructive">Delete</DropdownMenuItem>
+                </DropdownMenuContent>
             </DropdownMenu>
           </div>
         </div>
