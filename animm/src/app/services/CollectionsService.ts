@@ -24,6 +24,7 @@ const useCollectionsService = () => {
     }
     return await response.json();
   };
+  
   const getAllBackoffice = async (): Promise<ApiCollections | undefined> => {
     const response = await fetch(
       process.env.NEXT_PUBLIC_API_URL + '/collections/all'
@@ -34,23 +35,23 @@ const useCollectionsService = () => {
     return await response.json();
   };
 
-  const create = async (
-    collection: Omit<Collection, 'id'>
-  ): Promise<ApiCollection | undefined> => {
-    const response = await fetchWithAuth(
-      process.env.NEXT_PUBLIC_API_URL + '/collections/',
-      {
+  const create = () => {
+    const addCollection = async (data: {
+      name: string;
+      description: string;
+      userId: number;
+      thumbnail: string;
+      animation?: string;
+    }) => {
+      await fetchWithAuth (process.env.NEXT_PUBLIC_API_URL + '/collections', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(collection),
-      }
-    );
-    if (!response.ok) {
-      return undefined;
-    }
-    return await response.json();
+        body: JSON.stringify(data),
+      });
+    };
+    return {addCollection};
   };
 
   const update = async (
@@ -102,6 +103,7 @@ const useCollectionsService = () => {
     );
     return response.ok;
   };
+
 
   return {
     get,
