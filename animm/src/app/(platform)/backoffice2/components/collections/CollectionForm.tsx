@@ -37,14 +37,14 @@ export default function CollectionForm({
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (!e.target.files || e.target.files.length === 0) return;
     const file = e.target.files[0];
-    onChange({ ...collection, thumbnail: URL.createObjectURL(file) });
+    onChange({ ...collection, thumbnail: file, thumbnailPreview: URL.createObjectURL(file) });
   };
 
   const handleDrop = (e: React.DragEvent<HTMLDivElement>) => {
     e.preventDefault();
     if (!e.dataTransfer.files || e.dataTransfer.files.length === 0) return;
     const file = e.dataTransfer.files[0];
-    onChange({ ...collection, thumbnail: URL.createObjectURL(file) });
+    onChange({ ...collection, thumbnail: file, thumbnailPreview: URL.createObjectURL(file) });
   };
 
   const handleDragOver = (e: React.DragEvent<HTMLDivElement>) => {
@@ -95,9 +95,9 @@ export default function CollectionForm({
               onDrop={handleDrop}
               onDragOver={handleDragOver}
             >
-              {collection.thumbnail ? (
+              {collection.thumbnailPreview || collection.thumbnail ? (
                 <img
-                  src={collection.thumbnail}
+                  src={collection.thumbnailPreview || collection.thumbnail}
                   alt="Thumbnail preview"
                   className="w-full h-full object-cover rounded-md"
                 />

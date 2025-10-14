@@ -10,7 +10,7 @@ const useCollectionsService = () => {
       process.env.NEXT_PUBLIC_API_URL + '/collections/' + id
     );
     if (!response.ok) {
-      return undefined;
+      throw new Error(`Error fetching collection ${id}: ${response.statusText}`);
     }
     return await response.json();
   };
@@ -20,7 +20,7 @@ const useCollectionsService = () => {
       process.env.NEXT_PUBLIC_API_URL + '/collections/'
     );
     if (!response.ok) {
-      return undefined;
+      throw new Error(`Error fetching all collections: ${response.statusText}`);
     }
     return await response.json();
   };
@@ -30,7 +30,7 @@ const useCollectionsService = () => {
       process.env.NEXT_PUBLIC_API_URL + '/collections/all'
     );
     if (!response.ok) {
-      return undefined;
+      throw new Error(`Error fetching backoffice collections: ${response.statusText}`);
     }
     return await response.json();
   };
@@ -40,36 +40,74 @@ const useCollectionsService = () => {
       name: string;
       description: string;
       userId: number;
-      thumbnail: string;
-      animation?: string;
+      thumbnail: File | string;
+      templates?: any[];
     }) => {
-      await fetchWithAuth (process.env.NEXT_PUBLIC_API_URL + '/collections', {
+      const formData = new FormData();
+      formData.append('Name', data.name);
+      formData.append('Description', data.description);
+      formData.append('UserId', data.userId.toString());
+      if (data.thumbnail instanceof File) {
+        formData.append('File', data.thumbnail);
+      }
+      // Enviar templates como JSON string si es necesario
+      if (data.templates && data.templates.length > 0) {
+        formData.append('Templates', JSON.stringify(data.templates));
+      } else {
+        formData.append('Templates', JSON.stringify([]));
+      }
+
+      const response = await fetchWithAuth(process.env.NEXT_PUBLIC_API_URL + '/collections', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(data),
+        body: formData,
       });
+      if (!response.ok) {
+        throw new Error(`Error creating collection: ${response.statusText}`);
+      }
+      return await response.json();
     };
-    return {addCollection};
+    return { addCollection };
   };
 
   const update = async (
     id: number,
-    collection: Partial<Collection>
+    collection: Partial<Collection> & { thumbnail?: File | string }
   ): Promise<ApiCollection | undefined> => {
+    let body;
+    let headers = {};
+    if (collection.thumbnail instanceof File) {
+      const formData = new FormData();
+      formData.append('Name', collection.name || '');
+      formData.append('Description', collection.description || '');
+      formData.append('UserId', collection.userId?.toString() || '0');
+      formData.append('File', collection.thumbnail);
+      if (collection.templates) {
+        formData.append('Templates', JSON.stringify(collection.templates));
+      } else {
+        formData.append('Templates', JSON.stringify([]));
+      }
+      body = formData;
+    } else {
+      body = JSON.stringify({
+        name: collection.name,
+        description: collection.description,
+        userId: collection.userId,
+        thumbnail: collection.thumbnail,
+        templates: collection.templates || [],
+      });
+      headers = { 'Content-Type': 'application/json' };
+    }
+
     const response = await fetchWithAuth(
       process.env.NEXT_PUBLIC_API_URL + '/collections/' + id,
       {
         method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(collection),
+        headers,
+        body,
       }
     );
     if (!response.ok) {
-      return undefined;
+      throw new Error(`Error updating collection ${id}: ${response.statusText}`);
     }
     return await response.json();
   };
@@ -89,7 +127,7 @@ const useCollectionsService = () => {
       }
     );
     if (!response.ok) {
-      return undefined;
+      throw new Error(`Error updating user assignment for collection ${id}: ${response.statusText}`);
     }
     return await response.json();
   };
@@ -101,9 +139,11 @@ const useCollectionsService = () => {
         method: 'DELETE',
       }
     );
-    return response.ok;
+    if (!response.ok) {
+      throw new Error(`Error deleting collection ${id}: ${response.statusText}`);
+    }
+    return true;
   };
-
 
   return {
     get,

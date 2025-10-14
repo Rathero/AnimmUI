@@ -4,7 +4,6 @@ import { useEffect, useState } from 'react';
 import { LoadingSpinner } from '@/components/ui/loading-spinner';
 import { ContentWrapper } from '@/components/ui/content-wrapper';
 import { platformStore } from '@/stores/platformStore';
-import NewCollectionButton from './components/collections/NewCollection';
 import {
   Card,
   CardDescription,
@@ -14,52 +13,112 @@ import {
 } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Plus, Edit, Trash2 } from 'lucide-react';
+import { Plus, Edit, Trash2, Save, X } from 'lucide-react';
 import { Collection } from '@/types/collections';
 import useCollectionsService from '@/app/services/CollectionsService';
-import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
-import { X, Save } from 'lucide-react';
+import { User } from '@/types/users';
+import useUsersService from '@/app/services/UsersService';
+import CollectionForm from './components/collections/CollectionForm';
+
 
 export default function NewBackofficePage() {
   const [collections, setCollections] = useState<Collection[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-
   const [isEditing, setIsEditing] = useState(false);
-  const [editingItem, setEditingItem] = useState<Collection | null>(null);
-  const [editMode, setEditMode] = useState<
-    'collection' | 'template' | 'module' | 'variable'
-  >('collection');
+  const [editingItem, setEditingItem] = useState<any>(null); // Usamos any para permitir thumbnailFile
+  const [error, setError] = useState<string | null>(null);
+  const [fetchError, setFetchError] = useState<string | null>(null);
+  const [users, setUsers] = useState<User[]>([]);
+  const [isLoadingUsers, setIsLoadingUsers] = useState(true);
 
   const { setPageTitle } = platformStore(state => state);
   const {
     getAllBackoffice: getAllBackoffice,
     update: updateCollection,
     delete: deleteCollection,
+    create,
   } = useCollectionsService();
+  const { addCollection } = create();
+  const { getAll: getAllUsers } = useUsersService();
 
-  const handleEditCollection = (collection: Collection) => {
-    setEditingItem({ ...collection });
-    setEditMode('collection');
-    setIsEditing(true);
+  const fetchUsers = async () => {
+    setIsLoadingUsers(true);
+    setFetchError(null);
+    try {
+      const usersData = await getAllUsers();
+      setUsers(usersData?.Result || []);
+    } catch (error) {
+      const errMsg = error instanceof Error ? error.message : 'Unknown error fetching users';
+      console.error('Error fetching users:', error);
+      setFetchError(errMsg);
+    } finally {
+      setIsLoadingUsers(false);
+    }
   };
 
-  const handleSaveEdit = async () => {
+  useEffect(() => {
+    fetchUsers();
+  }, []);
+
+  const handleCreateCollection = () => {
+    setEditingItem({
+      id: 0,
+      name: '',
+      description: '',
+      thumbnail: '',
+      thumbnailFile: null,
+      userId: 0,
+      templates: [],
+    });
+    setIsEditing(true);
+    setError(null);
+  };
+
+  const handleEditCollection = (collection: Collection) => {
+    setEditingItem({
+      ...collection,
+      thumbnailFile: null,
+    });
+    setIsEditing(true);
+    setError(null);
+  };
+
+  const handleSaveCollection = async () => {
     if (!editingItem) return;
     try {
-      await updateCollection(editingItem.id, editingItem);
+      if (!editingItem.name) {
+        setError('Name is required');
+        return;
+      }
+
+      const collectionData = {
+        name: editingItem.name,
+        description: editingItem.description,
+        thumbnail: editingItem.thumbnailFile || editingItem.thumbnail, // Enviar File o string
+        userId: editingItem.userId,
+      };
+
+      if (editingItem.id === 0) {
+        await addCollection(collectionData);
+      } else {
+        await updateCollection(editingItem.id, collectionData);
+      }
+
       setIsEditing(false);
       setEditingItem(null);
-      await fetchData(); 
-    } catch (error) {
-      console.error('Error updating collection:', error);
-      
+      setError(null);
+      await fetchData();
+    } catch (err) {
+      const errMsg = err instanceof Error ? err.message : 'Failed to save collection';
+      setError(errMsg);
+      console.error('Error saving collection:', err);
     }
   };
 
   const handleCloseEdit = () => {
     setIsEditing(false);
     setEditingItem(null);
+    setError(null);
   };
 
   const handleDeleteCollection = async (collectionId: number) => {
@@ -70,6 +129,22 @@ export default function NewBackofficePage() {
       await fetchData();
     } catch (error) {
       console.error('Error deleting collection:', error);
+      setFetchError(error instanceof Error ? error.message : 'Unknown error deleting collection');
+    }
+  };
+
+  const fetchData = async () => {
+    setIsLoading(true);
+    setFetchError(null);
+    try {
+      const [collectionsData] = await Promise.all([getAllBackoffice()]);
+      setCollections(collectionsData?.Result || []);
+    } catch (error) {
+      const errMsg = error instanceof Error ? error.message : 'Unknown error fetching data';
+      console.error('Error fetching data:', error);
+      setFetchError(errMsg);
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -77,20 +152,6 @@ export default function NewBackofficePage() {
     setPageTitle('Backoffice');
     return () => setPageTitle(undefined);
   }, [setPageTitle]);
-
-  const fetchData = async () => {
-    setIsLoading(true);
-    try {
-      const [collectionsData] = await Promise.all([
-        getAllBackoffice(),
-      ]);
-      setCollections(collectionsData?.Result || []);
-    } catch (error) {
-      console.error('Error fetching data:', error);
-    } finally {
-      setIsLoading(false);
-    }
-  };
 
   useEffect(() => {
     fetchData();
@@ -108,6 +169,12 @@ export default function NewBackofficePage() {
 
   return (
     <ContentWrapper>
+      {fetchError && (
+        <Alert variant="destructive">
+          <AlertTitle>Error fetching data</AlertTitle>
+          <AlertDescription>{fetchError}</AlertDescription>
+        </Alert>
+      )}
       <div className="space-y-6">
         {/* Header */}
         <div className="flex items-center justify-between">
@@ -120,94 +187,15 @@ export default function NewBackofficePage() {
         </div>
 
         {/* Botón de nueva colección */}
-        <NewCollectionButton onCreated={fetchData} />
-
-        {/* Formulario modal para editar colección */}
-        {isEditing && editMode === 'collection' && editingItem && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-            <Card className="w-full max-w-md mx-4">
-              <CardHeader>
-                <CardTitle>Edit Collection</CardTitle>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  onClick={handleCloseEdit}
-                  className="absolute top-2 right-2"
-                >
-                  <X className="w-5 h-5" />
-                </Button>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div>
-                  <label
-                    htmlFor="name"
-                    className="block text-sm font-medium"
-                  >
-                    Name
-                  </label>
-                  <Input
-                    id="name"
-                    value={editingItem.name}
-                    onChange={e =>
-                      setEditingItem({ ...editingItem, name: e.target.value })
-                    }
-                  />
-                </div>
-                <div>
-                  <label
-                    htmlFor="description"
-                    className="block text-sm font-medium"
-                  >
-                    Description
-                  </label>
-                  <Textarea
-                    id="description"
-                    value={editingItem.description}
-                    onChange={e =>
-                      setEditingItem({ ...editingItem, description: e.target.value })
-                    }
-                  />
-                </div>
-                <div>
-                  <label
-                    htmlFor="thumbnail"
-                    className="block text-sm font-medium"
-                  >
-                    Thumbnail URL
-                  </label>
-                  <Input
-                    id="thumbnail"
-                    value={editingItem.thumbnail}
-                    onChange={e =>
-                      setEditingItem({ ...editingItem, thumbnail: e.target.value })
-                    }
-                  />
-                  {editingItem.thumbnail && (
-                    <img
-                      src={editingItem.thumbnail}
-                      alt="Thumbnail preview"
-                      className="w-full max-w-xs h-32 object-cover rounded-md border mt-2"
-                      onError={e => {
-                        const target = e.target as HTMLImageElement;
-                        target.style.display = 'none';
-                      }}
-                    />
-                  )}
-                </div>
-                <div className="flex items-center gap-2 pt-4">
-                  <Button onClick={handleSaveEdit}>
-                    <Save className="w-4 h-4 mr-2" />
-                    Save
-                  </Button>
-                  <Button variant="outline" onClick={handleCloseEdit}>
-                    <X className="w-4 h-4 mr-2" />
-                    Cancel
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
+        <div className="space-y-4">
+          <div className="flex items-center justify-between">
+            <h2 className="text-xl font-semibold">Collections</h2>
+            <Button onClick={handleCreateCollection}>
+              <Plus className="w-4 h-4 mr-2" />
+              New Collection
+            </Button>
           </div>
-        )}
+        </div>
 
         {/* Grid de colecciones */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -224,9 +212,7 @@ export default function NewBackofficePage() {
                 <CardHeader>
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
-                      <CardTitle className="text-lg">
-                        {collection.name}
-                      </CardTitle>
+                      <CardTitle className="text-lg">{collection.name}</CardTitle>
                     </div>
                     <div className="flex items-center gap-2">
                       <Button
@@ -292,6 +278,19 @@ export default function NewBackofficePage() {
           )}
         </div>
       </div>
+
+      {isEditing && editingItem && (
+        <CollectionForm
+          collection={editingItem}
+          onChange={setEditingItem}
+          onSave={handleSaveCollection}
+          onCancel={handleCloseEdit}
+          title={editingItem.id === 0 ? 'Create Collection' : 'Edit Collection'}
+          users={users}
+          isLoadingUsers={isLoadingUsers}
+          error={error}
+        />
+      )}
     </ContentWrapper>
   );
 }
