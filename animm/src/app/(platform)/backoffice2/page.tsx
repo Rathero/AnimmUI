@@ -20,7 +20,7 @@ import { User } from '@/types/users';
 import useUsersService from '@/app/services/UsersService';
 import CollectionForm from './components/collections/CollectionForm';
 
-// Nuevo tipo para edición que incluye previsualización
+// Tipo para edición
 type EditingCollection = Omit<Collection, 'thumbnail'> & {
   thumbnail: File | null;
   thumbnailPreview: string;
@@ -36,38 +36,32 @@ export default function NewBackofficePage() {
   const [isLoadingUsers, setIsLoadingUsers] = useState(true);
 
   const { setPageTitle } = platformStore(state => state);
-  const {
-    getAllBackoffice,
-    update: updateCollection,
-    delete: deleteCollection,
-    create,
-  } = useCollectionsService();
+  const { getAllBackoffice, update: updateCollection, delete: deleteCollection, create } =
+    useCollectionsService();
   const { addCollection } = create();
   const { getAll: getAllUsers } = useUsersService();
 
+  // Fetch users
   const fetchUsers = async () => {
     setIsLoadingUsers(true);
     try {
       const usersData = await getAllUsers();
       setUsers(usersData?.Result || []);
-    } catch (error) {
-      console.error('Error fetching users:', error);
+    } catch (err) {
+      console.error('Error fetching users:', err);
     } finally {
       setIsLoadingUsers(false);
     }
   };
 
-  useEffect(() => {
-    fetchUsers();
-  }, []);
-
+  // Fetch collections
   const fetchData = async () => {
     setIsLoading(true);
     try {
-      const [collectionsData] = await Promise.all([getAllBackoffice()]);
+      const collectionsData = await getAllBackoffice();
       setCollections(collectionsData?.Result || []);
-    } catch (error) {
-      console.error('Error fetching data:', error);
+    } catch (err) {
+      console.error('Error fetching collections:', err);
     } finally {
       setIsLoading(false);
     }
@@ -75,6 +69,8 @@ export default function NewBackofficePage() {
 
   useEffect(() => {
     setPageTitle('Backoffice');
+    fetchUsers();
+    fetchData();
     return () => setPageTitle(undefined);
   }, [setPageTitle]);
 
@@ -127,7 +123,7 @@ export default function NewBackofficePage() {
       description: editingItem.description,
       userId: editingItem.userId,
       templates: editingItem.templates || [],
-      thumbnail: fileThumbnail as File, // ⚠ Forzado como File
+      thumbnail: fileThumbnail as File, // ⚠ Cast seguro
     };
 
     if (editingItem.id === 0) {
@@ -150,12 +146,11 @@ export default function NewBackofficePage() {
 
   const handleDeleteCollection = async (collectionId: number) => {
     if (!confirm('Are you sure you want to delete this collection?')) return;
-
     try {
       await deleteCollection(collectionId);
       await fetchData();
-    } catch (error) {
-      console.error('Error deleting collection:', error);
+    } catch (err) {
+      console.error('Error deleting collection:', err);
     }
   };
 
@@ -172,7 +167,6 @@ export default function NewBackofficePage() {
   return (
     <ContentWrapper>
       <div className="space-y-6">
-        {/* Header */}
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-2xl font-bold">Backoffice</h1>
@@ -182,18 +176,15 @@ export default function NewBackofficePage() {
           </div>
         </div>
 
-        {/* Botón de nueva colección */}
         <div className="space-y-4">
           <div className="flex items-center justify-between">
             <h2 className="text-xl font-semibold">Collections</h2>
             <Button onClick={handleCreateCollection}>
-              <Plus className="w-4 h-4 mr-2" />
-              New Collection
+              <Plus className="w-4 h-4 mr-2" /> New Collection
             </Button>
           </div>
         </div>
 
-        {/* Grid de colecciones */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {collections.length === 0 ? (
             <div className="text-center text-muted-foreground col-span-full">
@@ -207,9 +198,7 @@ export default function NewBackofficePage() {
               >
                 <CardHeader>
                   <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <CardTitle className="text-lg">{collection.name}</CardTitle>
-                    </div>
+                    <CardTitle className="text-lg">{collection.name}</CardTitle>
                     <div className="flex items-center gap-2">
                       <Button
                         variant="ghost"
@@ -264,14 +253,8 @@ export default function NewBackofficePage() {
                         {collection.templates?.length || 0}
                       </Badge>
                     </div>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      className="w-full mt-2"
-                      // TODO: implementar create template
-                    >
-                      <Plus className="w-4 h-4 mr-2" />
-                      Add Template
+                    <Button variant="outline" size="sm" className="w-full mt-2">
+                      <Plus className="w-4 h-4 mr-2" /> Add Template
                     </Button>
                   </div>
                 </CardContent>
@@ -283,7 +266,7 @@ export default function NewBackofficePage() {
 
       {isEditing && editingItem && (
         <CollectionForm
-          collection={editingItem} 
+          collection={editingItem}
           onChange={setEditingItem}
           onSave={handleSaveCollection}
           onCancel={handleCloseEdit}
