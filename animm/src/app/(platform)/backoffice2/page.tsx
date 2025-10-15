@@ -20,14 +20,12 @@ import { User } from '@/types/users';
 import useUsersService from '@/app/services/UsersService';
 import CollectionForm from './components/collections/CollectionForm';
 
-
 export default function NewBackofficePage() {
   const [collections, setCollections] = useState<Collection[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isEditing, setIsEditing] = useState(false);
-  const [editingItem, setEditingItem] = useState<any>(null); // Usamos any para permitir thumbnailFile
+  const [editingItem, setEditingItem] = useState<Collection | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [fetchError, setFetchError] = useState<string | null>(null);
   const [users, setUsers] = useState<User[]>([]);
   const [isLoadingUsers, setIsLoadingUsers] = useState(true);
 
@@ -43,14 +41,11 @@ export default function NewBackofficePage() {
 
   const fetchUsers = async () => {
     setIsLoadingUsers(true);
-    setFetchError(null);
     try {
       const usersData = await getAllUsers();
       setUsers(usersData?.Result || []);
     } catch (error) {
-      const errMsg = error instanceof Error ? error.message : 'Unknown error fetching users';
       console.error('Error fetching users:', error);
-      setFetchError(errMsg);
     } finally {
       setIsLoadingUsers(false);
     }
@@ -66,7 +61,7 @@ export default function NewBackofficePage() {
       name: '',
       description: '',
       thumbnail: '',
-      thumbnailFile: null,
+      thumbnailPreview: '',
       userId: 0,
       templates: [],
     });
@@ -77,43 +72,36 @@ export default function NewBackofficePage() {
   const handleEditCollection = (collection: Collection) => {
     setEditingItem({
       ...collection,
-      thumbnailFile: null,
+      thumbnail: collection.thumbnail || '', // Ensure thumbnail is a string if not set
+      thumbnailPreview: collection.thumbnail || '',
     });
     setIsEditing(true);
     setError(null);
   };
 
-  const handleSaveCollection = async () => {
-    if (!editingItem) return;
-    try {
-      if (!editingItem.name) {
-        setError('Name is required');
-        return;
-      }
+ const handleSaveCollection = async () => {
+  if (!editingItem) return;
 
-      const collectionData = {
-        name: editingItem.name,
-        description: editingItem.description,
-        thumbnail: editingItem.thumbnailFile || editingItem.thumbnail, // Enviar File o string
-        userId: editingItem.userId,
-      };
-
-      if (editingItem.id === 0) {
-        await addCollection(collectionData);
-      } else {
-        await updateCollection(editingItem.id, collectionData);
-      }
-
-      setIsEditing(false);
-      setEditingItem(null);
-      setError(null);
-      await fetchData();
-    } catch (err) {
-      const errMsg = err instanceof Error ? err.message : 'Failed to save collection';
-      setError(errMsg);
-      console.error('Error saving collection:', err);
-    }
+  const collectionData = {
+    name: editingItem.name,
+    description: editingItem.description,
+    thumbnail: editingItem.thumbnail || '',
+    userId: editingItem.userId,
+    templates: editingItem.templates || [],
   };
+
+  if (editingItem.id === 0) {
+    await addCollection(collectionData);
+  } else {
+    await updateCollection(editingItem.id, collectionData);
+  }
+
+  setIsEditing(false);
+  setEditingItem(null);
+  setError(null);
+  await fetchData();
+};
+
 
   const handleCloseEdit = () => {
     setIsEditing(false);
@@ -129,22 +117,6 @@ export default function NewBackofficePage() {
       await fetchData();
     } catch (error) {
       console.error('Error deleting collection:', error);
-      setFetchError(error instanceof Error ? error.message : 'Unknown error deleting collection');
-    }
-  };
-
-  const fetchData = async () => {
-    setIsLoading(true);
-    setFetchError(null);
-    try {
-      const [collectionsData] = await Promise.all([getAllBackoffice()]);
-      setCollections(collectionsData?.Result || []);
-    } catch (error) {
-      const errMsg = error instanceof Error ? error.message : 'Unknown error fetching data';
-      console.error('Error fetching data:', error);
-      setFetchError(errMsg);
-    } finally {
-      setIsLoading(false);
     }
   };
 
@@ -152,6 +124,18 @@ export default function NewBackofficePage() {
     setPageTitle('Backoffice');
     return () => setPageTitle(undefined);
   }, [setPageTitle]);
+
+  const fetchData = async () => {
+    setIsLoading(true);
+    try {
+      const [collectionsData] = await Promise.all([getAllBackoffice()]);
+      setCollections(collectionsData?.Result || []);
+    } catch (error) {
+      console.error('Error fetching data:', error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   useEffect(() => {
     fetchData();
@@ -169,12 +153,6 @@ export default function NewBackofficePage() {
 
   return (
     <ContentWrapper>
-      {fetchError && (
-        <Alert variant="destructive">
-          <AlertTitle>Error fetching data</AlertTitle>
-          <AlertDescription>{fetchError}</AlertDescription>
-        </Alert>
-      )}
       <div className="space-y-6">
         {/* Header */}
         <div className="flex items-center justify-between">
