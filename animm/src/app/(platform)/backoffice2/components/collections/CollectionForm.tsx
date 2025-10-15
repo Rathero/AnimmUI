@@ -10,10 +10,17 @@ import { Save, X } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { LoadingSpinner } from '@/components/ui/loading-spinner';
 import { User } from '@/types/users';
+import { Collection } from '@/types/collections';
+
+// Definimos un tipo EditingCollection que usamos en la UI
+export type EditingCollection = Omit<Collection, 'thumbnail'> & {
+  thumbnail: File | null;
+  thumbnailPreview: string;
+};
 
 interface CollectionFormProps {
-  collection: any;
-  onChange: (collection: any) => void;
+  collection: EditingCollection;
+  onChange: (collection: EditingCollection) => void;
   onSave: () => void;
   onCancel: () => void;
   title: string;
@@ -35,16 +42,22 @@ export default function CollectionForm({
   const hiddenFileInput = useRef<HTMLInputElement>(null);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (!e.target.files || e.target.files.length === 0) return;
-    const file = e.target.files[0];
-    onChange({ ...collection, thumbnail: URL.createObjectURL(file) });
+    const file = e.target.files?.[0] ?? null;
+    onChange({
+      ...collection,
+      thumbnail: file,
+      thumbnailPreview: file ? URL.createObjectURL(file) : '',
+    });
   };
 
   const handleDrop = (e: React.DragEvent<HTMLDivElement>) => {
     e.preventDefault();
-    if (!e.dataTransfer.files || e.dataTransfer.files.length === 0) return;
-    const file = e.dataTransfer.files[0];
-    onChange({ ...collection, thumbnail: URL.createObjectURL(file) });
+    const file = e.dataTransfer.files?.[0] ?? null;
+    onChange({
+      ...collection,
+      thumbnail: file,
+      thumbnailPreview: file ? URL.createObjectURL(file) : '',
+    });
   };
 
   const handleDragOver = (e: React.DragEvent<HTMLDivElement>) => {
@@ -72,7 +85,10 @@ export default function CollectionForm({
             <Input
               id="name"
               value={collection.name}
-              onChange={e => onChange({ ...collection, name: e.target.value })}
+              onChange={e =>
+                onChange({ ...collection, name: e.target.value })
+              }
+              placeholder="Enter collection name"
             />
           </div>
 
@@ -82,7 +98,10 @@ export default function CollectionForm({
             <Textarea
               id="description"
               value={collection.description}
-              onChange={e => onChange({ ...collection, description: e.target.value })}
+              onChange={e =>
+                onChange({ ...collection, description: e.target.value })
+              }
+              placeholder="Enter collection description"
             />
           </div>
 
@@ -95,9 +114,9 @@ export default function CollectionForm({
               onDrop={handleDrop}
               onDragOver={handleDragOver}
             >
-              {collection.thumbnail ? (
+              {collection.thumbnailPreview ? (
                 <img
-                  src={collection.thumbnail}
+                  src={collection.thumbnailPreview}
                   alt="Thumbnail preview"
                   className="w-full h-full object-cover rounded-md"
                 />
@@ -125,7 +144,9 @@ export default function CollectionForm({
               <select
                 id="userId"
                 value={collection.userId}
-                onChange={e => onChange({ ...collection, userId: parseInt(e.target.value) })}
+                onChange={e =>
+                  onChange({ ...collection, userId: parseInt(e.target.value) || 0 })
+                }
                 className="w-full border rounded px-2 py-1"
               >
                 <option value={0}>Select a user</option>
