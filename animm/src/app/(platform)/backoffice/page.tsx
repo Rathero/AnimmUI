@@ -507,15 +507,7 @@ const fetchData = async () => {
                   </CardHeader>
                   {collection.thumbnail && (
                     <div className="px-6 py-2">
-                      <img
-                        src={collection.thumbnail}
-                        alt={`${collection.name} thumbnail`}
-                        className="w-full h-32 object-cover rounded-md"
-                        onError={e => {
-                          const target = e.target as HTMLImageElement;
-                          target.style.display = 'none';
-                        }}
-                      />
+                      
                     </div>
                   )}
                   <CardContent>

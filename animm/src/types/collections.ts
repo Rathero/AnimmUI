@@ -98,9 +98,10 @@ export interface Collection {
   id: number;
   name: string;
   description: string;
-  thumbnail: string;
+  thumbnail: string | File | null;
   userId: number;
-  templates: Template[];
+  templates: any[];
+  thumbnailPreview?: string;
 }
 
 export interface ApiCollections extends BaseApiResponse<Collection[]> {}

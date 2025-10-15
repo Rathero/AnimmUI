@@ -13,25 +13,31 @@ import {
 } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Plus, Edit, Trash2, Save, X } from 'lucide-react';
+import { Plus, Edit, Trash2 } from 'lucide-react';
 import { Collection } from '@/types/collections';
 import useCollectionsService from '@/app/services/CollectionsService';
 import { User } from '@/types/users';
 import useUsersService from '@/app/services/UsersService';
 import CollectionForm from './components/collections/CollectionForm';
 
+// Nuevo tipo para edición que incluye previsualización
+type EditingCollection = Omit<Collection, 'thumbnail'> & {
+  thumbnail: File | null;
+  thumbnailPreview: string;
+};
+
 export default function NewBackofficePage() {
   const [collections, setCollections] = useState<Collection[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isEditing, setIsEditing] = useState(false);
-  const [editingItem, setEditingItem] = useState<Collection | null>(null);
+  const [editingItem, setEditingItem] = useState<EditingCollection | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [users, setUsers] = useState<User[]>([]);
   const [isLoadingUsers, setIsLoadingUsers] = useState(true);
 
   const { setPageTitle } = platformStore(state => state);
   const {
-    getAllBackoffice: getAllBackoffice,
+    getAllBackoffice,
     update: updateCollection,
     delete: deleteCollection,
     create,
@@ -55,12 +61,29 @@ export default function NewBackofficePage() {
     fetchUsers();
   }, []);
 
+  const fetchData = async () => {
+    setIsLoading(true);
+    try {
+      const [collectionsData] = await Promise.all([getAllBackoffice()]);
+      setCollections(collectionsData?.Result || []);
+    } catch (error) {
+      console.error('Error fetching data:', error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    setPageTitle('Backoffice');
+    return () => setPageTitle(undefined);
+  }, [setPageTitle]);
+
   const handleCreateCollection = () => {
     setEditingItem({
       id: 0,
       name: '',
       description: '',
-      thumbnail: '',
+      thumbnail: null,
       thumbnailPreview: '',
       userId: 0,
       templates: [],
@@ -72,36 +95,52 @@ export default function NewBackofficePage() {
   const handleEditCollection = (collection: Collection) => {
     setEditingItem({
       ...collection,
-      thumbnail: collection.thumbnail || '', // Ensure thumbnail is a string if not set
-      thumbnailPreview: collection.thumbnail || '',
+      thumbnail: collection.thumbnail instanceof File ? collection.thumbnail : null,
+      thumbnailPreview:
+        typeof collection.thumbnail === 'string'
+          ? collection.thumbnail
+          : collection.thumbnail instanceof File
+          ? URL.createObjectURL(collection.thumbnail)
+          : '',
     });
     setIsEditing(true);
     setError(null);
   };
 
- const handleSaveCollection = async () => {
-  if (!editingItem) return;
+  const handleSaveCollection = async () => {
+    if (!editingItem) return;
 
-  const collectionData = {
-    name: editingItem.name,
-    description: editingItem.description,
-    thumbnail: editingItem.thumbnail || '',
-    userId: editingItem.userId,
-    templates: editingItem.templates || [],
+    const fileThumbnail =
+      editingItem.id === 0
+        ? editingItem.thumbnail instanceof File
+          ? editingItem.thumbnail
+          : undefined
+        : editingItem.thumbnail; // en edición puede ser null
+
+    if (editingItem.id === 0 && !fileThumbnail) {
+      setError('Thumbnail file is required');
+      return;
+    }
+
+    const collectionData = {
+      name: editingItem.name,
+      description: editingItem.description,
+      userId: editingItem.userId,
+      templates: editingItem.templates || [],
+      thumbnail: fileThumbnail as File, // ⚠ Forzado como File
+    };
+
+    if (editingItem.id === 0) {
+      await addCollection(collectionData);
+    } else {
+      await updateCollection(editingItem.id, collectionData);
+    }
+
+    setIsEditing(false);
+    setEditingItem(null);
+    setError(null);
+    await fetchData();
   };
-
-  if (editingItem.id === 0) {
-    await addCollection(collectionData);
-  } else {
-    await updateCollection(editingItem.id, collectionData);
-  }
-
-  setIsEditing(false);
-  setEditingItem(null);
-  setError(null);
-  await fetchData();
-};
-
 
   const handleCloseEdit = () => {
     setIsEditing(false);
@@ -119,27 +158,6 @@ export default function NewBackofficePage() {
       console.error('Error deleting collection:', error);
     }
   };
-
-  useEffect(() => {
-    setPageTitle('Backoffice');
-    return () => setPageTitle(undefined);
-  }, [setPageTitle]);
-
-  const fetchData = async () => {
-    setIsLoading(true);
-    try {
-      const [collectionsData] = await Promise.all([getAllBackoffice()]);
-      setCollections(collectionsData?.Result || []);
-    } catch (error) {
-      console.error('Error fetching data:', error);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    fetchData();
-  }, []);
 
   if (isLoading) {
     return (
@@ -221,7 +239,13 @@ export default function NewBackofficePage() {
                 {collection.thumbnail && (
                   <div className="px-6 py-2">
                     <img
-                      src={collection.thumbnail}
+                      src={
+                        typeof collection.thumbnail === 'string'
+                          ? collection.thumbnail
+                          : collection.thumbnail instanceof File
+                          ? URL.createObjectURL(collection.thumbnail)
+                          : ''
+                      }
                       alt={`${collection.name} thumbnail`}
                       className="w-full h-32 object-cover rounded-md"
                       onError={e => {
@@ -259,7 +283,7 @@ export default function NewBackofficePage() {
 
       {isEditing && editingItem && (
         <CollectionForm
-          collection={editingItem}
+          collection={editingItem} 
           onChange={setEditingItem}
           onSave={handleSaveCollection}
           onCancel={handleCloseEdit}
