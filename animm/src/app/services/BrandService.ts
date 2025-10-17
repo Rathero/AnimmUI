@@ -30,9 +30,6 @@ const useBrandService = () => {
       }
     );
     if (!response.ok) throw new Error('Failed to delete image');
-    if (response.ok) {
-      alert("Image deleted succesfully")
-    }
     return response.json();
   };
 

@@ -32,3 +32,12 @@ export interface BrandImage {
   url: string
   userId: number
 }
+
+export interface DeleteModalProps {
+  open: boolean
+  onConfirm: () => Promise<void> | void
+  onCancel: () => void
+  title?: string
+  description?: string
+  loading?: boolean
+}

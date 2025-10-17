@@ -22,7 +22,6 @@ export function UploadModal({ open, onOpenChange, activeTabConfig }: UploadModal
       preview: URL.createObjectURL(file),
     }));
     console.log(filesArray);
-    debugger
     setUploadedFiles(prev => [...prev, ...filesArray]);
     if (hiddenFileInput.current) hiddenFileInput.current.value = "";
   };
