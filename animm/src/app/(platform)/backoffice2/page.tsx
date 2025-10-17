@@ -20,7 +20,7 @@ import { User } from '@/types/users';
 import useUsersService from '@/app/services/UsersService';
 import CollectionForm from './components/collections/CollectionForm';
 
-// Tipo para edición
+
 type EditingCollection = Omit<Collection, 'thumbnail'> & {
   thumbnail: File | null;
   thumbnailPreview: string;
@@ -41,7 +41,7 @@ export default function NewBackofficePage() {
   const { addCollection } = create();
   const { getAll: getAllUsers } = useUsersService();
 
-  // Fetch users
+
   const fetchUsers = async () => {
     setIsLoadingUsers(true);
     try {
@@ -54,7 +54,7 @@ export default function NewBackofficePage() {
     }
   };
 
-  // Fetch collections
+
   const fetchData = async () => {
     setIsLoading(true);
     try {
@@ -111,7 +111,7 @@ export default function NewBackofficePage() {
         ? editingItem.thumbnail instanceof File
           ? editingItem.thumbnail
           : undefined
-        : editingItem.thumbnail; // en edición puede ser null
+        : editingItem.thumbnail; 
 
     if (editingItem.id === 0 && !fileThumbnail) {
       setError('Thumbnail file is required');
@@ -123,7 +123,7 @@ export default function NewBackofficePage() {
       description: editingItem.description,
       userId: editingItem.userId,
       templates: editingItem.templates || [],
-      thumbnail: fileThumbnail as File, // ⚠ Cast seguro
+      thumbnail: fileThumbnail as File, 
     };
 
     if (editingItem.id === 0) {

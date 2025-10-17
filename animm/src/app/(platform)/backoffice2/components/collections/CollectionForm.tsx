@@ -12,15 +12,15 @@ import { LoadingSpinner } from '@/components/ui/loading-spinner';
 import { User } from '@/types/users';
 import { Collection } from '@/types/collections';
 
-// Definimos un tipo EditingCollection que usamos en la UI
-export type EditingCollection = Omit<Collection, 'thumbnail'> & {
+
+export type UpdateCollection = Omit<Collection, 'thumbnail'> & {
   thumbnail: File | null;
   thumbnailPreview: string;
 };
 
 interface CollectionFormProps {
-  collection: EditingCollection;
-  onChange: (collection: EditingCollection) => void;
+  collection: UpdateCollection;
+  onChange: (collection: UpdateCollection) => void;
   onSave: () => void;
   onCancel: () => void;
   title: string;
@@ -41,24 +41,25 @@ export default function CollectionForm({
 }: CollectionFormProps) {
   const hiddenFileInput = useRef<HTMLInputElement>(null);
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0] ?? null;
-    onChange({
-      ...collection,
-      thumbnail: file,
-      thumbnailPreview: file ? URL.createObjectURL(file) : '',
-    });
-  };
+const updateThumbnail = (file: File | null) => {
+  onChange({
+    ...collection,
+    thumbnail: file,
+    thumbnailPreview: file ? URL.createObjectURL(file) : '',
+  });
+};
 
-  const handleDrop = (e: React.DragEvent<HTMLDivElement>) => {
-    e.preventDefault();
-    const file = e.dataTransfer.files?.[0] ?? null;
-    onChange({
-      ...collection,
-      thumbnail: file,
-      thumbnailPreview: file ? URL.createObjectURL(file) : '',
-    });
-  };
+const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const file = e.target.files?.[0] ?? null;
+  updateThumbnail(file);
+};
+
+const handleDrop = (e: React.DragEvent<HTMLDivElement>) => {
+  e.preventDefault();
+  const file = e.dataTransfer.files?.[0] ?? null;
+  updateThumbnail(file);
+};
+
 
   const handleDragOver = (e: React.DragEvent<HTMLDivElement>) => {
     e.preventDefault();
