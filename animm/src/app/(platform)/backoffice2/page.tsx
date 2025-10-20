@@ -19,22 +19,17 @@ import useCollectionsService from '@/app/services/CollectionsService';
 import { User } from '@/types/users';
 import useUsersService from '@/app/services/UsersService';
 import CollectionForm from './components/collections/CollectionForm';
+import type { CollectionRequest } from '@/types/collections';
 
-
-type EditingCollection = Omit<Collection, 'thumbnail'> & {
-  thumbnail: File | null;
-  thumbnailPreview: string;
-};
 
 export default function NewBackofficePage() {
   const [collections, setCollections] = useState<Collection[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isEditing, setIsEditing] = useState(false);
-  const [editingItem, setEditingItem] = useState<EditingCollection | null>(null);
+  const [editingCollection, setEditingCollection] = useState<CollectionRequest | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [users, setUsers] = useState<User[]>([]);
   const [isLoadingUsers, setIsLoadingUsers] = useState(true);
-
   const { setPageTitle } = platformStore(state => state);
   const { getAllBackoffice, update: updateCollection, delete: deleteCollection, create } =
     useCollectionsService();
@@ -75,7 +70,7 @@ export default function NewBackofficePage() {
   }, [setPageTitle]);
 
   const handleCreateCollection = () => {
-    setEditingItem({
+    setEditingCollection({
       id: 0,
       name: '',
       description: '',
@@ -89,7 +84,7 @@ export default function NewBackofficePage() {
   };
 
   const handleEditCollection = (collection: Collection) => {
-    setEditingItem({
+    setEditingCollection({
       ...collection,
       thumbnail: collection.thumbnail instanceof File ? collection.thumbnail : null,
       thumbnailPreview:
@@ -103,44 +98,38 @@ export default function NewBackofficePage() {
     setError(null);
   };
 
-  const handleSaveCollection = async () => {
-    if (!editingItem) return;
+const handleSaveCollection = async () => {
+  if (!editingCollection) return;
 
-    const fileThumbnail =
-      editingItem.id === 0
-        ? editingItem.thumbnail instanceof File
-          ? editingItem.thumbnail
-          : undefined
-        : editingItem.thumbnail; 
+  const collectionData = {
+    name: editingCollection.name,
+    description: editingCollection.description,
+    userId: editingCollection.userId,
+    templates: editingCollection.templates || [],
+    thumbnail: editingCollection.thumbnail ?? null,
+  };
 
-    if (editingItem.id === 0 && !fileThumbnail) {
-      setError('Thumbnail file is required');
-      return;
-    }
-
-    const collectionData = {
-      name: editingItem.name,
-      description: editingItem.description,
-      userId: editingItem.userId,
-      templates: editingItem.templates || [],
-      thumbnail: fileThumbnail as File, 
-    };
-
-    if (editingItem.id === 0) {
-      await addCollection(collectionData);
+  try {
+    if (editingCollection.id) {
+      await updateCollection(editingCollection.id, collectionData);
     } else {
-      await updateCollection(editingItem.id, collectionData);
+      await addCollection(collectionData);
     }
 
     setIsEditing(false);
-    setEditingItem(null);
+    setEditingCollection(null);
     setError(null);
     await fetchData();
-  };
+  } catch (err) {
+    console.error('Error saving collection:', err);
+    setError('Error saving collection');
+  }
+};
+
 
   const handleCloseEdit = () => {
     setIsEditing(false);
-    setEditingItem(null);
+    setEditingCollection(null);
     setError(null);
   };
 
@@ -264,13 +253,13 @@ export default function NewBackofficePage() {
         </div>
       </div>
 
-      {isEditing && editingItem && (
+      {isEditing && editingCollection && (
         <CollectionForm
-          collection={editingItem}
-          onChange={setEditingItem}
+          collection={editingCollection}
+          onChange={setEditingCollection}
           onSave={handleSaveCollection}
           onCancel={handleCloseEdit}
-          title={editingItem.id === 0 ? 'Create Collection' : 'Edit Collection'}
+          title={editingCollection.id === 0 ? 'Create Collection' : 'Edit Collection'}
           users={users}
           isLoadingUsers={isLoadingUsers}
           error={error}

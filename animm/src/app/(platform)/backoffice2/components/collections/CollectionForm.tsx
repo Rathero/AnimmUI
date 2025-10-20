@@ -10,17 +10,13 @@ import { Save, X } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { LoadingSpinner } from '@/components/ui/loading-spinner';
 import { User } from '@/types/users';
-import { Collection } from '@/types/collections';
+import { CollectionRequest } from '@/types/collections';
 
 
-export type UpdateCollection = Omit<Collection, 'thumbnail'> & {
-  thumbnail: File | null;
-  thumbnailPreview: string;
-};
 
 interface CollectionFormProps {
-  collection: UpdateCollection;
-  onChange: (collection: UpdateCollection) => void;
+  collection: CollectionRequest;
+  onChange: (collection: CollectionRequest) => void;
   onSave: () => void;
   onCancel: () => void;
   title: string;

@@ -40,7 +40,7 @@ const useCollectionsService = () => {
       name: string;
       description?: string;
       userId: number;
-      thumbnail: File;
+      thumbnail: File | null;
       templates?: any[];
     }) => {
       const formData = new FormData();
