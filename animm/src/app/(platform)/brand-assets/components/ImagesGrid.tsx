@@ -7,25 +7,23 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import Image from "next/image"
 import useBrandService from "@/app/services/BrandService"
 import { BrandImage } from "@/types/brandImageRequest"
-import DeleteModal from "./DeleteModal"
+import AnimmModal from "@/components/AnimmModal"
 
 export function ImageGrid() {
   const [images, setImages] = useState<BrandImage[]>([])
   const { getBrandImages, deleteBrandImage } = useBrandService()
-  const [deleteModalOpen, setDeleteModalOpen] = useState(false)
+  const [modalOpen, setModalOpen] = useState(false)
   const [selectedId, setSelectedId] = useState<number | null>(null)
 
   useEffect(() => {
     const loadImages = async () => {
-        const data = await getBrandImages()
-        const imagesArray = Array.isArray(data.Result) ? data.Result : []
-        setImages(imagesArray)
+      const data = await getBrandImages()
+      const imagesArray = Array.isArray(data.Result) ? data.Result : []
+      setImages(imagesArray)
       if (!data.Result) {
         setImages([])
-        return
       }
     }
-
     loadImages()
   }, [getBrandImages])
 
@@ -39,17 +37,19 @@ export function ImageGrid() {
 
     const name = fileName.substring(0, lastDotIndex)
     const ext = fileName.substring(lastDotIndex)
-
     const cleanName = name.split("_")[0]
 
     return cleanName + ext
   }
 
-  const handleDelete = async (imageId: number) => {
+  const handleDelete = (imageId: number) => {
     setSelectedId(imageId)
-    setDeleteModalOpen(true)
+    setModalOpen(true)
   }
-  const selectedImage = selectedId != null ? images.find((img) => img.id === selectedId) ?? null : null
+
+  const selectedImage = selectedId != null
+    ? images.find((img) => img.id === selectedId) ?? null
+    : null
 
   const confirmDelete = async () => {
     if (selectedId === null) return
@@ -57,10 +57,10 @@ export function ImageGrid() {
       await deleteBrandImage(selectedId)
       setImages(images.filter(img => img.id !== selectedId))
     } catch (err) {
-      alert('Error deleting image')
+      alert("Error deleting image")
       console.error(err)
     } finally {
-      setDeleteModalOpen(false)
+      setModalOpen(false)
       setSelectedId(null)
     }
   }
@@ -106,14 +106,11 @@ export function ImageGrid() {
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end">
                     <DropdownMenuItem asChild>
-                      <a
-                        href={item.url}
-                        target="_blank"
-                      >
+                      <a href={item.url} target="_blank">
                         Open
                       </a>
                     </DropdownMenuItem>
-                    <DropdownMenuItem 
+                    <DropdownMenuItem
                       className="text-destructive"
                       onClick={() => handleDelete(item.id)}
                     >
@@ -128,12 +125,16 @@ export function ImageGrid() {
           <p className="text-muted-foreground">No images yet</p>
         )}
       </div>
-      <DeleteModal
-        open={deleteModalOpen}
-        onCancel={() => setDeleteModalOpen(false)}
+
+      <AnimmModal
+        open={modalOpen}
+        onCancel={() => setModalOpen(false)}
         onConfirm={confirmDelete}
-        title="Are you sure?"
-        description={`This action cannot be undone. This will permanently delete the image "${selectedImage ? getCleanFileName(selectedImage.url) : ""}".`}
+        title="Delete image?"
+        description={`This will permanently delete the image "${selectedImage ? getCleanFileName(selectedImage.url) : ""}".`}
+        confirmText="Delete"
+        cancelText="Cancel"
+        confirmVariant="destructive"
       />
     </>
   )

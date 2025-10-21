@@ -33,11 +33,14 @@ export interface BrandImage {
   userId: number
 }
 
-export interface DeleteModalProps {
+export interface AnimmModalProps {
   open: boolean
   onConfirm: () => Promise<void> | void
   onCancel: () => void
   title?: string
   description?: string
+  confirmText?: string
+  cancelText?: string
+  confirmVariant?: "default" | "destructive" | "outline"
   loading?: boolean
 }

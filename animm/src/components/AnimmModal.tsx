@@ -10,17 +10,19 @@ import {
   DialogDescription,
   DialogFooter,
 } from "@/components/ui/dialog"
-import { DeleteModalProps } from "@/types/brandImageRequest"
+import { AnimmModalProps } from "@/types/brandImageRequest"
 
-
-export default function DeleteModal({
+export default function AnimmModal({
   open,
   onConfirm,
   onCancel,
-  title = "Do you want to delete this item?",
+  title = "Are you sure?",
   description = "This action cannot be undone.",
+  confirmText = "Confirm",
+  cancelText = "Cancel",
+  confirmVariant = "default",
   loading = false,
-}: DeleteModalProps) {
+}: AnimmModalProps) {
   const [isLoading, setIsLoading] = useState(false)
 
   const handleConfirm = async () => {
@@ -44,14 +46,14 @@ export default function DeleteModal({
 
         <DialogFooter className="flex justify-end gap-2">
           <Button variant="outline" onClick={onCancel} disabled={isLoading}>
-            Cancel
+            {cancelText}
           </Button>
           <Button
-            variant="destructive"
+            variant={confirmVariant}
             onClick={handleConfirm}
             disabled={isLoading}
           >
-            {isLoading ? "Deleting..." : "Delete"}
+            {isLoading ? `${confirmText}...` : confirmText}
           </Button>
         </DialogFooter>
       </DialogContent>
