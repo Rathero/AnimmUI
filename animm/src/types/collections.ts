@@ -106,10 +106,22 @@ export interface Collection {
   id: number;
   name: string;
   description: string;
-  thumbnail: string;
+  thumbnail: string | File | null;
   userId: number;
-  templates: Template[];
+  templates: any[];
+  thumbnailPreview?: string;
 }
+
+export interface CollectionRequest {
+  id?: number;
+  name: string;
+  description?: string;
+  userId: number;
+  thumbnail: File | null;
+  templates?: any[];
+  thumbnailPreview?: string;
+}
+
 
 export interface ApiCollections extends BaseApiResponse<Collection[]> {}
 export interface ApiCollection extends BaseApiResponse<Collection> {}
