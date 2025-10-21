@@ -16,16 +16,19 @@ export function ImageGrid() {
   const [selectedId, setSelectedId] = useState<number | null>(null)
 
   useEffect(() => {
-    const loadImages = async () => {
-      const data = await getBrandImages()
-      const imagesArray = Array.isArray(data.Result) ? data.Result : []
-      setImages(imagesArray)
-      if (!data.Result) {
-        setImages([])
-      }
+  const loadImages = async () => {
+    const data = await getBrandImages()
+    const imagesArray = Array.isArray(data.Result) ? data.Result : []
+    setImages(imagesArray)
+    if (!data.Result) {
+      setImages([])
     }
-    loadImages()
-  }, [getBrandImages])
+  }
+
+  loadImages() 
+  const intervalId = setInterval(loadImages, 1000)
+  return () => clearInterval(intervalId)
+}, [])
 
   const getCleanFileName = (url: string) => {
     if (!url) return ""
