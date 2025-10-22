@@ -26,8 +26,7 @@ export function ImageGrid() {
   }
 
   loadImages() 
-  const intervalId = setInterval(loadImages, 1000)
-  return () => clearInterval(intervalId)
+  setInterval(loadImages, 1000)
 }, [])
 
   const getCleanFileName = (url: string) => {
