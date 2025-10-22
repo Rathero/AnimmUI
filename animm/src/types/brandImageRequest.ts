@@ -14,11 +14,13 @@ export interface Tab {
 export interface BrandAssetsTabsProps {
   activeTab: string;
   setActiveTab: (tab: string) => void;
+  onUploadComplete?: () => void;
 }
 export interface UploadModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   activeTabConfig: Tab;
+  onUploadComplete?: () => void;
 }
 
 export interface UploadedFile {

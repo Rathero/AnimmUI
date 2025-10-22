@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { UploadModal } from "./UploadModal";
 import { BrandAssetsTabsProps, Tab } from "@/types/brandImageRequest";
 
-export function BrandAssetsTabs({ activeTab, setActiveTab }: BrandAssetsTabsProps) {
+export function BrandAssetsTabs({ activeTab, setActiveTab, onUploadComplete }: BrandAssetsTabsProps) {
   const tabs: Tab[] = [
     { id: "images", label: "Images", icon: ImageIcon, buttonText: "Upload Image", modalTitle: "Upload Image" },
     { id: "videos", label: "Videos", icon: Video, buttonText: "Upload Video", modalTitle: "Upload Video" },
@@ -46,7 +46,7 @@ export function BrandAssetsTabs({ activeTab, setActiveTab }: BrandAssetsTabsProp
           <Plus className="w-4 h-4" />
           {activeTabConfig.buttonText}
         </Button>
-        <UploadModal open={modalOpen} onOpenChange={setModalOpen} activeTabConfig={activeTabConfig} />
+        <UploadModal open={modalOpen} onOpenChange={setModalOpen} activeTabConfig={activeTabConfig} onUploadComplete={onUploadComplete} />
       </div>
     </nav>
   );

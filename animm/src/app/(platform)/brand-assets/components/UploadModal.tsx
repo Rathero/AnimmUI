@@ -8,11 +8,11 @@ import { platformStore } from '@/stores/platformStore';
 import useBrandService from '@/app/services/BrandService';
 import { UploadModalProps, UploadedFile } from "@/types/brandImageRequest";
 
-export function UploadModal({ open, onOpenChange, activeTabConfig }: UploadModalProps) {
+export function UploadModal({ open, onOpenChange, activeTabConfig, onUploadComplete }: UploadModalProps) {
 
   const hiddenFileInput = useRef<HTMLInputElement>(null);
   const [uploadedFiles, setUploadedFiles] = useState<UploadedFile[]>([]);
-  const { addBrandImage: addBrandImage } = useBrandService();
+  const { addBrandImage: addBrandImage, loadImages } = useBrandService();
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (!e.target.files) return;
@@ -48,7 +48,6 @@ export function UploadModal({ open, onOpenChange, activeTabConfig }: UploadModal
   const handleChooseFileClick = () => {
     if (hiddenFileInput.current) hiddenFileInput.current.click();
   };
-
   const { authenticationResponse, setAuthenticationResponse } = platformStore(
       state => state
   );
@@ -63,6 +62,8 @@ export function UploadModal({ open, onOpenChange, activeTabConfig }: UploadModal
       await addBrandImage(data);
       URL.revokeObjectURL(uploadedFile.preview);
     }
+    await loadImages();
+    if (onUploadComplete) onUploadComplete();
     setUploadedFiles([]);
     onOpenChange(false);
   }

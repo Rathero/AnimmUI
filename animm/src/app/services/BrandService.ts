@@ -33,7 +33,12 @@ const useBrandService = () => {
     return response.json();
   };
 
-  return { addBrandImage, getBrandImages, deleteBrandImage };
+  const loadImages = async () => {
+    const data = await getBrandImages()
+    return Array.isArray(data.Result) ? data.Result : []
+  }
+
+  return { addBrandImage, getBrandImages, deleteBrandImage, loadImages };
 };
 
 export default useBrandService;

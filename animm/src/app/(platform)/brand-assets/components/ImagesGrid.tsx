@@ -9,25 +9,15 @@ import useBrandService from "@/app/services/BrandService"
 import { BrandImage } from "@/types/brandImageRequest"
 import AnimmModal from "@/components/AnimmModal"
 
-export function ImageGrid() {
+export function ImageGrid({ reloadKey = 0 }: { reloadKey?: number }) {
   const [images, setImages] = useState<BrandImage[]>([])
-  const { getBrandImages, deleteBrandImage } = useBrandService()
+  const { loadImages, deleteBrandImage } = useBrandService()
   const [modalOpen, setModalOpen] = useState(false)
   const [selectedId, setSelectedId] = useState<number | null>(null)
 
   useEffect(() => {
-  const loadImages = async () => {
-    const data = await getBrandImages()
-    const imagesArray = Array.isArray(data.Result) ? data.Result : []
-    setImages(imagesArray)
-    if (!data.Result) {
-      setImages([])
-    }
-  }
-
-  loadImages() 
-  setInterval(loadImages, 1000)
-}, [])
+    loadImages().then(setImages)
+  }, [reloadKey])
 
   const getCleanFileName = (url: string) => {
     if (!url) return ""
@@ -57,7 +47,8 @@ export function ImageGrid() {
     if (selectedId === null) return
     try {
       await deleteBrandImage(selectedId)
-      setImages(images.filter(img => img.id !== selectedId))
+      const imagesUpdated = await loadImages()
+      setImages(imagesUpdated)
     } catch (err) {
       alert("Error deleting image")
       console.error(err)
