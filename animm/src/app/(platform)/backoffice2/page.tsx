@@ -4,8 +4,6 @@ import { useEffect, useState } from 'react';
 import { LoadingSpinner } from '@/components/ui/loading-spinner';
 import { ContentWrapper } from '@/components/ui/content-wrapper';
 import { platformStore } from '@/stores/platformStore';
-import { Button } from '@/components/ui/button';
-import { ArrowLeft } from 'lucide-react';
 import { Collection } from '@/types/collections';
 import useCollectionsService from '@/app/services/CollectionsService';
 import { User } from '@/types/users';
