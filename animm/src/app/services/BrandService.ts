@@ -22,7 +22,23 @@ const useBrandService = () => {
     return await response.json();
   };
 
-  return { addBrandImage, getBrandImages };
+  const deleteBrandImage = async (imageId: number) => {
+    const response = await fetchWithAuth(
+      `${process.env.NEXT_PUBLIC_API_URL}/brand/${imageId}`,
+      {
+        method: 'DELETE',
+      }
+    );
+    if (!response.ok) throw new Error('Failed to delete image');
+    return response.json();
+  };
+
+  const loadImages = async () => {
+    const data = await getBrandImages()
+    return Array.isArray(data.Result) ? data.Result : []
+  }
+
+  return { addBrandImage, getBrandImages, deleteBrandImage, loadImages };
 };
 
 export default useBrandService;
