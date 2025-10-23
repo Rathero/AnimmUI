@@ -99,6 +99,13 @@ export default function TemplatesView({
           </Button>
         </div>
 
+        <div className="flex justify mt-8">
+          <Button variant="outline" size="sm" onClick={onBack}>
+            <ArrowLeft className="w-4 h-4 mr-2" />
+            Back to Collections
+          </Button>
+        </div>
+
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {collection.templates?.map(template => (
             <Card
@@ -145,12 +152,7 @@ export default function TemplatesView({
           ))}
         </div>
 
-        <div className="flex justify-end mt-8">
-          <Button variant="outline" size="sm" onClick={onBack}>
-            <ArrowLeft className="w-4 h-4 mr-2" />
-            Back to Collections
-          </Button>
-        </div>
+        
       </div>
 
       {isEditingTemplate && editingTemplate && (

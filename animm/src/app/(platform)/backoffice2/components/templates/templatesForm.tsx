@@ -79,7 +79,38 @@ export default function TemplateForm({
 
           {/* File */}
           <div>
-            <Label htmlFor="file">File</Label>
+            <Label htmlFor="file">Thumbnail</Label>
+            <div
+              className="w-full h-32 border-2 border-dashed rounded-md flex items-center justify-center cursor-pointer hover:bg-gray-50"
+              onClick={() => hiddenFileInput.current?.click()}
+              onDrop={handleDrop}
+              onDragOver={handleDragOver}
+            >
+              {template.filePreview ? (
+                <div className="text-center p-4">
+                  <p className="text-sm font-medium text-gray-700">
+                    {template.file?.name}
+                  </p>
+                  <p className="text-xs text-gray-500 mt-1">
+                    {template.file?.size ? `${(template.file.size / 1024).toFixed(2)} KB` : ''}
+                  </p>
+                </div>
+              ) : (
+                <span className="text-muted-foreground">
+                  Drop file or click to select
+                </span>
+              )}
+              <input
+                ref={hiddenFileInput}
+                type="file"
+                onChange={handleFileChange}
+                style={{ display: 'none' }}
+              />
+            </div>
+          </div>
+
+          <div>
+            <Label htmlFor="file">Video</Label>
             <div
               className="w-full h-32 border-2 border-dashed rounded-md flex items-center justify-center cursor-pointer hover:bg-gray-50"
               onClick={() => hiddenFileInput.current?.click()}
