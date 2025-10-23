@@ -13,7 +13,6 @@ import { User } from '@/types/users';
 import { CollectionRequest } from '@/types/collections';
 
 
-
 interface CollectionFormProps {
   collection: CollectionRequest;
   onChange: (collection: CollectionRequest) => void;
@@ -76,7 +75,7 @@ const handleDrop = (e: React.DragEvent<HTMLDivElement>) => {
         <CardContent className="space-y-4">
           {error && <div className="text-red-500 text-sm">{error}</div>}
 
-          {/* Name */}
+         
           <div>
             <Label htmlFor="name">Name</Label>
             <Input
@@ -89,7 +88,7 @@ const handleDrop = (e: React.DragEvent<HTMLDivElement>) => {
             />
           </div>
 
-          {/* Description */}
+          
           <div>
             <Label htmlFor="description">Description</Label>
             <Textarea
@@ -102,7 +101,7 @@ const handleDrop = (e: React.DragEvent<HTMLDivElement>) => {
             />
           </div>
 
-          {/* Thumbnail */}
+          
           <div>
             <Label htmlFor="thumbnail">Thumbnail</Label>
             <div
@@ -132,7 +131,7 @@ const handleDrop = (e: React.DragEvent<HTMLDivElement>) => {
             </div>
           </div>
 
-          {/* User selector */}
+          
           <div>
             <Label htmlFor="userId">User</Label>
             {isLoadingUsers ? (
@@ -156,7 +155,7 @@ const handleDrop = (e: React.DragEvent<HTMLDivElement>) => {
             )}
           </div>
 
-          {/* Buttons */}
+      
           <div className="flex items-center gap-2 pt-4">
             <Button onClick={onSave}>
               <Save className="w-4 h-4 mr-2" /> Save

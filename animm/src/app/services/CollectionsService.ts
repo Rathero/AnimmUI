@@ -1,5 +1,5 @@
 'use client';
-import { ApiCollection, ApiCollections, Collection } from '@/types/collections';
+import { ApiCollection, ApiCollections, CollectionRequest } from '@/types/collections';
 import useFetchWithAuth from './fetchWithAuth';
 
 const useCollectionsService = () => {
@@ -83,7 +83,7 @@ const useCollectionsService = () => {
 
   const update = async (
     id: number,
-    collection: Partial<Collection> & { thumbnail: File | null }
+    collection: CollectionRequest
   ): Promise<ApiCollection | undefined> => {
     const formData = new FormData();
 

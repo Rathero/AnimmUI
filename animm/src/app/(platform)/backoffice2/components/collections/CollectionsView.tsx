@@ -51,48 +51,36 @@ export default function CollectionsView({
     setError(null);
   };
 
-  const handleEditCollection = (collection: Collection) => {
-    setEditingCollection({
-      ...collection,
-      thumbnail: collection.thumbnail instanceof File ? collection.thumbnail : null,
-      thumbnailPreview:
-        typeof collection.thumbnail === 'string'
-          ? collection.thumbnail
-          : collection.thumbnail instanceof File
-          ? URL.createObjectURL(collection.thumbnail)
-          : '',
-    });
-    setIsEditing(true);
-    setError(null);
+const handleEditCollection = (collection: Collection) => {
+  const requestData: CollectionRequest = {
+    id: collection.id,
+    name: collection.name,
+    description: collection.description,
+    userId: collection.userId,
+    thumbnail: null, 
+    thumbnailPreview: collection.thumbnail || '', 
+    templates: collection.templates,
   };
+  
+  setEditingCollection(requestData);
+  setIsEditing(true);
+  setError(null);
+};
 
-  const handleSaveCollection = async () => {
-    if (!editingCollection) return;
+const handleSaveCollection = async () => {
+  if (!editingCollection) return;
 
-    const collectionData = {
-      name: editingCollection.name,
-      description: editingCollection.description,
-      userId: editingCollection.userId,
-      templates: editingCollection.templates || [],
-      thumbnail: editingCollection.thumbnail ?? null,
-    };
+  if (editingCollection.id) {
+    await updateCollection(editingCollection.id, editingCollection);
+  } else {
+    await addCollection(editingCollection);
+  }
 
-    try {
-      if (editingCollection.id) {
-        await updateCollection(editingCollection.id, collectionData);
-      } else {
-        await addCollection(collectionData);
-      }
-
-      setIsEditing(false);
-      setEditingCollection(null);
-      setError(null);
-      await onDataChange();
-    } catch (err) {
-      console.error('Error saving collection:', err);
-      setError('Error saving collection');
-    }
-  };
+  setIsEditing(false);
+  setEditingCollection(null);
+  setError(null);
+  await onDataChange();
+};
 
   const handleCloseEdit = () => {
     setIsEditing(false);
@@ -172,25 +160,19 @@ export default function CollectionsView({
                   <CardDescription>{collection.description}</CardDescription>
                 </CardHeader>
 
-                {collection.thumbnail && (
-                  <div className="px-6 py-2">
-                    <img
-                      src={
-                        typeof collection.thumbnail === 'string'
-                          ? collection.thumbnail
-                          : collection.thumbnail instanceof File
-                          ? URL.createObjectURL(collection.thumbnail)
-                          : ''
-                      }
-                      alt={`${collection.name} thumbnail`}
-                      className="w-full h-32 object-cover rounded-md"
-                      onError={e => {
-                        const target = e.target as HTMLImageElement;
-                        target.style.display = 'none';
-                      }}
-                    />
-                  </div>
-                )}
+                  {collection.thumbnail && (
+                    <div className="px-6 py-2">
+                      <img
+                        src={collection.thumbnail}
+                        alt={`${collection.name} thumbnail`}
+                        className="w-full h-32 object-cover rounded-md"
+                        onError={e => {
+                          const target = e.target as HTMLImageElement;
+                          target.style.display = 'none';
+                        }}
+                      />
+                    </div>
+                  )}
 
                 <CardContent>
                   <div className="space-y-2">
