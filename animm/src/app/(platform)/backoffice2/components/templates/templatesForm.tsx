@@ -63,8 +63,7 @@ export default function TemplateForm({
         </CardHeader>
         <CardContent className="space-y-4">
           {error && <div className="text-red-500 text-sm">{error}</div>}
-
-          {/* Name */}
+         
           <div>
             <Label htmlFor="name">Name</Label>
             <Input
@@ -77,7 +76,6 @@ export default function TemplateForm({
             />
           </div>
 
-          {/* File */}
           <div>
             <Label htmlFor="file">Thumbnail</Label>
             <div
@@ -139,8 +137,7 @@ export default function TemplateForm({
               />
             </div>
           </div>
-
-          {/* Buttons */}
+          
           <div className="flex items-center gap-2 pt-4">
             <Button onClick={onSave}>
               <Save className="w-4 h-4 mr-2" /> Save
