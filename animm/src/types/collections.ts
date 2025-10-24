@@ -106,20 +106,18 @@ export interface Collection {
   id: number;
   name: string;
   description: string;
-  thumbnail: string | File | null;
+  thumbnail: string | null; 
   userId: number;
   templates: any[];
-  thumbnailPreview?: string;
 }
-
 export interface CollectionRequest {
   id?: number;
   name: string;
-  description?: string;
+  description: string;
   userId: number;
-  thumbnail: File | null;
-  templates?: any[];
+  thumbnail: File | null; 
   thumbnailPreview?: string;
+  templates?: any[];
 }
 
 

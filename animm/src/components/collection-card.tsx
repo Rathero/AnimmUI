@@ -7,10 +7,7 @@ interface CollectionCardProps {
 }
 
 export default function CollectionCard({ collection }: CollectionCardProps) {
-  const thumbnailSrc =
-    collection.thumbnail instanceof File
-      ? URL.createObjectURL(collection.thumbnail)
-      : collection.thumbnail || '/img/placeholder.svg';
+  const thumbnailSrc = collection.thumbnail || '/img/placeholder.svg';
 
   return (
     <Card className="flex flex-row w-full h-36 overflow-hidden transition-shadow hover:shadow-md hover:shadow-slate-500/10 cursor-pointer">
