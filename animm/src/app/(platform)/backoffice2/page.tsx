@@ -10,14 +10,16 @@ import { User } from '@/types/users';
 import useUsersService from '@/app/services/UsersService';
 import CollectionsView from './components/collections/CollectionsView';
 import TemplatesView from './components/templates/TemplatesView';
+import ModulesView from './components/modules/ModulesView';
 
 export default function NewBackofficePage() {
   const [collections, setCollections] = useState<Collection[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [users, setUsers] = useState<User[]>([]);
   const [isLoadingUsers, setIsLoadingUsers] = useState(true);
-  const [viewMode, setViewMode] = useState<'collections' | 'templates'>('collections');
+  const [viewMode, setViewMode] = useState<'collections' | 'templates' | 'modules'>('collections');
   const [selectedCollection, setSelectedCollection] = useState<Collection | null>(null);
+  const [selectedTemplate, setSelectedTemplate] = useState<any | null>(null);
 
   const { setPageTitle } = platformStore(state => state);
   const { getAllBackoffice } = useCollectionsService();
@@ -39,7 +41,18 @@ export default function NewBackofficePage() {
     setIsLoading(true);
     try {
       const collectionsData = await getAllBackoffice();
-      setCollections(collectionsData?.Result || []);
+      const newCollections = collectionsData?.Result || [];
+      setCollections(newCollections);
+      
+      // Actualizar la colección seleccionada con los datos frescos
+      if (selectedCollection) {
+        const updatedCollection = newCollections.find(
+          (c: Collection) => c.id === selectedCollection.id
+        );
+        if (updatedCollection) {
+          setSelectedCollection(updatedCollection);
+        }
+      }
     } catch (err) {
       console.error('Error fetching collections:', err);
     } finally {
@@ -54,14 +67,27 @@ export default function NewBackofficePage() {
     return () => setPageTitle(undefined);
   }, [setPageTitle]);
 
-  const goToTemplates = (collection: Collection) => {
-    setSelectedCollection(collection);
+  const goToTemplates = (collection?: Collection) => {
+    if (collection) {
+      setSelectedCollection(collection);
+    }
     setViewMode('templates');
   };
 
   const goToCollections = () => {
     setSelectedCollection(null);
+    setSelectedTemplate(null);
     setViewMode('collections');
+  };
+
+  const goToModules = (template : any) => {
+    setSelectedTemplate(template);
+    setViewMode('modules');
+  };
+
+  const goBackToTemplates = () => {
+    setSelectedTemplate(null);
+    setViewMode('templates');
   };
 
   if (isLoading) {
@@ -90,6 +116,15 @@ export default function NewBackofficePage() {
         <TemplatesView
           collection={selectedCollection}
           onBack={goToCollections}
+          onDataChange={fetchData}
+          onTemplateClick={goToModules}
+        />
+      )}
+      
+      {viewMode === 'modules' && selectedTemplate && (
+        <ModulesView
+          template={selectedTemplate}
+          onBack={goBackToTemplates}
           onDataChange={fetchData}
         />
       )}

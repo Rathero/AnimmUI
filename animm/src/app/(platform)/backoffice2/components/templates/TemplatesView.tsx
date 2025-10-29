@@ -1,4 +1,4 @@
- import { useState } from 'react';
+import { useState } from 'react';
 import {
   Card,
   CardDescription,
@@ -23,12 +23,14 @@ interface TemplatesViewProps {
   collection: Collection;
   onBack: () => void;
   onDataChange: () => Promise<void>;
+  onTemplateClick: (template: any) => void;
 }
 
 export default function TemplatesView({
   collection,
   onBack,
   onDataChange,
+  onTemplateClick
 }: TemplatesViewProps) {
   const [isEditingTemplate, setIsEditingTemplate] = useState(false);
   const [editingTemplate, setEditingTemplate] = useState<TemplateRequest | null>(null);
@@ -93,16 +95,17 @@ export default function TemplatesView({
       <div className="space-y-4">
         <div className="flex items-center justify-between">
           <h2 className="text-xl font-semibold">Templates in {collection.name}</h2>
-          <Button onClick={handleCreateTemplate}>
-            <Plus className="w-4 h-4 mr-2" />
-            New Template
-          </Button>
         </div>
 
-        <div className="flex justify mt-8">
+        <div className="flex justify-between items-center mt-8">
           <Button variant="outline" size="sm" onClick={onBack}>
             <ArrowLeft className="w-4 h-4 mr-2" />
             Back to Collections
+          </Button>
+          
+          <Button onClick={handleCreateTemplate}>
+            <Plus className="w-4 h-4 mr-2" />
+            New Template
           </Button>
         </div>
 
@@ -111,6 +114,7 @@ export default function TemplatesView({
             <Card
               key={template.id}
               className="hover:shadow-md transition-shadow cursor-pointer"
+              onClick={() => onTemplateClick(template)}
             >
               <CardHeader>
                 <div className="flex items-center justify-between">
@@ -140,19 +144,40 @@ export default function TemplatesView({
                 </div>
                 <CardDescription>Template ID: {template.id}</CardDescription>
               </CardHeader>
+
+              {template.thumbnail && (
+                <div className="px-6 py-2">
+                  <img
+                    src={template.thumbnail}
+                    alt={`${template.name} thumbnail`}
+                    className="w-full h-32 object-cover rounded-md"
+                    onError={e => {
+                      const target = e.target as HTMLImageElement;
+                      target.style.display = 'none';
+                    }}
+                  />
+                </div>
+              )}
+
               <CardContent>
                 <div className="space-y-2">
                   <div className="flex items-center justify-between text-sm">
                     <span className="text-muted-foreground">Modules:</span>
-                    <Badge variant="secondary">{template.modules?.length || 0}</Badge>
+                    <Badge variant="secondary">
+                      {template.modules?.length || 0}
+                    </Badge>
                   </div>
+                  <Button variant="outline" size="sm" className="w-full mt-2" 
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onTemplateClick(template);}}>
+                    Modules
+                  </Button>
                 </div>
               </CardContent>
             </Card>
           ))}
         </div>
-
-        
       </div>
 
       {isEditingTemplate && editingTemplate && (
