@@ -16,20 +16,24 @@ export function AssetsGrid({activeTab, reloadKey = 0 }: {activeTab: string; relo
   const [selectedId, setSelectedId] = useState<number | null>(null)
 
   useEffect(() => {
-    loadAssets().then((data) => {
-      const typeMap: Record<string, number> = {
-        images: 0,
-        videos: 1,
-        audios: 2,
-      };
-
-      const filtered = data.filter((item: BrandAsset) => item.type === typeMap[activeTab]);
-      setAssets(filtered);
-    });
+    fetchAssets()
   }, [reloadKey, activeTab]);
 
   const FileType = activeTab.slice(0, -1)
 
+  const fetchAssets = async () => {
+    const data = await loadAssets()
+    const typeMap: Record<string, number> = {
+      images: 0,
+      videos: 1,
+      audios: 2,
+    }
+
+    const filtered = data.filter((item: BrandAsset) => item.type === typeMap[activeTab])
+    setAssets(filtered)
+    return filtered
+  }
+  
   const getCleanFileName = (url: string) => {
     if (!url) return ""
     const parts = url.split("/")
@@ -58,17 +62,10 @@ export function AssetsGrid({activeTab, reloadKey = 0 }: {activeTab: string; relo
     if (selectedId === null) return
     try {
       await deleteBrandAsset(selectedId)
-      const assetsUpdated = await loadAssets().then((data) => {
-      const typeMap: Record<string, number> = {
-        images: 0,
-        videos: 1,
-        audios: 2,
-      };
-
-      const assetsUpdated = data.filter((item: BrandAsset) => item.type === typeMap[activeTab]);
+      const assetsUpdated = await fetchAssets()
       setAssets(assetsUpdated);
-    });
-    } catch (err) {
+    }
+    catch (err) {
       alert("Error deleting asset")
       console.error(err)
     } finally {
