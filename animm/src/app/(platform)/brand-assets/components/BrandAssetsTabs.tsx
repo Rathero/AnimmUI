@@ -4,7 +4,7 @@ import { ImageIcon, Video, Music, Palette, Settings, Plus } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { UploadModal } from "./UploadModal";
-import { BrandAssetsTabsProps, Tab } from "@/types/brandImageRequest";
+import { BrandAssetsTabsProps, Tab } from "@/types/brandAssets";
 
 export function BrandAssetsTabs({ activeTab, setActiveTab, onUploadComplete }: BrandAssetsTabsProps) {
   const tabs: Tab[] = [

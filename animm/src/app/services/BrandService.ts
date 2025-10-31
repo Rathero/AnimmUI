@@ -3,18 +3,18 @@ import useFetchWithAuth from './fetchWithAuth';
 const useBrandService = () => {
   const fetchWithAuth = useFetchWithAuth();
 
-  const addBrandImage = async (data: FormData) => {
+  const addBrandAssets = async (data: FormData) => {
     const response = await fetchWithAuth(
-      process.env.NEXT_PUBLIC_API_URL + '/brand/image',
+      process.env.NEXT_PUBLIC_API_URL + '/BrandAsset/asset',
       {
         method: 'POST',
         body: data,
       }
     );
   };
-  const getBrandImages = async () => {
+  const getBrandAssets = async () => {
     const response = await fetchWithAuth(
-      process.env.NEXT_PUBLIC_API_URL + '/brand/images',
+      process.env.NEXT_PUBLIC_API_URL + '/BrandAsset/assets',
       {
         method: 'GET',
       }
@@ -22,9 +22,9 @@ const useBrandService = () => {
     return await response.json();
   };
 
-  const deleteBrandImage = async (imageId: number) => {
+  const deleteBrandAsset = async (assetId: number) => {
     const response = await fetchWithAuth(
-      `${process.env.NEXT_PUBLIC_API_URL}/brand/${imageId}`,
+      `${process.env.NEXT_PUBLIC_API_URL}/BrandAsset/${assetId}`,
       {
         method: 'DELETE',
       }
@@ -33,12 +33,12 @@ const useBrandService = () => {
     return response.json();
   };
 
-  const loadImages = async () => {
-    const data = await getBrandImages()
+  const loadAssets = async () => {
+    const data = await getBrandAssets()
     return Array.isArray(data.Result) ? data.Result : []
   }
 
-  return { addBrandImage, getBrandImages, deleteBrandImage, loadImages };
+  return { addBrandAssets, getBrandAssets, deleteBrandAsset, loadAssets };
 };
 
 export default useBrandService;

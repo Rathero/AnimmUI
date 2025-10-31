@@ -2,17 +2,17 @@
 import { useRef, useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { CloudUpload, Trash2 } from "lucide-react";
+import { CloudUpload, Trash2, Music } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { platformStore } from '@/stores/platformStore';
 import useBrandService from '@/app/services/BrandService';
-import { UploadModalProps, UploadedFile } from "@/types/brandImageRequest";
+import { UploadModalProps, UploadedFile } from "@/types/brandAssets";
 
 export function UploadModal({ open, onOpenChange, activeTabConfig, onUploadComplete }: UploadModalProps) {
 
   const hiddenFileInput = useRef<HTMLInputElement>(null);
   const [uploadedFiles, setUploadedFiles] = useState<UploadedFile[]>([]);
-  const { addBrandImage: addBrandImage, loadImages } = useBrandService();
+  const { addBrandAssets: addBrandAssets, loadAssets } = useBrandService();
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (!e.target.files) return;
@@ -55,14 +55,25 @@ export function UploadModal({ open, onOpenChange, activeTabConfig, onUploadCompl
   const handleUpload = async () => {
     if (!authenticationResponse) return;
     const userId = authenticationResponse.id;
+
+    const typeMap = {
+      images: 0,
+      videos: 1,
+      audios: 2,
+    };
+
+    const type = typeMap[activeTabConfig.id as keyof typeof typeMap];
+
     for (const uploadedFile of uploadedFiles) {
       const data = new FormData();
       data.append('UserId', userId.toString());
       data.append('File', uploadedFile.file);
-      await addBrandImage(data);
+      data.append('Type', type.toString());
+      await addBrandAssets(data);
       URL.revokeObjectURL(uploadedFile.preview);
     }
-    await loadImages();
+
+    await loadAssets();
     if (onUploadComplete) onUploadComplete();
     setUploadedFiles([]);
     onOpenChange(false);
@@ -88,7 +99,15 @@ export function UploadModal({ open, onOpenChange, activeTabConfig, onUploadCompl
               ref={hiddenFileInput}
               type="file"
               multiple
-              accept="image/*"
+              accept={
+                activeTabConfig.id === "images"
+                  ? "image/*"
+                  : activeTabConfig.id === "videos"
+                  ? "video/*"
+                  : activeTabConfig.id === "audios"
+                  ? "audio/*"
+                  : "*/*"
+              }
               style={{ display: "none" }}
               onChange={handleFileChange}
             />
@@ -108,11 +127,17 @@ export function UploadModal({ open, onOpenChange, activeTabConfig, onUploadCompl
                 {uploadedFiles.map(file => (
                   <div key={file.id} className="flex items-center gap-3 p-3 border rounded-lg">
                     <div className="w-12 h-12 rounded-lg overflow-hidden bg-muted flex-shrink-0">
-                      <img
-                        src={file.preview}
-                        alt={file.file.name}
-                        className="w-full h-full object-cover"
-                      />
+                      <div className="w-12 h-12 rounded-lg overflow-hidden bg-muted flex-shrink-0 flex items-center justify-center">
+                        {activeTabConfig.id === "images" && (
+                          <img src={file.preview} alt={file.file.name} className="w-full h-full object-cover" />
+                        )}
+                        {activeTabConfig.id === "videos" && (
+                          <video src={file.preview} className="w-full h-full object-cover" muted />
+                        )}
+                        {activeTabConfig.id === "audios" && (
+                          <Music className="w-small h-small object-cover"/>
+                        )}
+                      </div>
                     </div>
                     <div className="flex-1 min-w-0">
                       <p className="text-sm font-medium truncate">{file.file.name}</p>
