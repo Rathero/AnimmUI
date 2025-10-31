@@ -1,23 +1,34 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import { ImageIcon, MoreVertical } from "lucide-react"
+import { ImageIcon, Video, Music, MoreVertical } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import Image from "next/image"
 import useBrandService from "@/app/services/BrandService"
-import { BrandImage } from "@/types/brandImageRequest"
+import { Brandasset } from "@/types/brandAssets"
 import AnimmModal from "@/components/AnimmModal"
 
-export function ImageGrid({ reloadKey = 0 }: { reloadKey?: number }) {
-  const [images, setImages] = useState<BrandImage[]>([])
-  const { loadImages, deleteBrandImage } = useBrandService()
+export function AssetsGrid({activeTab, reloadKey = 0 }: {activeTab: string; reloadKey?: number }) {
+  const [assets, setAssets] = useState<Brandasset[]>([])
+  const { loadAssets, deleteBrandAsset } = useBrandService()
   const [modalOpen, setModalOpen] = useState(false)
   const [selectedId, setSelectedId] = useState<number | null>(null)
 
   useEffect(() => {
-    loadImages().then(setImages)
-  }, [reloadKey])
+    loadAssets().then((data) => {
+      const typeMap: Record<string, number> = {
+        images: 0,
+        videos: 1,
+        audios: 2,
+      };
+
+      const filtered = data.filter((item: Brandasset) => item.type === typeMap[activeTab]);
+      setAssets(filtered);
+    });
+  }, [reloadKey, activeTab]);
+
+  const FileType = activeTab.slice(0, -1)
 
   const getCleanFileName = (url: string) => {
     if (!url) return ""
@@ -34,23 +45,31 @@ export function ImageGrid({ reloadKey = 0 }: { reloadKey?: number }) {
     return cleanName + ext
   }
 
-  const handleDelete = (imageId: number) => {
-    setSelectedId(imageId)
+  const handleDelete = (assetId: number) => {
+    setSelectedId(assetId)
     setModalOpen(true)
   }
 
-  const selectedImage = selectedId != null
-    ? images.find((img) => img.id === selectedId) ?? null
+  const selectedAsset = selectedId != null
+    ? assets.find((item) => item.id === selectedId) ?? null
     : null
 
   const confirmDelete = async () => {
     if (selectedId === null) return
     try {
-      await deleteBrandImage(selectedId)
-      const imagesUpdated = await loadImages()
-      setImages(imagesUpdated)
+      await deleteBrandAsset(selectedId)
+      const assetsUpdated = await loadAssets().then((data) => {
+      const typeMap: Record<string, number> = {
+        images: 0,
+        videos: 1,
+        audios: 2,
+      };
+
+      const assetsUpdated = data.filter((item: Brandasset) => item.type === typeMap[activeTab]);
+      setAssets(assetsUpdated);
+    });
     } catch (err) {
-      alert("Error deleting image")
+      alert("Error deleting asset")
       console.error(err)
     } finally {
       setModalOpen(false)
@@ -61,29 +80,55 @@ export function ImageGrid({ reloadKey = 0 }: { reloadKey?: number }) {
   return (
     <>
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-5 p-6">
-        {images.length > 0 ? (
-          images.map((item) => (
+        {assets.length > 0 ? (
+          assets.map((item) => (
             <div
               key={item.id}
               className="group rounded-xl border border-border bg-card overflow-hidden hover:shadow-lg hover:border-muted-foreground/30 transition-all duration-200"
             >
               <div className="relative aspect-[4/3] bg-muted overflow-hidden">
-                <Image
-                  src={item.url || "/placeholder.svg"}
-                  alt={getCleanFileName(item.url)}
-                  fill
-                  className="object-cover transition-transform duration-300 group-hover:scale-105"
-                />
+                {activeTab === "images" && (
+                  <Image
+                    src={item.url || "/placeholder.svg"}
+                    alt={getCleanFileName(item.url)}
+                    fill
+                    className="object-cover transition-transform duration-300 group-hover:scale-105"
+                  />
+                )}
+                {activeTab === "videos" && (
+                  <video
+                    src={item.url}
+                    controls
+                    className="w-full h-full object-cover"
+                  />
+                )}
+                {activeTab === "audios" && (
+                  <audio
+                    controls
+                    src={item.url}
+                    className="w-full p-2"
+                  />
+                )}
               </div>
 
               <div className="flex items-center justify-between px-3 py-2 border-t border-border bg-background/50">
                 <div className="flex items-center gap-2 min-w-0">
-                  <ImageIcon className="w-4 h-4 text-muted-foreground flex-shrink-0" />
+                  {activeTab === "images" && (
+                    <ImageIcon className="w-4 h-4 text-muted-foreground flex-shrink-0" />
+                  )}
+                  {activeTab === "videos" && (
+                    <Video className="w-4 h-4 text-muted-foreground flex-shrink-0" />
+                  )}
+                  {activeTab === "audios" && (
+                    <Music className="w-4 h-4 text-muted-foreground flex-shrink-0" />
+                  )}
                   <div className="min-w-0">
                     <p className="text-sm font-medium text-foreground truncate">
                       {getCleanFileName(item.url)}
                     </p>
-                    <p className="text-xs text-muted-foreground truncate">Image</p>
+                    <p className="text-xs text-muted-foreground truncate capitalize">
+                      {FileType}
+                    </p>
                   </div>
                 </div>
 
@@ -115,7 +160,9 @@ export function ImageGrid({ reloadKey = 0 }: { reloadKey?: number }) {
             </div>
           ))
         ) : (
-          <p className="text-muted-foreground">No images yet</p>
+          <p className="text-muted-foreground">
+            No {activeTab} yet
+          </p>
         )}
       </div>
 
@@ -123,8 +170,8 @@ export function ImageGrid({ reloadKey = 0 }: { reloadKey?: number }) {
         open={modalOpen}
         onCancel={() => setModalOpen(false)}
         onConfirm={confirmDelete}
-        title="Delete image?"
-        description={`This will permanently delete the image "${selectedImage ? getCleanFileName(selectedImage.url) : ""}".`}
+        title={`Delete ${FileType}?`}
+        description={`This will permanently delete the ${FileType} "${selectedAsset ? getCleanFileName(selectedAsset.url) : ""}".`}
         confirmText="Delete"
         cancelText="Cancel"
         confirmVariant="destructive"

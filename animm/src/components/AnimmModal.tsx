@@ -10,7 +10,7 @@ import {
   DialogDescription,
   DialogFooter,
 } from "@/components/ui/dialog"
-import { AnimmModalProps } from "@/types/brandImageRequest"
+import { AnimmModalProps } from "@/types/brandAssets"
 
 export default function AnimmModal({
   open,

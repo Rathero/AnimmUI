@@ -29,10 +29,11 @@ export interface UploadedFile {
   preview: string;
 }
 
-export interface BrandImage {
+export interface Brandasset {
   id: number
   url: string
   userId: number
+  type: number
 }
 
 export interface AnimmModalProps {
