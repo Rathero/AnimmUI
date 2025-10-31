@@ -29,7 +29,7 @@ export interface UploadedFile {
   preview: string;
 }
 
-export interface Brandasset {
+export interface BrandAsset {
   id: number
   url: string
   userId: number

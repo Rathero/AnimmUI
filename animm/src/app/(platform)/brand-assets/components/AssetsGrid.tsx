@@ -6,11 +6,11 @@ import { Button } from "@/components/ui/button"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import Image from "next/image"
 import useBrandService from "@/app/services/BrandService"
-import { Brandasset } from "@/types/brandAssets"
+import { BrandAsset } from "@/types/brandAssets"
 import AnimmModal from "@/components/AnimmModal"
 
 export function AssetsGrid({activeTab, reloadKey = 0 }: {activeTab: string; reloadKey?: number }) {
-  const [assets, setAssets] = useState<Brandasset[]>([])
+  const [assets, setAssets] = useState<BrandAsset[]>([])
   const { loadAssets, deleteBrandAsset } = useBrandService()
   const [modalOpen, setModalOpen] = useState(false)
   const [selectedId, setSelectedId] = useState<number | null>(null)
@@ -23,7 +23,7 @@ export function AssetsGrid({activeTab, reloadKey = 0 }: {activeTab: string; relo
         audios: 2,
       };
 
-      const filtered = data.filter((item: Brandasset) => item.type === typeMap[activeTab]);
+      const filtered = data.filter((item: BrandAsset) => item.type === typeMap[activeTab]);
       setAssets(filtered);
     });
   }, [reloadKey, activeTab]);
@@ -65,7 +65,7 @@ export function AssetsGrid({activeTab, reloadKey = 0 }: {activeTab: string; relo
         audios: 2,
       };
 
-      const assetsUpdated = data.filter((item: Brandasset) => item.type === typeMap[activeTab]);
+      const assetsUpdated = data.filter((item: BrandAsset) => item.type === typeMap[activeTab]);
       setAssets(assetsUpdated);
     });
     } catch (err) {
