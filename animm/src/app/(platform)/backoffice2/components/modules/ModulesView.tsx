@@ -1,18 +1,17 @@
-'use client';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import {
   Card,
-  CardDescription,
   CardHeader,
   CardTitle,
   CardContent,
+  CardDescription,
 } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
 import { Plus, Edit, Trash2, ArrowLeft } from 'lucide-react';
-import { Collection, Module, ModuleTypeEnum } from '@/types/collections';
+import { Collection, Module } from '@/types/collections';
 import useModulesService from '@/app/services/ModuleService';
-import ModuleForm from './modulesForm'; 
+import ModuleForm from './modulesForm';
+import type { ModuleRequest } from '@/types/collections';
 
 interface ModulesViewProps {
   collection: Collection;
@@ -28,32 +27,40 @@ export default function ModulesView({
   onModuleClick,
 }: ModulesViewProps) {
   const [isEditing, setIsEditing] = useState(false);
-  const [editingModule, setEditingModule] = useState<Module | null>(null);
+  const [editingModule, setEditingModule] = useState<ModuleRequest | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [modules, setModules] = useState<Module[]>([]);
 
   const { getByCollection, create, update, delete: deleteModule } = useModulesService();
+
+  useEffect(() => {
+    
+    (async () => {
+      const mods = await getByCollection(collection.id);
+      setModules(mods);
+    })();
+  }, [collection.id, onDataChange]);
 
   const handleCreateModule = () => {
     setEditingModule({
       id: 0,
-      moduleType: ModuleTypeEnum.Image,
-      file: '',
-      variables: [],
-      images: [],
+      file: null,
     });
     setIsEditing(true);
     setError(null);
   };
 
   const handleEditModule = (module: Module) => {
-    setEditingModule(module);
+    setEditingModule({
+      id: module.id,
+      file: module.file ?? null,
+    });
     setIsEditing(true);
     setError(null);
   };
 
   const handleSaveModule = async () => {
     if (!editingModule) return;
-
     try {
       if (editingModule.id === 0) {
         await create(editingModule);
@@ -64,6 +71,8 @@ export default function ModulesView({
       setEditingModule(null);
       setError(null);
       await onDataChange();
+      const mods = await getByCollection(collection.id);
+      setModules(mods);
     } catch (err) {
       console.error('Error saving module:', err);
       setError('Error saving module');
@@ -81,6 +90,9 @@ export default function ModulesView({
     try {
       await deleteModule(moduleId);
       await onDataChange();
+      // Vuelve a pedir los módulos
+      const mods = await getByCollection(collection.id);
+      setModules(mods);
     } catch (err) {
       console.error('Error deleting module:', err);
     }
@@ -103,12 +115,12 @@ export default function ModulesView({
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mt-4">
-          {collection.templates?.flatMap(t => t.modules)?.length === 0 ? (
+          {modules.length === 0 ? (
             <div className="text-center text-muted-foreground col-span-full">
               No modules found
             </div>
           ) : (
-            collection.templates?.flatMap(t => t.modules)?.map((module: Module) => (
+            modules.map((module: Module) => (
               <Card
                 key={module.id}
                 className="hover:shadow-md transition-shadow cursor-pointer"
@@ -116,7 +128,9 @@ export default function ModulesView({
               >
                 <CardHeader>
                   <div className="flex items-center justify-between">
-                    <CardTitle className="text-lg">{module.file}</CardTitle>
+                    <CardTitle className="text-lg">
+                      {typeof module.file === 'object' && module.file ? module.file.name : 'No thumbnail'}
+                    </CardTitle>
                     <div className="flex items-center gap-2">
                       <Button
                         variant="ghost"
@@ -141,30 +155,28 @@ export default function ModulesView({
                     </div>
                   </div>
                   <CardDescription>Module ID: {module.id}</CardDescription>
-                </CardHeader>
-
-                <CardContent>
-                  <div className="space-y-2">
-                    <div className="flex items-center justify-between text-sm">
-                      <span className="text-muted-foreground">Variables:</span>
-                      <Badge variant="secondary">{module.variables?.length || 0}</Badge>
-                    </div>
-                    <div className="flex items-center justify-between text-sm">
-                      <span className="text-muted-foreground">Images:</span>
-                      <Badge variant="secondary">{module.images?.length || 0}</Badge>
-                    </div>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      className="w-full mt-2"
-                      onClick={e => {
-                        e.stopPropagation();
-                        onModuleClick(module);
-                      }}
-                    >
-                      Open Module
-                    </Button>
+                  <div className="pt-2">
+                    {typeof module.file === 'object' && module.file && (
+                      <img
+                        src={URL.createObjectURL(module.file)}
+                        alt="Thumbnail"
+                        className="max-h-20 mx-auto rounded"
+                      />
+                    )}
                   </div>
+                </CardHeader>
+                <CardContent>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="w-full mt-2"
+                    onClick={e => {
+                      e.stopPropagation();
+                      onModuleClick(module);
+                    }}
+                  >
+                    Open Module
+                  </Button>
                 </CardContent>
               </Card>
             ))

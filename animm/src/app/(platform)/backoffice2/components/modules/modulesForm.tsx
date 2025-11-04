@@ -2,41 +2,34 @@
 
 import { useRef } from 'react';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
 import { Save, X } from 'lucide-react';
+import type { ModuleRequest } from '@/types/collections';
 
-interface TemplateRequest {
-  name: string;
-  file: File | null;
-  filePreview: string;
-}
-
-interface TemplateFormProps {
-  template: TemplateRequest;
-  onChange: (template: TemplateRequest) => void;
+interface ModuleFormProps {
+  module: ModuleRequest;
+  onChange: (module: ModuleRequest) => void;
   onSave: () => void;
   onCancel: () => void;
   title: string;
   error?: string | null;
 }
 
-export default function TemplateForm({
-  template,
+export default function ModuleForm({
+  module,
   onChange,
   onSave,
   onCancel,
   title,
   error,
-}: TemplateFormProps) {
-  const hiddenFileInput = useRef<HTMLInputElement>(null);
+}: ModuleFormProps) {
+  const fileInput = useRef<HTMLInputElement>(null);
 
   const updateFile = (file: File | null) => {
     onChange({
-      ...template,
+      ...module,
       file: file,
-      filePreview: file ? URL.createObjectURL(file) : '',
     });
   };
 
@@ -57,87 +50,50 @@ export default function TemplateForm({
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <Card className="w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+      <Card className="w-full max-w-md max-h-[90vh] overflow-y-auto">
         <CardHeader>
           <CardTitle>{title}</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
           {error && <div className="text-red-500 text-sm">{error}</div>}
-         
-          <div>
-            <Label htmlFor="name">Name</Label>
-            <Input
-              id="name"
-              value={template.name}
-              onChange={e =>
-                onChange({ ...template, name: e.target.value })
-              }
-              placeholder="Enter template name"
-            />
-          </div>
 
           <div>
             <Label htmlFor="file">Thumbnail</Label>
             <div
               className="w-full h-32 border-2 border-dashed rounded-md flex items-center justify-center cursor-pointer hover:bg-gray-50"
-              onClick={() => hiddenFileInput.current?.click()}
+              onClick={() => fileInput.current?.click()}
               onDrop={handleDrop}
               onDragOver={handleDragOver}
             >
-              {template.filePreview ? (
+              {module.file ? (
                 <div className="text-center p-4">
+                  <img
+                    src={URL.createObjectURL(module.file)}
+                    alt="Thumbnail preview"
+                    className="max-h-20 mx-auto mb-2"
+                  />
                   <p className="text-sm font-medium text-gray-700">
-                    {template.file?.name}
+                    {module.file.name}
                   </p>
                   <p className="text-xs text-gray-500 mt-1">
-                    {template.file?.size ? `${(template.file.size / 1024).toFixed(2)} KB` : ''}
+                    {(module.file.size / 1024).toFixed(2)} KB
                   </p>
                 </div>
               ) : (
                 <span className="text-muted-foreground">
-                  Drop file or click to select
+                  Suelta aquí o haz click para seleccionar imagen
                 </span>
               )}
               <input
-                ref={hiddenFileInput}
+                ref={fileInput}
                 type="file"
+                accept="image/*"
                 onChange={handleFileChange}
                 style={{ display: 'none' }}
               />
             </div>
           </div>
 
-          <div>
-            <Label htmlFor="file">Video</Label>
-            <div
-              className="w-full h-32 border-2 border-dashed rounded-md flex items-center justify-center cursor-pointer hover:bg-gray-50"
-              onClick={() => hiddenFileInput.current?.click()}
-              onDrop={handleDrop}
-              onDragOver={handleDragOver}
-            >
-              {template.filePreview ? (
-                <div className="text-center p-4">
-                  <p className="text-sm font-medium text-gray-700">
-                    {template.file?.name}
-                  </p>
-                  <p className="text-xs text-gray-500 mt-1">
-                    {template.file?.size ? `${(template.file.size / 1024).toFixed(2)} KB` : ''}
-                  </p>
-                </div>
-              ) : (
-                <span className="text-muted-foreground">
-                  Drop file or click to select
-                </span>
-              )}
-              <input
-                ref={hiddenFileInput}
-                type="file"
-                onChange={handleFileChange}
-                style={{ display: 'none' }}
-              />
-            </div>
-          </div>
-          
           <div className="flex items-center gap-2 pt-4">
             <Button onClick={onSave}>
               <Save className="w-4 h-4 mr-2" /> Save

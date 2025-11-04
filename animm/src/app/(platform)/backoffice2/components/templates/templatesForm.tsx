@@ -6,12 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
 import { Save, X } from 'lucide-react';
-
-interface TemplateRequest {
-  name: string;
-  file: File | null;
-  filePreview: string;
-}
+import type { TemplateRequest } from '@/types/collections';
 
 interface TemplateFormProps {
   template: TemplateRequest;
@@ -30,26 +25,33 @@ export default function TemplateForm({
   title,
   error,
 }: TemplateFormProps) {
-  const hiddenFileInput = useRef<HTMLInputElement>(null);
+  const thumbnailInput = useRef<HTMLInputElement>(null);
+  const videoInput = useRef<HTMLInputElement>(null);
 
-  const updateFile = (file: File | null) => {
+  const updateFile = (fileIndex: number, file: File | null) => {
+    const files = template.file ? [...template.file] : [null, null];
+    files[fileIndex] = file!
     onChange({
       ...template,
-      file: file,
-      filePreview: file ? URL.createObjectURL(file) : '',
+      file: files,
+      filePreview: files[0] ? URL.createObjectURL(files[0]) : '',
     });
   };
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0] ?? null;
-    updateFile(file);
-  };
+  const handleFileChange =
+    (fileIndex: number) =>
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      const file = e.target.files?.[0] ?? null;
+      updateFile(fileIndex, file);
+    };
 
-  const handleDrop = (e: React.DragEvent<HTMLDivElement>) => {
-    e.preventDefault();
-    const file = e.dataTransfer.files?.[0] ?? null;
-    updateFile(file);
-  };
+  const handleDrop =
+    (fileIndex: number) =>
+    (e: React.DragEvent<HTMLDivElement>) => {
+      e.preventDefault();
+      const file = e.dataTransfer.files?.[0] ?? null;
+      updateFile(fileIndex, file);
+    };
 
   const handleDragOver = (e: React.DragEvent<HTMLDivElement>) => {
     e.preventDefault();
@@ -63,7 +65,7 @@ export default function TemplateForm({
         </CardHeader>
         <CardContent className="space-y-4">
           {error && <div className="text-red-500 text-sm">{error}</div>}
-         
+
           <div>
             <Label htmlFor="name">Name</Label>
             <Input
@@ -76,68 +78,77 @@ export default function TemplateForm({
             />
           </div>
 
+          {/* Thumbnail */}
           <div>
-            <Label htmlFor="file">Thumbnail</Label>
+            <Label htmlFor="thumbnail">Thumbnail</Label>
             <div
               className="w-full h-32 border-2 border-dashed rounded-md flex items-center justify-center cursor-pointer hover:bg-gray-50"
-              onClick={() => hiddenFileInput.current?.click()}
-              onDrop={handleDrop}
+              onClick={() => thumbnailInput.current?.click()}
+              onDrop={handleDrop(0)}
               onDragOver={handleDragOver}
             >
-              {template.filePreview ? (
+              {template.file && template.file[0] ? (
                 <div className="text-center p-4">
+                  <img
+                    src={URL.createObjectURL(template.file[0])}
+                    alt="Thumbnail preview"
+                    className="max-h-20 mx-auto mb-2"
+                  />
                   <p className="text-sm font-medium text-gray-700">
-                    {template.file?.name}
+                    {template.file[0].name}
                   </p>
                   <p className="text-xs text-gray-500 mt-1">
-                    {template.file?.size ? `${(template.file.size / 1024).toFixed(2)} KB` : ''}
+                    {(template.file[0].size / 1024).toFixed(2)} KB
                   </p>
                 </div>
               ) : (
                 <span className="text-muted-foreground">
-                  Drop file or click to select
+                  Suelta aquí o haz click para seleccionar imagen
                 </span>
               )}
               <input
-                ref={hiddenFileInput}
+                ref={thumbnailInput}
                 type="file"
-                onChange={handleFileChange}
+                accept="image/*"
+                onChange={handleFileChange(0)}
                 style={{ display: 'none' }}
               />
             </div>
           </div>
 
+          {/* Video */}
           <div>
-            <Label htmlFor="file">Video</Label>
+            <Label htmlFor="video">Video</Label>
             <div
               className="w-full h-32 border-2 border-dashed rounded-md flex items-center justify-center cursor-pointer hover:bg-gray-50"
-              onClick={() => hiddenFileInput.current?.click()}
-              onDrop={handleDrop}
+              onClick={() => videoInput.current?.click()}
+              onDrop={handleDrop(1)}
               onDragOver={handleDragOver}
             >
-              {template.filePreview ? (
+              {template.file && template.file[1] ? (
                 <div className="text-center p-4">
                   <p className="text-sm font-medium text-gray-700">
-                    {template.file?.name}
+                    {template.file[1].name}
                   </p>
                   <p className="text-xs text-gray-500 mt-1">
-                    {template.file?.size ? `${(template.file.size / 1024).toFixed(2)} KB` : ''}
+                    {(template.file[1].size / 1024).toFixed(2)} KB
                   </p>
                 </div>
               ) : (
                 <span className="text-muted-foreground">
-                  Drop file or click to select
+                  Suelta aquí o haz click para seleccionar video
                 </span>
               )}
               <input
-                ref={hiddenFileInput}
+                ref={videoInput}
                 type="file"
-                onChange={handleFileChange}
+                accept="video/*"
+                onChange={handleFileChange(1)}
                 style={{ display: 'none' }}
               />
             </div>
           </div>
-          
+
           <div className="flex items-center gap-2 pt-4">
             <Button onClick={onSave}>
               <Save className="w-4 h-4 mr-2" /> Save

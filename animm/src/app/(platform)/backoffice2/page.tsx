@@ -44,7 +44,6 @@ export default function NewBackofficePage() {
       const newCollections = collectionsData?.Result || [];
       setCollections(newCollections);
       
-      // Actualizar la colección seleccionada con los datos frescos
       if (selectedCollection) {
         const updatedCollection = newCollections.find(
           (c: Collection) => c.id === selectedCollection.id

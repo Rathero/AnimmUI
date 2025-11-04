@@ -120,6 +120,18 @@ export interface CollectionRequest {
   templates?: any[];
 }
 
+export interface TemplateRequest {
+  id?: number;
+  name: string;
+  file: File[] | null;
+  filePreview: string;
+}
+
+export interface ModuleRequest {
+  id?: number;
+  file: File | null
+}
+
 
 export interface ApiCollections extends BaseApiResponse<Collection[]> {}
 export interface ApiCollection extends BaseApiResponse<Collection> {}

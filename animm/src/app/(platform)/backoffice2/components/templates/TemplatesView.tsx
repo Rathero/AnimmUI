@@ -11,13 +11,9 @@ import { Badge } from '@/components/ui/badge';
 import { Plus, Edit, Trash2, ArrowLeft } from 'lucide-react';
 import { Collection } from '@/types/collections';
 import TemplateForm from './templatesForm';
+import type { TemplateRequest } from '@/types/collections';
 
-interface TemplateRequest {
-  id?: number;
-  name: string;
-  file: File | null;
-  filePreview: string;
-}
+
 
 interface TemplatesViewProps {
   collection: Collection;
@@ -40,7 +36,7 @@ export default function TemplatesView({
     setEditingTemplate({
       id: 0,
       name: '',
-      file: null,
+      file: [],
       filePreview: '',
     });
     setIsEditingTemplate(true);
@@ -51,8 +47,8 @@ export default function TemplatesView({
     setEditingTemplate({
       id: template.id,
       name: template.name,
-      file: null,
-      filePreview: '',
+      file: [],
+      filePreview: template.thumbnail || '',
     });
     setIsEditingTemplate(true);
     setError(null);
