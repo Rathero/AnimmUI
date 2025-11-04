@@ -83,31 +83,34 @@ export function AssetsGrid({activeTab, reloadKey = 0 }: {activeTab: string; relo
               key={item.id}
               className="group rounded-xl border border-border bg-card overflow-hidden hover:shadow-lg hover:border-muted-foreground/30 transition-all duration-200"
             >
-              <div className="relative aspect-[4/3] bg-muted overflow-hidden">
-                {activeTab === "images" && (
+              {activeTab === "images" && (
+                <div className="relative aspect-[4/3] bg-muted overflow-hidden">
                   <Image
                     src={item.url || "/placeholder.svg"}
                     alt={getCleanFileName(item.url)}
                     fill
                     className="object-cover transition-transform duration-300 group-hover:scale-105"
                   />
-                )}
-                {activeTab === "videos" && (
+                </div>
+              )}
+              {activeTab === "videos" && (
+              <div className="relative aspect-[4/3] bg-muted overflow-hidden">
                   <video
                     src={item.url}
                     controls
                     className="w-full h-full object-cover"
                   />
-                )}
-                {activeTab === "audios" && (
+                </div>
+              )}
+              {activeTab === "audios" && (
+                <div className="bg-muted overflow-hidden">
                   <audio
                     controls
                     src={item.url}
                     className="w-full p-2"
                   />
-                )}
-              </div>
-
+                </div>
+              )}
               <div className="flex items-center justify-between px-3 py-2 border-t border-border bg-background/50">
                 <div className="flex items-center gap-2 min-w-0">
                   {activeTab === "images" && (
