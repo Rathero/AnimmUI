@@ -121,10 +121,13 @@ export interface CollectionRequest {
 }
 
 export interface TemplateRequest {
-  id?: number;
+  id: number;
   name: string;
-  file: File[] | null;
-  filePreview: string;
+  thumbnail: File | null;
+  thumbnailPreview?: string;  
+  video: File | null;
+  videoPreview?: string;       
+  isStatic: boolean;
 }
 
 export interface ModuleRequest {

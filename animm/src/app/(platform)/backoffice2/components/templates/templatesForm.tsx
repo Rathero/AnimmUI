@@ -28,33 +28,53 @@ export default function TemplateForm({
   const thumbnailInput = useRef<HTMLInputElement>(null);
   const videoInput = useRef<HTMLInputElement>(null);
 
-  const updateFile = (fileIndex: number, file: File | null) => {
-    const files = template.file ? [...template.file] : [null, null];
-    files[fileIndex] = file!
+  const updateThumbnail = (file: File | null) => {
     onChange({
       ...template,
-      file: files,
-      filePreview: files[0] ? URL.createObjectURL(files[0]) : '',
+      thumbnail: file,
+      thumbnailPreview: file ? URL.createObjectURL(file) : '',
     });
   };
 
-  const handleFileChange =
-    (fileIndex: number) =>
-    (e: React.ChangeEvent<HTMLInputElement>) => {
-      const file = e.target.files?.[0] ?? null;
-      updateFile(fileIndex, file);
-    };
+  const handleThumbnailChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0] ?? null;
+    updateThumbnail(file);
+  };
 
-  const handleDrop =
-    (fileIndex: number) =>
-    (e: React.DragEvent<HTMLDivElement>) => {
-      e.preventDefault();
-      const file = e.dataTransfer.files?.[0] ?? null;
-      updateFile(fileIndex, file);
-    };
+  const handleThumbnailDrop = (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    const file = e.dataTransfer.files?.[0] ?? null;
+    updateThumbnail(file);
+  };
+
+  const updateVideo = (file: File | null) => {
+    onChange({
+      ...template,
+      video: file,
+      videoPreview: file ? URL.createObjectURL(file) : '',
+    });
+  };
+
+  const handleVideoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0] ?? null;
+    updateVideo(file);
+  };
+
+  const handleVideoDrop = (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    const file = e.dataTransfer.files?.[0] ?? null;
+    updateVideo(file);
+  };
 
   const handleDragOver = (e: React.DragEvent<HTMLDivElement>) => {
     e.preventDefault();
+  };
+
+  const handleStaticChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    onChange({
+      ...template,
+      isStatic: e.target.checked,
+    });
   };
 
   return (
@@ -82,35 +102,27 @@ export default function TemplateForm({
           <div>
             <Label htmlFor="thumbnail">Thumbnail</Label>
             <div
-              className="w-full h-32 border-2 border-dashed rounded-md flex items-center justify-center cursor-pointer hover:bg-gray-50"
+              className="w-full h-32 border-2 border-dashed rounded-md flex items-center justify-center cursor-pointer"
               onClick={() => thumbnailInput.current?.click()}
-              onDrop={handleDrop(0)}
+              onDrop={handleThumbnailDrop}
               onDragOver={handleDragOver}
             >
-              {template.file && template.file[0] ? (
-                <div className="text-center p-4">
-                  <img
-                    src={URL.createObjectURL(template.file[0])}
-                    alt="Thumbnail preview"
-                    className="max-h-20 mx-auto mb-2"
-                  />
-                  <p className="text-sm font-medium text-gray-700">
-                    {template.file[0].name}
-                  </p>
-                  <p className="text-xs text-gray-500 mt-1">
-                    {(template.file[0].size / 1024).toFixed(2)} KB
-                  </p>
-                </div>
+              {template.thumbnailPreview ? (
+                <img
+                  src={template.thumbnailPreview}
+                  alt="Thumbnail preview"
+                  className="w-full h-full object-cover rounded-md"
+                />
               ) : (
                 <span className="text-muted-foreground">
-                  Suelta aquí o haz click para seleccionar imagen
+                  Drop image or click to select
                 </span>
               )}
               <input
                 ref={thumbnailInput}
                 type="file"
                 accept="image/*"
-                onChange={handleFileChange(0)}
+                onChange={handleThumbnailChange}
                 style={{ display: 'none' }}
               />
             </div>
@@ -120,33 +132,44 @@ export default function TemplateForm({
           <div>
             <Label htmlFor="video">Video</Label>
             <div
-              className="w-full h-32 border-2 border-dashed rounded-md flex items-center justify-center cursor-pointer hover:bg-gray-50"
+              className="w-full h-32 border-2 border-dashed rounded-md flex items-center justify-center cursor-pointer"
               onClick={() => videoInput.current?.click()}
-              onDrop={handleDrop(1)}
+              onDrop={handleVideoDrop}
               onDragOver={handleDragOver}
             >
-              {template.file && template.file[1] ? (
-                <div className="text-center p-4">
-                  <p className="text-sm font-medium text-gray-700">
-                    {template.file[1].name}
-                  </p>
-                  <p className="text-xs text-gray-500 mt-1">
-                    {(template.file[1].size / 1024).toFixed(2)} KB
-                  </p>
-                </div>
+              {template.videoPreview ? (
+                <video
+                  src={template.videoPreview}
+                  className="w-full h-full object-cover rounded-md"
+                  controls={false}
+                />
+              ) : template.video ? (
+                <span className="text-gray-700">{template.video.name}</span>
               ) : (
                 <span className="text-muted-foreground">
-                  Suelta aquí o haz click para seleccionar video
+                  Drop video or click to select
                 </span>
               )}
               <input
                 ref={videoInput}
                 type="file"
                 accept="video/*"
-                onChange={handleFileChange(1)}
+                onChange={handleVideoChange}
                 style={{ display: 'none' }}
               />
             </div>
+          </div>
+
+          {/* Checkbox estático */}
+          <div className="flex items-center gap-2">
+            <input
+              id="isStatic"
+              type="checkbox"
+              checked={!!template.isStatic}
+              onChange={handleStaticChange}
+              className="mr-2"
+            />
+            <Label htmlFor="isStatic">Is Static?</Label>
           </div>
 
           <div className="flex items-center gap-2 pt-4">

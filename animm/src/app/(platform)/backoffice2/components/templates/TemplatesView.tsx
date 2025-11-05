@@ -10,16 +10,15 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Plus, Edit, Trash2, ArrowLeft } from 'lucide-react';
 import { Collection } from '@/types/collections';
+import useTemplatesService from '@/app/services/TemplatesService';
 import TemplateForm from './templatesForm';
-import type { TemplateRequest } from '@/types/collections';
-
-
+import type { Template, TemplateRequest } from '@/types/collections';
 
 interface TemplatesViewProps {
   collection: Collection;
   onBack: () => void;
   onDataChange: () => Promise<void>;
-  onTemplateClick: (template: any) => void;
+  onTemplateClick: (template: Template) => void;
 }
 
 export default function TemplatesView({
@@ -32,23 +31,32 @@ export default function TemplatesView({
   const [editingTemplate, setEditingTemplate] = useState<TemplateRequest | null>(null);
   const [error, setError] = useState<string | null>(null);
 
+  const { update, delete: deleteTemplate, create } = useTemplatesService();
+  const { addTemplate } = create();
+
   const handleCreateTemplate = () => {
     setEditingTemplate({
       id: 0,
       name: '',
-      file: [],
-      filePreview: '',
+      thumbnail: null,
+      thumbnailPreview: '',
+      video: null,
+      videoPreview: '',
+      isStatic: false,
     });
     setIsEditingTemplate(true);
     setError(null);
   };
 
-  const handleEditTemplate = (template: any) => {
+  const handleEditTemplate = (template: Template) => {
     setEditingTemplate({
       id: template.id,
       name: template.name,
-      file: [],
-      filePreview: template.thumbnail || '',
+      thumbnail: null,
+      thumbnailPreview: template.thumbnail || '',
+      video: null,
+      videoPreview: template.video || '',
+      isStatic: !!template.static
     });
     setIsEditingTemplate(true);
     setError(null);
@@ -57,17 +65,22 @@ export default function TemplatesView({
   const handleSaveTemplate = async () => {
     if (!editingTemplate) return;
 
-    try {
-      console.log('Saving template:', editingTemplate);
-
-      setIsEditingTemplate(false);
-      setEditingTemplate(null);
-      setError(null);
-      await onDataChange();
-    } catch (err) {
-      console.error('Error saving template:', err);
-      setError('Error saving template');
+    if (editingTemplate.id && editingTemplate.id !== 0) {
+      await update(editingTemplate.id, editingTemplate);
+    } else {
+      await addTemplate({
+        name: editingTemplate.name,
+        collectionId: collection.id,
+        isStatic: editingTemplate.isStatic,
+        thumbnail: editingTemplate.thumbnail,
+        video: editingTemplate.video,
+      });
     }
+
+    setIsEditingTemplate(false);
+    setEditingTemplate(null);
+    setError(null);
+    await onDataChange();
   };
 
   const handleCloseTemplateEdit = () => {
@@ -79,10 +92,11 @@ export default function TemplatesView({
   const handleDeleteTemplate = async (templateId: number) => {
     if (!confirm('Are you sure you want to delete this template?')) return;
     try {
-      console.log('Deleting template:', templateId);
+      await deleteTemplate(templateId);
       await onDataChange();
     } catch (err) {
       console.error('Error deleting template:', err);
+      setError('Error deleting template');
     }
   };
 
@@ -92,19 +106,16 @@ export default function TemplatesView({
         <div className="flex items-center justify-between">
           <h2 className="text-xl font-semibold">Templates in {collection.name}</h2>
         </div>
-
         <div className="flex justify-between items-center mt-8">
           <Button variant="outline" size="sm" onClick={onBack}>
             <ArrowLeft className="w-4 h-4 mr-2" />
             Back to Collections
           </Button>
-          
           <Button onClick={handleCreateTemplate}>
             <Plus className="w-4 h-4 mr-2" />
             New Template
           </Button>
         </div>
-
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {collection.templates?.map(template => (
             <Card
@@ -140,8 +151,7 @@ export default function TemplatesView({
                 </div>
                 <CardDescription>Template ID: {template.id}</CardDescription>
               </CardHeader>
-
-              {template.thumbnail && (
+              {template.thumbnail && typeof template.thumbnail === "string" && (
                 <div className="px-6 py-2">
                   <img
                     src={template.thumbnail}
@@ -154,7 +164,6 @@ export default function TemplatesView({
                   />
                 </div>
               )}
-
               <CardContent>
                 <div className="space-y-2">
                   <div className="flex items-center justify-between text-sm">
@@ -166,7 +175,8 @@ export default function TemplatesView({
                   <Button variant="outline" size="sm" className="w-full mt-2" 
                     onClick={(e) => {
                       e.stopPropagation();
-                      onTemplateClick(template);}}>
+                      onTemplateClick(template);
+                    }}>
                     Modules
                   </Button>
                 </div>
