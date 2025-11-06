@@ -47,3 +47,15 @@ export interface AnimmModalProps {
   confirmVariant?: "default" | "destructive" | "outline"
   loading?: boolean
 }
+
+export interface Color {
+  id: number
+  name: string
+  hex: string
+}
+
+export interface UploadedColor {
+  id: string
+  name: string 
+  hex: string 
+}
