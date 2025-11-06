@@ -39,12 +39,19 @@ const useBrandService = () => {
     return Array.isArray(data.Result) ? data.Result : []
   }
 
-  const addBrandColors = async (data: FormData) => {
+  const addBrandColors = async (userId: number, name: string, hex: string) => {
     const response = await fetchWithAuth(
       process.env.NEXT_PUBLIC_API_URL + '/BrandAsset/color',
       {
         method: 'POST',
-        body: data,
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          UserId: userId,
+          Name: name,
+          Hex: hex,
+        }),
       }
     );
     if (!response.ok) throw new Error('Failed to add color');

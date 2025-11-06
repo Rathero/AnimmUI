@@ -45,7 +45,6 @@ export function ColorsGrid({ reloadKey = 0 }: { reloadKey?: number }) {
     try {
       await deleteBrandColor(selectedId)
       const colorsUpdated = await fetchColors()
-      setColors(colorsUpdated);
     }
     catch (err) {
       alert("Error deleting color")

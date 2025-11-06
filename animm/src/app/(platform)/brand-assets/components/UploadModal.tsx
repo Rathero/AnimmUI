@@ -70,11 +70,7 @@ export function UploadModal({ open, onOpenChange, activeTabConfig, onUploadCompl
 
     if (activeTabConfig.id === "colors") {
       for (const color of uploadedColors) {
-        const data = new FormData();
-        data.append('UserId', userId.toString());
-        data.append('Name', color.name);
-        data.append('Hex', color.hex);
-        await addBrandColors(data);
+        await addBrandColors(userId, color.name, color.hex);
       }
       if (onUploadComplete) onUploadComplete();
       setUploadedColors([]);
