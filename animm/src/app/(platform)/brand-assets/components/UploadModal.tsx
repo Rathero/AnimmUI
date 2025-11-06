@@ -2,17 +2,21 @@
 import { useRef, useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { CloudUpload, Trash2, Music } from "lucide-react";
+import { CloudUpload, Trash2, Music, Brush } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { platformStore } from '@/stores/platformStore';
-import useBrandService from '@/app/services/BrandService';
-import { UploadModalProps, UploadedFile } from "@/types/brandAssets";
+import { platformStore } from "@/stores/platformStore";
+import useBrandService from "@/app/services/BrandService";
+import { UploadModalProps, UploadedFile, UploadedColor } from "@/types/brandAssets";
 
 export function UploadModal({ open, onOpenChange, activeTabConfig, onUploadComplete }: UploadModalProps) {
 
   const hiddenFileInput = useRef<HTMLInputElement>(null);
+  const colorPickerRef = useRef<HTMLInputElement>(null);
   const [uploadedFiles, setUploadedFiles] = useState<UploadedFile[]>([]);
-  const { addBrandAssets: addBrandAssets, loadAssets } = useBrandService();
+  const [uploadedColors, setUploadedColors] = useState<UploadedColor[]>([]);
+  const [colorName, setColorName] = useState<string>("");
+  const [colorHex, setColorHex] = useState<string>("#ffffff");
+  const { addBrandAssets: addBrandAssets, loadAssets, addBrandColors } = useBrandService();
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (!e.target.files) return;
@@ -64,23 +68,44 @@ export function UploadModal({ open, onOpenChange, activeTabConfig, onUploadCompl
 
     const type = typeMap[activeTabConfig.id as keyof typeof typeMap];
 
-    for (const uploadedFile of uploadedFiles) {
-      const data = new FormData();
-      data.append('UserId', userId.toString());
-      data.append('File', uploadedFile.file);
-      data.append('Type', type.toString());
-      await addBrandAssets(data);
-      URL.revokeObjectURL(uploadedFile.preview);
+    if (activeTabConfig.id === "colors") {
+      for (const color of uploadedColors) {
+        await addBrandColors(userId, color.name, color.hex);
+      }
+      if (onUploadComplete) onUploadComplete();
+      setUploadedColors([]);
+      onOpenChange(false);
     }
+    else {
+      for (const uploadedFile of uploadedFiles) {
+        const data = new FormData();
+        data.append('UserId', userId.toString());
+        data.append('File', uploadedFile.file);
+        data.append('Type', type.toString());
+        await addBrandAssets(data);
+        URL.revokeObjectURL(uploadedFile.preview);
+      }
 
-    await loadAssets();
-    if (onUploadComplete) onUploadComplete();
-    setUploadedFiles([]);
-    onOpenChange(false);
+      await loadAssets();
+      if (onUploadComplete) onUploadComplete();
+      setUploadedFiles([]);
+      onOpenChange(false);
+    }
   }
 
+  const handleColorUpload = async () => {
+    if (!colorName.trim()) return;
+      const entry = { id: Date.now().toString(), name: colorName.trim(), hex: colorHex.trim() };
+      setUploadedColors(prev => [...prev, entry]);
+      setColorName('');
+      setColorHex('#ffffff');
+  };
+
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    activeTabConfig.id === "images" ||
+    activeTabConfig.id === "videos" ||
+    activeTabConfig.id === "audios" ? (
+      <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-2xl">
         <DialogHeader>
           <DialogTitle className="text-xl font-semibold">{activeTabConfig.modalTitle}</DialogTitle>
@@ -171,5 +196,105 @@ export function UploadModal({ open, onOpenChange, activeTabConfig, onUploadCompl
         </div>
       </DialogContent>
     </Dialog>
-  );
-}
+    ) : activeTabConfig.id === "colors" ? (
+      <Dialog open={open} onOpenChange={onOpenChange}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle className="text-xl font-semibold">{activeTabConfig.modalTitle}</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 items-end">
+              <div className="col-span-1">
+                <label className="block text-sm text-muted-foreground mb-1">Preview</label>
+                <div className="w-20 h-12 rounded border overflow-hidden" style={{ backgroundColor: colorHex }} />
+              </div>
+              <div className="sm:col-span-1">
+                <label className="block text-sm text-muted-foreground mb-1">Color</label>
+                <div className="relative">
+                  <input
+                    ref={colorPickerRef}
+                    type="color"
+                    value={colorHex}
+                    onChange={e => setColorHex(e.target.value)}
+                    className="absolute inset-0 w-full h-10 opacity-0 cursor-pointer"
+                  />
+                  <Button
+                    type="button"
+                    variant="outline"
+                    className="w-full h-10 flex items-center justify-center gap-2 pointer-events-none"
+                  >
+                    <Brush className="w-4 h-4" />
+                    Pick Color
+                  </Button>
+                </div>
+              </div>
+              <div className="sm:col-span-1">
+                <label className="block text-sm text-muted-foreground mb-1">Hex</label>
+                <input
+                  type="text"
+                  value={colorHex}
+                  onChange={e => setColorHex(e.target.value)}
+                  className="w-full input px-2 py-2 border rounded"
+                />
+              </div>
+            </div>
+            <div>
+              <label className="block text-sm text-muted-foreground mb-1">Name</label>
+              <input
+                type="text"
+                value={colorName}
+                onChange={e => setColorName(e.target.value)}
+                placeholder="e.g. Primary Blue"                  
+                className="w-full input px-2 py-2 border rounded"
+              />
+            </div>
+            <div className="flex gap-2">
+              <Button
+                variant="outline"
+                onClick={() => {
+                  handleColorUpload();
+                }}
+              >
+                Add Color
+              </Button>
+              <Button variant="ghost" onClick={() => { setColorName(''); setColorHex('#ffffff'); }}>
+                Reset
+              </Button>
+            </div>
+            {uploadedColors.length > 0 && (
+              <div className="space-y-2">
+                <h4 className="font-medium">Colors to upload</h4>
+                <div className="space-y-2 max-h-60 overflow-y-auto">
+                  {uploadedColors.map(c => (
+                    <div key={c.id} className="flex items-center gap-3 p-3 border rounded-lg">
+                      <div className="w-12 h-8 rounded overflow-hidden bg-muted flex-shrink-0" style={{ backgroundColor: c.hex }} />
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-medium truncate">{c.name}</p>
+                        <p className="text-xs text-muted-foreground">{c.hex}</p>
+                      </div>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => setUploadedColors(prev => prev.filter(x => x.id !== c.id))}
+                        className="text-muted-foreground hover:text-foreground"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </Button>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+            <div className="flex justify-end gap-3 pt-4 border-t">
+              <Button variant="outline" onClick={() => onOpenChange(false)}>
+                Cancel
+              </Button>
+              <Button disabled={uploadedColors.length === 0} onClick={handleUpload}>
+                Done
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+    ) : null
+)}

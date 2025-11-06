@@ -1,3 +1,4 @@
+import { add } from '@tensorflow/tfjs';
 import useFetchWithAuth from './fetchWithAuth';
 
 const useBrandService = () => {
@@ -24,7 +25,7 @@ const useBrandService = () => {
 
   const deleteBrandAsset = async (assetId: number) => {
     const response = await fetchWithAuth(
-      `${process.env.NEXT_PUBLIC_API_URL}/BrandAsset/${assetId}`,
+      `${process.env.NEXT_PUBLIC_API_URL}/BrandAsset/assets/${assetId}`,
       {
         method: 'DELETE',
       }
@@ -38,7 +39,52 @@ const useBrandService = () => {
     return Array.isArray(data.Result) ? data.Result : []
   }
 
-  return { addBrandAssets, getBrandAssets, deleteBrandAsset, loadAssets };
+  const addBrandColors = async (userId: number, name: string, hex: string) => {
+    const response = await fetchWithAuth(
+      process.env.NEXT_PUBLIC_API_URL + '/BrandAsset/color',
+      {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          UserId: userId,
+          Name: name,
+          Hex: hex,
+        }),
+      }
+    );
+    if (!response.ok) throw new Error('Failed to add color');
+    return response.json();
+  };
+
+  const getBrandColors = async () => {
+    const response = await fetchWithAuth(
+      process.env.NEXT_PUBLIC_API_URL + '/BrandAsset/colors',
+      {
+        method: 'GET',
+      }
+    );
+    return await response.json();
+  };
+
+  const deleteBrandColor = async (colorId: number) => {
+    const response = await fetchWithAuth(
+      `${process.env.NEXT_PUBLIC_API_URL}/BrandAsset/colors/${colorId}`,
+      {
+        method: 'DELETE',
+      }
+    );
+    if (!response.ok) throw new Error('Failed to delete color');
+    return response.json();
+  };
+
+  const loadColors = async () => {
+    const data = await getBrandColors()
+    return Array.isArray(data.Result) ? data.Result : []
+  }
+
+  return { addBrandAssets, getBrandAssets, deleteBrandAsset, loadAssets, addBrandColors, getBrandColors, loadColors, deleteBrandColor };
 };
 
 export default useBrandService;

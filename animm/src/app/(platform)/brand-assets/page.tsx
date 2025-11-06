@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react';
 import { platformStore } from '@/stores/platformStore';
 import { BrandAssetsTabs } from "./components/BrandAssetsTabs";
 import { AssetsGrid } from "./components/AssetsGrid";
+import { ColorsGrid } from "./components/ColorsGrid";
 
 export default function BrandAssetsPage() {
   const { setPageTitle } = platformStore(state => state);
@@ -24,7 +25,7 @@ export default function BrandAssetsPage() {
         {["images", "videos", "audios"].includes(activeTab) && (
           <AssetsGrid activeTab={activeTab} reloadKey={reloadKey} />
         )}
-        {activeTab === "colors" && <p className="text-muted-foreground">No colors yet</p>}
+        {activeTab === "colors" && <ColorsGrid reloadKey={reloadKey} />}
         {activeTab === "settings" && <p className="text-muted-foreground">Settings</p>}
       </div>
     </div>
