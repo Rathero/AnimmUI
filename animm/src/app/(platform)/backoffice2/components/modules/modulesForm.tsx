@@ -30,6 +30,7 @@ export default function ModuleForm({
     onChange({
       ...module,
       file: file,
+      filePreview: file ? URL.createObjectURL(file) : '',
     });
   };
 
@@ -58,30 +59,22 @@ export default function ModuleForm({
           {error && <div className="text-red-500 text-sm">{error}</div>}
 
           <div>
-            <Label htmlFor="file">Thumbnail</Label>
+            <Label htmlFor="file">Animation</Label>
             <div
               className="w-full h-32 border-2 border-dashed rounded-md flex items-center justify-center cursor-pointer hover:bg-gray-50"
               onClick={() => fileInput.current?.click()}
               onDrop={handleDrop}
               onDragOver={handleDragOver}
             >
-              {module.file ? (
-                <div className="text-center p-4">
+              {module.filePreview ? (
                   <img
-                    src={URL.createObjectURL(module.file)}
+                    src={module.filePreview}
                     alt="Thumbnail preview"
                     className="max-h-20 mx-auto mb-2"
-                  />
-                  <p className="text-sm font-medium text-gray-700">
-                    {module.file.name}
-                  </p>
-                  <p className="text-xs text-gray-500 mt-1">
-                    {(module.file.size / 1024).toFixed(2)} KB
-                  </p>
-                </div>
+                  />           
               ) : (
                 <span className="text-muted-foreground">
-                  Suelta aquí o haz click para seleccionar imagen
+                  Drop animation or click to select
                 </span>
               )}
               <input

@@ -132,7 +132,8 @@ export interface TemplateRequest {
 
 export interface ModuleRequest {
   id?: number;
-  file: File | null
+  file: File | null;
+  filePreview?: string;
 }
 
 

@@ -21,6 +21,7 @@ export default function NewBackofficePage() {
   const [selectedCollection, setSelectedCollection] = useState<Collection | null>(null);
   const [selectedTemplate, setSelectedTemplate] = useState<any | null>(null);
 
+
   const { setPageTitle } = platformStore(state => state);
   const { getAllBackoffice } = useCollectionsService();
   const { getAll: getAllUsers } = useUsersService();
