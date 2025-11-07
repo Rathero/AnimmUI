@@ -49,7 +49,7 @@ export enum ModuleTypeEnum {
 export interface Tag {
   name: string;
 }
-export interface ApiTemplate extends BaseApiResponse<Template> {}
+
 
 export interface ProductVariable {
   id: number;
@@ -120,6 +120,24 @@ export interface CollectionRequest {
   templates?: any[];
 }
 
+export interface TemplateRequest {
+  id: number;
+  name: string;
+  thumbnail: File | null;
+  thumbnailPreview?: string;  
+  video: File | null;
+  videoPreview?: string;       
+  isStatic: boolean;
+}
+
+export interface ModuleRequest {
+  id?: number;
+  file: File | null;
+  filePreview?: string;
+}
+
 
 export interface ApiCollections extends BaseApiResponse<Collection[]> {}
 export interface ApiCollection extends BaseApiResponse<Collection> {}
+export interface ApiTemplate extends BaseApiResponse<Template> {}
+export interface ApiModules extends BaseApiResponse<Module> {}

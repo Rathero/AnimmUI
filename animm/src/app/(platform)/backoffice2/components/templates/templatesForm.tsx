@@ -6,12 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
 import { Save, X } from 'lucide-react';
-
-interface TemplateRequest {
-  name: string;
-  file: File | null;
-  filePreview: string;
-}
+import type { TemplateRequest } from '@/types/collections';
 
 interface TemplateFormProps {
   template: TemplateRequest;
@@ -30,29 +25,56 @@ export default function TemplateForm({
   title,
   error,
 }: TemplateFormProps) {
-  const hiddenFileInput = useRef<HTMLInputElement>(null);
+  const thumbnailInput = useRef<HTMLInputElement>(null);
+  const videoInput = useRef<HTMLInputElement>(null);
 
-  const updateFile = (file: File | null) => {
+  const updateThumbnail = (file: File | null) => {
     onChange({
       ...template,
-      file: file,
-      filePreview: file ? URL.createObjectURL(file) : '',
+      thumbnail: file,
+      thumbnailPreview: file ? URL.createObjectURL(file) : '',
     });
   };
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleThumbnailChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0] ?? null;
-    updateFile(file);
+    updateThumbnail(file);
   };
 
-  const handleDrop = (e: React.DragEvent<HTMLDivElement>) => {
+  const handleThumbnailDrop = (e: React.DragEvent<HTMLDivElement>) => {
     e.preventDefault();
     const file = e.dataTransfer.files?.[0] ?? null;
-    updateFile(file);
+    updateThumbnail(file);
+  };
+
+  const updateVideo = (file: File | null) => {
+    onChange({
+      ...template,
+      video: file,
+      videoPreview: file ? URL.createObjectURL(file) : '',
+    });
+  };
+
+  const handleVideoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0] ?? null;
+    updateVideo(file);
+  };
+
+  const handleVideoDrop = (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    const file = e.dataTransfer.files?.[0] ?? null;
+    updateVideo(file);
   };
 
   const handleDragOver = (e: React.DragEvent<HTMLDivElement>) => {
     e.preventDefault();
+  };
+
+  const handleStaticChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    onChange({
+      ...template,
+      isStatic: e.target.checked,
+    });
   };
 
   return (
@@ -63,7 +85,7 @@ export default function TemplateForm({
         </CardHeader>
         <CardContent className="space-y-4">
           {error && <div className="text-red-500 text-sm">{error}</div>}
-         
+
           <div>
             <Label htmlFor="name">Name</Label>
             <Input
@@ -76,68 +98,80 @@ export default function TemplateForm({
             />
           </div>
 
+          {/* Thumbnail */}
           <div>
-            <Label htmlFor="file">Thumbnail</Label>
+            <Label htmlFor="thumbnail">Thumbnail</Label>
             <div
-              className="w-full h-32 border-2 border-dashed rounded-md flex items-center justify-center cursor-pointer hover:bg-gray-50"
-              onClick={() => hiddenFileInput.current?.click()}
-              onDrop={handleDrop}
+              className="w-full h-32 border-2 border-dashed rounded-md flex items-center justify-center cursor-pointer"
+              onClick={() => thumbnailInput.current?.click()}
+              onDrop={handleThumbnailDrop}
               onDragOver={handleDragOver}
             >
-              {template.filePreview ? (
-                <div className="text-center p-4">
-                  <p className="text-sm font-medium text-gray-700">
-                    {template.file?.name}
-                  </p>
-                  <p className="text-xs text-gray-500 mt-1">
-                    {template.file?.size ? `${(template.file.size / 1024).toFixed(2)} KB` : ''}
-                  </p>
-                </div>
+              {template.thumbnailPreview ? (
+                <img
+                  src={template.thumbnailPreview}
+                  alt="Thumbnail preview"
+                  className="w-full h-full object-cover rounded-md"
+                />
               ) : (
                 <span className="text-muted-foreground">
-                  Drop file or click to select
+                  Drop image or click to select
                 </span>
               )}
               <input
-                ref={hiddenFileInput}
+                ref={thumbnailInput}
                 type="file"
-                onChange={handleFileChange}
+                accept="image/*"
+                onChange={handleThumbnailChange}
                 style={{ display: 'none' }}
               />
             </div>
           </div>
 
+          {/* Video */}
           <div>
-            <Label htmlFor="file">Video</Label>
+            <Label htmlFor="video">Video</Label>
             <div
-              className="w-full h-32 border-2 border-dashed rounded-md flex items-center justify-center cursor-pointer hover:bg-gray-50"
-              onClick={() => hiddenFileInput.current?.click()}
-              onDrop={handleDrop}
+              className="w-full h-32 border-2 border-dashed rounded-md flex items-center justify-center cursor-pointer"
+              onClick={() => videoInput.current?.click()}
+              onDrop={handleVideoDrop}
               onDragOver={handleDragOver}
             >
-              {template.filePreview ? (
-                <div className="text-center p-4">
-                  <p className="text-sm font-medium text-gray-700">
-                    {template.file?.name}
-                  </p>
-                  <p className="text-xs text-gray-500 mt-1">
-                    {template.file?.size ? `${(template.file.size / 1024).toFixed(2)} KB` : ''}
-                  </p>
-                </div>
+              {template.videoPreview ? (
+                <video
+                  src={template.videoPreview}
+                  className="w-full h-full object-cover rounded-md"
+                  controls={false}
+                />
+              ) : template.video ? (
+                <span className="text-gray-700">{template.video.name}</span>
               ) : (
                 <span className="text-muted-foreground">
-                  Drop file or click to select
+                  Drop video or click to select
                 </span>
               )}
               <input
-                ref={hiddenFileInput}
+                ref={videoInput}
                 type="file"
-                onChange={handleFileChange}
+                accept="video/*"
+                onChange={handleVideoChange}
                 style={{ display: 'none' }}
               />
             </div>
           </div>
-          
+
+          {/* Checkbox estático */}
+          <div className="flex items-center gap-2">
+            <input
+              id="isStatic"
+              type="checkbox"
+              checked={!!template.isStatic}
+              onChange={handleStaticChange}
+              className="mr-2"
+            />
+            <Label htmlFor="isStatic">Is Static?</Label>
+          </div>
+
           <div className="flex items-center gap-2 pt-4">
             <Button onClick={onSave}>
               <Save className="w-4 h-4 mr-2" /> Save
