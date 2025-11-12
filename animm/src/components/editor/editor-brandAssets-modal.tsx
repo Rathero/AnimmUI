@@ -36,8 +36,15 @@ export default function BrandAssetsModal({
         setIsLoading(true);
         try {
         const data = await loadAssets();
-        const imageAssets = data.filter((item: BrandAsset) => item.type === 0);
-        setBrandAssets(imageAssets);
+        const typeMap: Record<string, number> = {
+            'Image': 0,
+            'Video': 1,
+            'Audio': 2,
+        };
+        
+        const typeNumber = typeMap[TypeAsset];
+        const filteredAssets = data.filter((item: BrandAsset) => item.type === typeNumber);
+        setBrandAssets(filteredAssets);
         } catch (error) {
         console.error('Error loading brand assets:', error);
         } finally {
@@ -81,17 +88,28 @@ export default function BrandAssetsModal({
               {brandAssets.map((asset) => (
                 <div
                   key={asset.id}
-                  className="group rounded-xl border border-border bg-card overflow-hidden hover:shadow-lg hover:border-muted-foreground/30 transition-all duration-200"
+                  className="group rounded-xl border border-border bg-card overflow-hidden hover:shadow-lg hover:border-muted-foreground/30 transition-all duration-200 cursor-pointer"
                   onClick={() => handleImageClick(asset.url)}
                 >
-                  <div className="relative aspect-[4/3] bg-muted overflow-hidden">
-                    <Image
-                      src={asset.url}
-                      alt={getCleanFileName(asset.url)}
-                      fill
-                      className="object-cover transition-transform duration-300 group-hover:scale-105"
-                    />
-                  </div>
+                  {TypeAsset === 'Image' && (
+                    <div className="relative aspect-[4/3] bg-muted overflow-hidden">
+                      <Image
+                        src={asset.url}
+                        alt={getCleanFileName(asset.url)}
+                        fill
+                        className="object-cover transition-transform duration-300 group-hover:scale-105"
+                      />
+                    </div>
+                  )}
+                  {TypeAsset === 'Video' && (
+                    <div className="relative aspect-[4/3] bg-muted overflow-hidden">
+                      <video
+                        src={asset.url}
+                        className="w-full h-full object-cover"
+                        controls
+                      />
+                    </div>
+                  )}
                   <div className="px-2 py-1.5 border-t border-border bg-background/50">
                     <p className="text-xs font-medium text-foreground truncate">
                       {getCleanFileName(asset.url)}
