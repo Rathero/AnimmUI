@@ -136,6 +136,12 @@ export interface ModuleRequest {
   filePreview?: string;
 }
 
+export interface Variable {
+  id: number;
+  name: string;
+  value: string;
+}
+
 
 export interface ApiCollections extends BaseApiResponse<Collection[]> {}
 export interface ApiCollection extends BaseApiResponse<Collection> {}

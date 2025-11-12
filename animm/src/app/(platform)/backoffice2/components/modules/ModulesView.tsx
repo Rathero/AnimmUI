@@ -6,6 +6,7 @@ import {
   CardContent,
 } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
 import { Plus, Edit, Trash2, ArrowLeft } from 'lucide-react';
 import { Template } from '@/types/collections';
 import useModulesService from '@/app/services/ModuleService';
@@ -16,14 +17,14 @@ interface ModulesViewProps {
   template: Template;
   onBack: () => void;
   onDataChange: () => Promise<void>;
-  
+  onModuleClick: (module: Module) => void;
 }
 
 export default function ModulesView({
   template,
   onBack,
   onDataChange,
-  
+  onModuleClick,
 }: ModulesViewProps) {
   const [isEditingModule, setIsEditingModule] = useState(false);
   const [editingModule, setEditingModule] = useState<ModuleRequest | null>(null);
@@ -113,10 +114,11 @@ export default function ModulesView({
               <Card
                 key={module.id}
                 className="hover:shadow-md transition-shadow cursor-pointer"
-                
+                onClick={() => onModuleClick(module)}
               >
                 <CardHeader>
                   <div className="flex items-center justify-between">
+                    <CardDescription>Module ID: {module.id}</CardDescription>
                     <div className="flex items-center gap-2">
                       <Button
                         variant="ghost"
@@ -140,12 +142,11 @@ export default function ModulesView({
                       </Button>
                     </div>
                   </div>
-                  <CardDescription>Module ID: {module.id}</CardDescription>
                 </CardHeader>
-                {typeof module.file === 'object' && module.file && (
+                {typeof module.file === 'string' && module.file && (
                   <div className="px-6 py-2">
                     <img
-                      src={URL.createObjectURL(module.file)}
+                      src={module.file}
                       alt="Module thumbnail"
                       className="w-full h-32 object-cover rounded-md"
                       onError={e => {
@@ -156,17 +157,25 @@ export default function ModulesView({
                   </div>
                 )}
                 <CardContent>
-                  <Button 
-                    variant="outline" 
-                    size="sm" 
-                    className="w-full mt-2" 
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      
-                    }}
-                  >
-                    Open Module
-                  </Button>
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between text-sm">
+                      <span className="text-muted-foreground">Variables:</span>
+                      <Badge variant="secondary">
+                        {module.variables?.length || 0}
+                      </Badge>
+                    </div>
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      className="w-full mt-2" 
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onModuleClick(module);
+                      }}
+                    >
+                      Variables
+                    </Button>
+                  </div>
                 </CardContent>
               </Card>
             ))

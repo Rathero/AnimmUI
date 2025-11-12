@@ -4,23 +4,26 @@ import { useEffect, useState } from 'react';
 import { LoadingSpinner } from '@/components/ui/loading-spinner';
 import { ContentWrapper } from '@/components/ui/content-wrapper';
 import { platformStore } from '@/stores/platformStore';
-import { Collection } from '@/types/collections';
+import { Collection, Template, Module } from '@/types/collections';
 import useCollectionsService from '@/app/services/CollectionsService';
 import { User } from '@/types/users';
 import useUsersService from '@/app/services/UsersService';
 import CollectionsView from './components/collections/CollectionsView';
 import TemplatesView from './components/templates/TemplatesView';
 import ModulesView from './components/modules/ModulesView';
+import VariablesView from './components/variables/variablesView';
+
+type ViewMode = 'collections' | 'templates' | 'modules' | 'variables';
 
 export default function NewBackofficePage() {
   const [collections, setCollections] = useState<Collection[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [users, setUsers] = useState<User[]>([]);
   const [isLoadingUsers, setIsLoadingUsers] = useState(true);
-  const [viewMode, setViewMode] = useState<'collections' | 'templates' | 'modules'>('collections');
+  const [viewMode, setViewMode] = useState<ViewMode>('collections');
   const [selectedCollection, setSelectedCollection] = useState<Collection | null>(null);
-  const [selectedTemplate, setSelectedTemplate] = useState<any | null>(null);
-
+  const [selectedTemplate, setSelectedTemplate] = useState<Template | null>(null);
+  const [selectedModule, setSelectedModule] = useState<Module | null>(null);
 
   const { setPageTitle } = platformStore(state => state);
   const { getAllBackoffice } = useCollectionsService();
@@ -51,6 +54,24 @@ export default function NewBackofficePage() {
         );
         if (updatedCollection) {
           setSelectedCollection(updatedCollection);
+          
+          if (selectedTemplate) {
+            const updatedTemplate = updatedCollection.templates?.find(
+              (t: Template) => t.id === selectedTemplate.id
+            );
+            if (updatedTemplate) {
+              setSelectedTemplate(updatedTemplate);
+              
+              if (selectedModule) {
+                const updatedModule = updatedTemplate.modules?.find(
+                  (m: Module) => m.id === selectedModule.id
+                );
+                if (updatedModule) {
+                  setSelectedModule(updatedModule);
+                }
+              }
+            }
+          }
         }
       }
     } catch (err) {
@@ -62,10 +83,15 @@ export default function NewBackofficePage() {
 
   useEffect(() => {
     setPageTitle('Backoffice');
-    fetchUsers();
-    fetchData();
-    return () => setPageTitle(undefined);
   }, [setPageTitle]);
+
+  useEffect(() => {
+    fetchUsers();
+  }, []);
+
+  useEffect(() => {
+    fetchData();
+  }, []);
 
   const goToTemplates = (collection?: Collection) => {
     if (collection) {
@@ -77,17 +103,29 @@ export default function NewBackofficePage() {
   const goToCollections = () => {
     setSelectedCollection(null);
     setSelectedTemplate(null);
+    setSelectedModule(null);
     setViewMode('collections');
   };
 
-  const goToModules = (template : any) => {
+  const goToModules = (template: Template) => {
     setSelectedTemplate(template);
     setViewMode('modules');
   };
 
   const goBackToTemplates = () => {
     setSelectedTemplate(null);
+    setSelectedModule(null);
     setViewMode('templates');
+  };
+
+  const goToVariables = (module: Module) => {
+    setSelectedModule(module);
+    setViewMode('variables');
+  };
+
+  const goBackToModules = () => {
+    setSelectedModule(null);
+    setViewMode('modules');
   };
 
   if (isLoading) {
@@ -126,6 +164,16 @@ export default function NewBackofficePage() {
           template={selectedTemplate}
           onBack={goBackToTemplates}
           onDataChange={fetchData}
+          onModuleClick={goToVariables}
+        />
+      )}
+
+      {viewMode === 'variables' && selectedModule && (
+        <VariablesView
+          variables={selectedModule.variables || []}
+          onBack={goBackToModules}
+          onDataChange={fetchData}
+          title={`Variables del Módulo #${selectedModule.id}`}
         />
       )}
     </ContentWrapper>
