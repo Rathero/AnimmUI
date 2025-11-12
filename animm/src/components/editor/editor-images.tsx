@@ -23,10 +23,11 @@ import {
 } from '@/components/ui/dialog';
 import { Separator } from '@/components/ui/separator';
 
-import { CropIcon, ImageMinus, ImageUpscale } from 'lucide-react';
+import { CropIcon, ImageMinus, ImageUpscale, SquareLibrary } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 import ReactCrop, { type Crop } from 'react-image-crop';
 import 'react-image-crop/src/ReactCrop.scss';
+import BrandAssetsModal from './editor-brandAssets-modal';
 export default function EditorImages({
   images,
   changeImageParent,
@@ -39,12 +40,29 @@ export default function EditorImages({
   const [isCropOpen, setIsCropOpen] = useState<boolean>(false);
   const hiddenFileInput = useRef<HTMLInputElement>(null);
   const imgRef = useRef<HTMLImageElement>(null);
+  const [isBrandAssetsOpen, setIsBrandAssetsOpen] = useState<boolean>(false);
+  const [currentImageIndex, setCurrentImageIndex] = useState<number>(0);
 
   const [crop, setCrop] = useState<Crop | undefined>();
 
   useEffect(() => {
     setCrop(undefined);
   }, [isCropOpen]);
+
+  const openBrandAssetsModal = (index: number) => {
+    setCurrentImageIndex(index);
+    setIsBrandAssetsOpen(true);
+  };
+
+  const handleBrandImageSelect = (url: string) => {
+    const newImgSrc = [...imgSrc];
+    const newOriginalSrc = [...originalSrc];
+    newImgSrc[currentImageIndex] = url;
+    newOriginalSrc[currentImageIndex] = url;
+    setImgSrc(newImgSrc);
+    setOriginalSrc(newOriginalSrc);
+    changeImageParent(url, currentImageIndex, images[currentImageIndex].image);
+  };
 
   useEffect(() => {
     setImgSrc([]);
@@ -272,6 +290,24 @@ export default function EditorImages({
                           </Tooltip>
                         </TooltipProvider>
                       </div>
+                        <TooltipProvider>
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <Button 
+                                size="sm" 
+                                variant="outline" 
+                                className="w-full"
+                                onClick={() => openBrandAssetsModal(index)}
+                              >
+                                <SquareLibrary/>
+                                <p className="ms-1">Brand Images</p>
+                              </Button>
+                            </TooltipTrigger>
+                            <TooltipContent>
+                              <p>Open Brand Images Library</p>
+                            </TooltipContent>
+                          </Tooltip>
+                        </TooltipProvider>
                     </div>
                   </PopoverContent>
                 </Popover>
@@ -280,6 +316,13 @@ export default function EditorImages({
           </div>
         </div>
       )}
+      
+      <BrandAssetsModal
+        TypeAsset="Image"
+        open={isBrandAssetsOpen}
+        onOpenChange={setIsBrandAssetsOpen}
+        onSelectImage={handleBrandImageSelect}
+      />
     </>
   );
 }
