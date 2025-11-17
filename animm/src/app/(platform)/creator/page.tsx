@@ -31,14 +31,36 @@ import Module from './module';
 const Components = [
   ['1', '', '', 'Image'],
   ['2', '', '', 'Video'],
-  ['0', '/Test/WL_Product.riv', 'Template', 'Module01'],
-  ['0', '/Test/WL_Totem.riv', 'Template', 'Module02'],
-  ['0', '/Test/WL_Pb.riv', 'Template', 'Module03'],
-  ['0', '/Test/IND_Modules.riv', 'Module_01', 'Module04'],
-  ['0', '/Test/IND_Modules.riv', 'Module_02', 'Module05'],
-  ['0', '/Test/IND_Modules.riv', 'Module_03', 'Module06'],
-  ['0', '/Test/IND_Modules.riv', 'Module_04', 'Module07'],
-  ['0', '/Test/IND_Modules.riv', 'Module_05', 'Module08'],
+  [
+    '0',
+    'https://animmfilesv2.blob.core.windows.net/riv/modules/ikea_module_01.riv',
+    'Template',
+    'Module01',
+  ],
+  [
+    '0',
+    'https://animmfilesv2.blob.core.windows.net/riv/modules/ikea_module_02.riv',
+    'Template',
+    'Module02',
+  ],
+  [
+    '0',
+    'https://animmfilesv2.blob.core.windows.net/riv/modules/ikea_module_03.riv',
+    'Template',
+    'Module03',
+  ],
+  [
+    '0',
+    'https://animmfilesv2.blob.core.windows.net/riv/modules/ikea_module_04.riv',
+    'Template',
+    'Module04',
+  ],
+  [
+    '0',
+    'https://animmfilesv2.blob.core.windows.net/riv/modules/ikea_module_05.riv',
+    'Template',
+    'Module05',
+  ],
 ];
 
 interface DraggableDivProps {

@@ -168,8 +168,6 @@ export default function Editor() {
   const handleLanguageChange = (languageName: string) => {
     setSelectedLanguage(languageName);
 
-    if (!languageName) return;
-
     const languageContent = languageService.getLanguageContent(languageName);
     if (!languageContent) {
       console.warn(`No language content found for language ${languageName}`);
@@ -198,9 +196,7 @@ export default function Editor() {
       languageService.applyImageVariables();
 
       // If a language is already selected, reapply the language content
-      if (selectedLanguage) {
-        handleLanguageChange(selectedLanguage);
-      }
+      handleLanguageChange(selectedLanguage);
     }
   };
 
@@ -1149,15 +1145,15 @@ export default function Editor() {
                                       'absolute top-0 -z-10 object-cover ' +
                                       (currentWidth / currentHeight > 2.3 &&
                                       currentWidth / currentHeight <= 3
-                                        ? ' '
+                                        ? 'v_thin '
                                         : '') +
                                       (currentWidth / currentHeight >= 3
-                                        ? ' '
+                                        ? 'v_pan '
                                         : '') +
                                       (currentWidth / currentHeight <= 0.5
-                                        ? ' '
+                                        ? 'v_ver '
                                         : '') +
-                                      (currentHeight <= 400 ? ' ' : '')
+                                      (currentHeight <= 400 ? 'v_thin ' : '')
                                     }
                                   >
                                     <source src={videoSrc} type="video/mp4" />
