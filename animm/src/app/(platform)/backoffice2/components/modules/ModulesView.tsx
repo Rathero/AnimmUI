@@ -6,6 +6,7 @@ import {
   CardContent,
 } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { LoadingSpinner } from '@/components/ui/loading-spinner';
 import { Badge } from '@/components/ui/badge';
 import { Plus, Edit, Trash2, ArrowLeft } from 'lucide-react';
 import { Template } from '@/types/collections';
@@ -18,6 +19,7 @@ interface ModulesViewProps {
   onBack: () => void;
   onDataChange: () => Promise<void>;
   onModuleClick: (module: Module) => void;
+  isLoading?: boolean;
 }
 
 export default function ModulesView({
@@ -25,6 +27,7 @@ export default function ModulesView({
   onBack,
   onDataChange,
   onModuleClick,
+  isLoading = false,
 }: ModulesViewProps) {
   const [isEditingModule, setIsEditingModule] = useState(false);
   const [editingModule, setEditingModule] = useState<ModuleRequest | null>(null);
@@ -88,6 +91,76 @@ export default function ModulesView({
     }
   };
 
+  const moduleCards = template.modules?.map(module => (
+    <Card
+      key={module.id}
+      className="hover:shadow-md transition-shadow cursor-pointer"
+      onClick={() => onModuleClick(module)}
+    >
+      <CardHeader>
+        <div className="flex items-center justify-between">
+          <CardDescription>Module ID: {module.id}</CardDescription>
+          <div className="flex items-center gap-2">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={e => {
+                e.stopPropagation();
+                handleEditModule(module);
+              }}
+            >
+              <Edit className="w-4 h-4" />
+            </Button>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={e => {
+                e.stopPropagation();
+                handleDeleteModule(module.id);
+              }}
+            >
+              <Trash2 className="w-4 h-4" />
+            </Button>
+          </div>
+        </div>
+      </CardHeader>
+      {typeof module.file === 'string' && module.file && (
+        <div className="px-6 py-2">
+          <img
+            src={module.file}
+            alt="Module thumbnail"
+            className="w-full h-32 object-cover rounded-md"
+            onError={e => {
+              const target = e.target as HTMLImageElement;
+              target.style.display = 'none';
+            }}
+          />
+        </div>
+      )}
+      <CardContent>
+        <div className="space-y-2">
+          <div className="flex items-center justify-between text-sm">
+            <span className="text-muted-foreground">Variables:</span>
+            <Badge variant="secondary">
+              {module.variables?.length || 0}
+            </Badge>
+          </div>
+          <Button
+            variant="outline"
+            size="sm"
+            className="w-full mt-2"
+            onClick={(e) => {
+              e.stopPropagation();
+              onModuleClick(module);
+            }}
+          >
+            Variables
+          </Button>
+        </div>
+      </CardContent>
+    </Card>
+  ));
+
   return (
     <>
       <div className="space-y-4">
@@ -105,81 +178,19 @@ export default function ModulesView({
           </Button>
         </div>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {template.modules?.length === 0 ? (
+          {isLoading && (
+            <div className="col-span-full flex items-center justify-center py-12">
+              <LoadingSpinner size="lg" />
+            </div>
+          )}
+
+          {!isLoading && (!template.modules || template.modules.length === 0) && (
             <div className="text-center text-muted-foreground col-span-full">
               No modules found
             </div>
-          ) : (
-            template.modules?.map(module => (
-              <Card
-                key={module.id}
-                className="hover:shadow-md transition-shadow cursor-pointer"
-                onClick={() => onModuleClick(module)}
-              >
-                <CardHeader>
-                  <div className="flex items-center justify-between">
-                    <CardDescription>Module ID: {module.id}</CardDescription>
-                    <div className="flex items-center gap-2">
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={e => {
-                          e.stopPropagation();
-                          handleEditModule(module);
-                        }}
-                      >
-                        <Edit className="w-4 h-4" />
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={e => {
-                          e.stopPropagation();
-                          handleDeleteModule(module.id);
-                        }}
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </Button>
-                    </div>
-                  </div>
-                </CardHeader>
-                {typeof module.file === 'string' && module.file && (
-                  <div className="px-6 py-2">
-                    <img
-                      src={module.file}
-                      alt="Module thumbnail"
-                      className="w-full h-32 object-cover rounded-md"
-                      onError={e => {
-                        const target = e.target as HTMLImageElement;
-                        target.style.display = 'none';
-                      }}
-                    />
-                  </div>
-                )}
-                <CardContent>
-                  <div className="space-y-2">
-                    <div className="flex items-center justify-between text-sm">
-                      <span className="text-muted-foreground">Variables:</span>
-                      <Badge variant="secondary">
-                        {module.variables?.length || 0}
-                      </Badge>
-                    </div>
-                    <Button 
-                      variant="outline" 
-                      size="sm" 
-                      className="w-full mt-2" 
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        onModuleClick(module);
-                      }}
-                    >
-                      Variables
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
-            ))
           )}
+
+          {!isLoading && moduleCards}
         </div>
       </div>
 

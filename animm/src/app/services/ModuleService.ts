@@ -17,13 +17,16 @@ const useModulesService = () => {
 
   const getByTemplate = async (templateId: number): Promise<Module[]> => {
     const response = await fetchWithAuth(
-      process.env.NEXT_PUBLIC_API_URL + '/Modules/' + templateId
+      process.env.NEXT_PUBLIC_API_URL + 
+      '/Templates/' + 
+      templateId +
+      '/Modules'
     );
     if (!response.ok) {
       throw new Error(`Error fetching modules for template ${templateId}: ${response.statusText}`);
     }
     const data = await response.json();
-    return data || [];
+    return data?.Result || [];
   };
 
   const create = () => {
