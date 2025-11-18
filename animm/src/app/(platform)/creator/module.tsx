@@ -36,17 +36,12 @@ export default function Module({
       {type === '0' && src && ab && (
         <RiveWrapper key={`${src}-${ab}`} src={src} ab={ab} />
       )}
-      {type === '1' && (
-        <Image
-          fill
-          src={'/img/IMG_1.jpg'}
-          alt="image"
-          className="object-cover"
-        />
+      {type === '1' && src && (
+        <Image fill src={src} alt="image" className="object-cover" />
       )}
-      {type === '2' && (
+      {type === '2' && src && (
         <video className="absolute size-full object-cover" autoPlay loop muted>
-          <source src={'/video/Ski.mp4'} type="video/mp4" />
+          <source key={`${src}`} src={src} type="video/mp4" />
         </video>
       )}
     </div>

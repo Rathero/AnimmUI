@@ -29,8 +29,12 @@ import { Switch } from '@/components/ui/switch';
 import Module from './module';
 
 const Components = [
-  ['1', '', '', 'Image'],
-  ['2', '', '', 'Video'],
+  ['1', '/creator/IMG_01.jpg', '', 'Imagen 1'],
+  ['1', '/creator/IMG_02.jpg', '', 'Imagen 2'],
+  ['1', '/creator/IMG_03.jpg', '', 'Imagen 3'],
+  ['1', '/creator/IMG_04.jpg', '', 'Imagen 4'],
+  ['2', '/creator/Video_01.mp4', '', 'Video 1'],
+  ['2', '/creator/Video_02.mp4', '', 'Video 2'],
   [
     '0',
     'https://animmfilesv2.blob.core.windows.net/riv/modules/ikea_module_01.riv',
