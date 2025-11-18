@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { FileAsset, Rive } from '@rive-app/react-webgl2';
 import { useViewModelInstanceNumber } from '@rive-app/react-webgl2';
@@ -361,15 +361,21 @@ export default function Editor() {
   }, [tabs, activeTab]);
 
   const [assets, setAssets] = useState<Array<FileAsset>>([]);
+  const assetsRef = useRef<Array<FileAsset>>([]);
   const [rivesStates, setRiveStates] = useState<Rive[]>([]);
+
+  useEffect(() => {
+    assetsRef.current = assets;
+  }, [assets]);
+
   const changeImage = async (url: string, _i: number, name: string) => {
     const baseName = getBaseNameFromPath(name);
     if (!baseName) return;
-    await replaceRiveImageFromUrl(assets, baseName, url);
+    await replaceRiveImageFromUrl(assetsRef.current, baseName, url);
   };
 
   async function handleImageChange(imageName: string, newImageUrl: string) {
-    await replaceRiveImageFromUrl(assets, imageName, newImageUrl);
+    await replaceRiveImageFromUrl(assetsRef.current, imageName, newImageUrl);
   }
 
   async function handleTextChange(textName: string, newText: string) {
