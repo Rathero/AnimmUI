@@ -1,6 +1,26 @@
 import { useRive, Fit, Layout } from '@rive-app/react-webgl2';
 import Image from 'next/image';
-import { useEffect } from 'react';
+
+function RiveWrapper({
+  src,
+  ab,
+}: {
+  src: string | undefined;
+  ab: string | undefined;
+}) {
+  const { RiveComponent } = useRive({
+    src: src,
+    artboard: ab,
+    stateMachines: 'SM',
+    autoplay: true,
+    layout: new Layout({
+      fit: Fit.Layout,
+      layoutScaleFactor: 1,
+    }),
+  });
+
+  return <RiveComponent />;
+}
 
 export default function Module({
   type,
@@ -11,34 +31,11 @@ export default function Module({
   src: string | undefined;
   ab: string | undefined;
 }) {
-  const { rive, RiveComponent } = useRive({
-    src: src,
-    artboard: ab,
-    stateMachines: 'SM',
-    autoplay: true,
-    layout: new Layout({
-      fit: Fit.Layout,
-      layoutScaleFactor: 1,
-    }),
-  });
-  useEffect(() => {
-    if (rive && type === '0') {
-      rive.load({
-        src: src,
-        artboard: ab,
-        stateMachines: 'SM',
-        autoplay: true,
-      });
-      rive.layout = new Layout({
-        fit: Fit.Layout,
-        layoutScaleFactor: 1,
-      });
-    }
-  }, [src, ab, type]);
-
   return (
     <div className="size-full">
-      {type === '0' && <RiveComponent />}
+      {type === '0' && src && ab && (
+        <RiveWrapper key={`${src}-${ab}`} src={src} ab={ab} />
+      )}
       {type === '1' && (
         <Image
           fill

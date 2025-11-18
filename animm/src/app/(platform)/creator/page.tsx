@@ -138,7 +138,6 @@ const DraggableDiv = ({
                     <Trash />
                   </Button>
                 </div>
-                {/* Content here */}
                 <Module
                   type={Components[nestedDiv.module][0]}
                   src={Components[nestedDiv.module][1]}
