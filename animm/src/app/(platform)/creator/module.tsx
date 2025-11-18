@@ -40,8 +40,14 @@ export default function Module({
         <Image fill src={src} alt="image" className="object-cover" />
       )}
       {type === '2' && src && (
-        <video className="absolute size-full object-cover" autoPlay loop muted>
-          <source key={`${src}`} src={src} type="video/mp4" />
+        <video
+          key={src}
+          className="absolute size-full object-cover"
+          autoPlay
+          loop
+          muted
+        >
+          <source src={src} type="video/mp4" />
         </video>
       )}
     </div>
