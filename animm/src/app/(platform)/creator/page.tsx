@@ -130,7 +130,9 @@ const DraggableDiv = ({
                   <Button
                     variant="destructive"
                     size="icon"
-                    className="opacity-0 transition-opacity hover:opacity-100 z-40"
+                    className={`${
+                      isEdit ? 'opacity-20' : 'opacity-0'
+                    } transition-opacity hover:opacity-100 z-40`}
                     onClick={() => removeNestedDiv(index, id)}
                   >
                     <Trash />
