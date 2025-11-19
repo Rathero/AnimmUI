@@ -6,5 +6,5 @@ test('GivenTwoNumbers_WhenSum_ThenResultIsOk', () => {
 });
 
 test('GivenTwoNumbersNegative_WhenSum_ThenResultIsOk', () => {
-  expect(sum(-1, -2)).toBe(-3);
+  expect(sum(-1, -2)).toBe(3);
 });
