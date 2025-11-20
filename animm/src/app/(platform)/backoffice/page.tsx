@@ -8,7 +8,7 @@ import useCollectionsService from '@/app/services/CollectionsService';
 import { User } from '@/types/users';
 import useUsersService from '@/app/services/UsersService';
 import CollectionsView from './components/collections/CollectionsView';
-import TemplatesView from './components/templates/TemplatesView';
+import TemplatesView from './components/template/TemplatesView';
 import ModulesView from './components/modules/ModulesView';
 import VariablesView from './components/variables/variablesView';
 

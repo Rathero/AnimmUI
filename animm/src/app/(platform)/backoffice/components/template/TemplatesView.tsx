@@ -1,3 +1,4 @@
+'use client';
 import { useState, useEffect } from 'react';
 import {
   Card,
@@ -8,6 +9,7 @@ import { Button } from '@/components/ui/button';
 import { Plus, Edit, Trash2, ArrowLeft } from 'lucide-react';
 import { Collection } from '@/types/collections';
 import useTemplatesService from '@/app/services/TemplatesService';
+import useModulesService from '@/app/services/ModuleService';
 import TemplateForm from './TemplatesForm';
 import type { Template, TemplateRequest } from '@/types/collections';
 
@@ -27,21 +29,56 @@ export default function TemplatesView({
   const [editingTemplate, setEditingTemplate] = useState<TemplateRequest | null>(null);
   const [error, setError] = useState<string | null>(null);
 
-  const { listByCollection, update, delete: deleteTemplate, create } = useTemplatesService();
+  const { update, delete: deleteTemplate, create } = useTemplatesService();
   const { addTemplate } = create();
+
+  const modulesService = useModulesService(); 
+
 
   const loadTemplates = async () => {
     try {
-      const response = await listByCollection(collection.id);
-      setTemplates(response || []);
+      if (!collection.templates) {
+        setTemplates([]);
+        return;
+      }
+
+
+      const templatesWithModules = await Promise.all(
+        collection.templates.map(async (template) => {
+          const modules = await modulesService.getByTemplate(template.id);
+          return { ...template, modules };
+        })
+      );
+
+      setTemplates(templatesWithModules);
     } catch (err) {
-      console.error(err);
+      console.error('Error loading templates/modules:', err);
     }
   };
 
-  useEffect(() => {
-    loadTemplates();
-  }, [collection.id]);
+ useEffect(() => {
+  const fetchTemplatesWithModules = async () => {
+    if (!collection.templates) {
+      setTemplates([]);
+      return;
+    }
+
+    try {
+      const templatesWithModules = await Promise.all(
+        collection.templates.map(async (template) => {
+          const modules = await modulesService.getByTemplate(template.id);
+          return { ...template, modules };
+        })
+      );
+      setTemplates(templatesWithModules);
+    } catch (err) {
+      console.error('Error loading modules:', err);
+      setTemplates(collection.templates.map(t => ({ ...t, modules: [] }))); 
+    }
+  };
+
+  fetchTemplatesWithModules();
+}, [collection]);
 
   const handleCreateTemplate = () => {
     setEditingTemplate({
@@ -65,7 +102,7 @@ export default function TemplatesView({
       thumbnailPreview: template.thumbnail || '',
       video: null,
       videoPreview: template.video || '',
-      isStatic: !!template.static
+      isStatic: !!template.static,
     });
     setIsEditingTemplate(true);
     setError(null);
@@ -87,7 +124,7 @@ export default function TemplatesView({
     setIsEditingTemplate(false);
     setEditingTemplate(null);
     setError(null);
-    await loadTemplates();
+    await loadTemplates(); // recargamos después de crear/editar
   };
 
   const handleCloseTemplateEdit = () => {
@@ -110,7 +147,6 @@ export default function TemplatesView({
   return (
     <>
       <div className="space-y-4">
-
         <div className="flex items-center justify-between">
           <h2 className="text-xl font-semibold">Templates in {collection.name}</h2>
         </div>

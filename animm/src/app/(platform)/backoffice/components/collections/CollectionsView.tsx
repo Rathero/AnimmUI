@@ -103,7 +103,6 @@ export default function CollectionsView({
             </p>
           </div>
         </div>
-
         <div className="space-y-4">
           <div className="flex items-center justify-between">
             <h2 className="text-xl font-semibold">Collections</h2>
@@ -112,7 +111,6 @@ export default function CollectionsView({
             </Button>
           </div>
         </div>
-
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {collections.length === 0 ? (
             <div className="text-center text-muted-foreground col-span-full">
@@ -124,7 +122,6 @@ export default function CollectionsView({
                 key={collection.id}
                 className="flex flex-row items-center p-0 hover:shadow-md transition-shadow min-h-[100px]"
               >
-                {/* Imagen al lado izquierdo */}
                 <div className="flex-shrink-0 h-full w-40 rounded-l-md overflow-hidden">
                   {collection.thumbnail && (
                     <img
@@ -138,11 +135,10 @@ export default function CollectionsView({
                     />
                   )}
                 </div>
-                {/* Contenido al lado derecho */}
                 <div className="flex flex-col justify-center pl-6 py-4 flex-grow">
                   <div className="flex items-center justify-between">
                     <CardTitle className="text-lg">{collection.name}</CardTitle>
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center space-x-1 -mt-4 mr-3">
                       <Button
                         variant="ghost"
                         size="sm"
@@ -156,7 +152,6 @@ export default function CollectionsView({
                       <Button
                         variant="ghost"
                         size="sm"
-                        className="ml-2"
                         onClick={e => {
                           e.stopPropagation();
                           handleDeleteCollection(collection.id);
@@ -187,7 +182,6 @@ export default function CollectionsView({
           )}
         </div>
       </div>
-
       {isEditing && editingCollection && (
         <CollectionForm
           collection={editingCollection}
