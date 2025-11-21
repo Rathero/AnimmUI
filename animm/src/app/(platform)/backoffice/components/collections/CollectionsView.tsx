@@ -74,6 +74,7 @@ export default function CollectionsView({
     setEditingCollection(null);
     setError(null);
     await onDataChange();
+    window.location.reload();
   };
 
   const handleCloseEdit = () => {
@@ -87,6 +88,7 @@ export default function CollectionsView({
     try {
       await deleteCollection(collectionId);
       await onDataChange();
+      window.location.reload();
     } catch (err) {
       console.error('Error deleting collection:', err);
     }

@@ -124,7 +124,8 @@ export default function TemplatesView({
     setIsEditingTemplate(false);
     setEditingTemplate(null);
     setError(null);
-    await loadTemplates(); // recargamos después de crear/editar
+    await loadTemplates();
+    window.location.reload();
   };
 
   const handleCloseTemplateEdit = () => {
@@ -138,6 +139,7 @@ export default function TemplatesView({
     try {
       await deleteTemplate(templateId);
       await loadTemplates();
+      window.location.reload();
     } catch (err) {
       console.error('Error deleting template:', err);
       setError('Error deleting template');
