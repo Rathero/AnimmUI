@@ -48,24 +48,26 @@ export default function CollectionsView({
     setError(null);
   };
 
-  const handleEditCollection = (collection: Collection) => {
-    const requestData: CollectionRequest = {
-      id: collection.id,
-      name: collection.name,
-      description: collection.description,
-      userId: collection.userId,
-      thumbnail: null,
-      thumbnailPreview: collection.thumbnail || '',
-      templates: [],
-    };
-    setEditingCollection(requestData);
-    setIsEditing(true);
-    setError(null);
+const handleEditCollection = (collection: Collection) => {
+  const requestData: CollectionRequest = {
+    id: collection.id,
+    name: collection.name,
+    description: collection.description,
+    userId: collection.userId,
+    thumbnail: null,
+    thumbnailPreview: collection.thumbnail || '',
+    templates: collection.templates || [], 
   };
+  setEditingCollection(requestData);
+  setIsEditing(true);
+  setError(null);
+};
 
-  const handleSaveCollection = async () => {
-    if (!editingCollection) return;
-    if (editingCollection.id) {
+const handleSaveCollection = async () => {
+  if (!editingCollection) return;
+
+  try {
+    if (editingCollection.id && editingCollection.id !== 0) {
       await updateCollection(editingCollection.id, editingCollection);
     } else {
       await addCollection(editingCollection);
@@ -74,8 +76,11 @@ export default function CollectionsView({
     setEditingCollection(null);
     setError(null);
     await onDataChange();
-    window.location.reload();
-  };
+  } catch (err) {
+    console.error(err);
+    setError('Failed to save collection');
+  }
+};
 
   const handleCloseEdit = () => {
     setIsEditing(false);

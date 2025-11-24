@@ -165,6 +165,7 @@ export default function NewBackofficePage() {
         <VariablesView
           variables={selectedModule.variables || []}
           onBack={goBackToModules}
+          onDataChange={fetchCollections}
           title={`Variables del Módulo #${selectedModule.id}`}
         />
       )}

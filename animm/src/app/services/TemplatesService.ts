@@ -88,7 +88,7 @@ const useTemplatesService = () => {
     }
 
     const response = await fetchWithAuth(
-      process.env.NEXT_PUBLIC_API_URL + '/Templates/' + id,
+      process.env.NEXT_PUBLIC_API_URL + '/Templates',
       {
         method: 'PATCH',
         body: formData,

@@ -76,30 +76,30 @@ export default function ModulesView({
     setError(null);
   };
 
-  const handleSaveModule = async () => {
-    if (!editingModule) return;
+const handleSaveModule = async () => {
+  if (!editingModule) return;
 
-    try {
-      if (editingModule.id !== 0) {
-        await update(editingModule.id, editingModule);
-      } else {
-        await addModule({
-          file: editingModule.file,
-          templateId: template.id,
-        });
-      }
-
-      setIsEditingModule(false);
-      setEditingModule(null);
-      setError(null);
-
-      await loadModules();
-      await onDataChange();
-    } catch (err) {
-      console.error('Error saving module:', err);
-      setError('Error saving module');
+  try {
+    if (editingModule.id && editingModule.id !== 0) {
+      await update(editingModule.id, editingModule);
+    } else {
+      await addModule({
+        file: editingModule.file,
+        templateId: template.id,
+      });
     }
-  };
+
+    setIsEditingModule(false);
+    setEditingModule(null);
+    setError(null);
+
+    await onDataChange();
+  } catch (err) {
+    console.error(err);
+    setError('Failed to save module');
+  }
+};
+
 
   const handleCloseModuleEdit = () => {
     setIsEditingModule(false);

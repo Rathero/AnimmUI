@@ -17,12 +17,14 @@ interface TemplatesViewProps {
   collection: Collection;
   onBack: () => void;
   onTemplateClick: (template: Template) => void;
+  onDataChange?: () => Promise<void>; 
 }
 
 export default function TemplatesView({
   collection,
   onBack,
   onTemplateClick,
+  onDataChange,
 }: TemplatesViewProps) {
   const [templates, setTemplates] = useState<Template[]>([]);
   const [isEditingTemplate, setIsEditingTemplate] = useState(false);
@@ -34,14 +36,12 @@ export default function TemplatesView({
 
   const modulesService = useModulesService(); 
 
-
   const loadTemplates = async () => {
     try {
       if (!collection.templates) {
         setTemplates([]);
         return;
       }
-
 
       const templatesWithModules = await Promise.all(
         collection.templates.map(async (template) => {
@@ -56,29 +56,9 @@ export default function TemplatesView({
     }
   };
 
- useEffect(() => {
-  const fetchTemplatesWithModules = async () => {
-    if (!collection.templates) {
-      setTemplates([]);
-      return;
-    }
-
-    try {
-      const templatesWithModules = await Promise.all(
-        collection.templates.map(async (template) => {
-          const modules = await modulesService.getByTemplate(template.id);
-          return { ...template, modules };
-        })
-      );
-      setTemplates(templatesWithModules);
-    } catch (err) {
-      console.error('Error loading modules:', err);
-      setTemplates(collection.templates.map(t => ({ ...t, modules: [] }))); 
-    }
-  };
-
-  fetchTemplatesWithModules();
-}, [collection]);
+  useEffect(() => {
+    loadTemplates();
+  }, [collection]);
 
   const handleCreateTemplate = () => {
     setEditingTemplate({
@@ -110,22 +90,31 @@ export default function TemplatesView({
 
   const handleSaveTemplate = async () => {
     if (!editingTemplate) return;
-    if (editingTemplate.id !== 0) {
-      await update(editingTemplate.id, editingTemplate);
-    } else {
-      await addTemplate({
-        name: editingTemplate.name,
-        collectionId: collection.id,
-        isStatic: editingTemplate.isStatic,
-        thumbnail: editingTemplate.thumbnail,
-        video: editingTemplate.video,
-      });
+
+    try {
+      if (editingTemplate.id && editingTemplate.id !== 0) {
+        await update(editingTemplate.id, editingTemplate);
+      } else {
+        await addTemplate({
+          name: editingTemplate.name,
+          collectionId: collection.id,
+          isStatic: editingTemplate.isStatic,
+          thumbnail: editingTemplate.thumbnail,
+          video: editingTemplate.video,
+        });
+      }
+
+      setIsEditingTemplate(false);
+      setEditingTemplate(null);
+      setError(null);
+
+      await loadTemplates();
+
+      if (onDataChange) await onDataChange();
+    } catch (err) {
+      console.error(err);
+      setError('Failed to save template');
     }
-    setIsEditingTemplate(false);
-    setEditingTemplate(null);
-    setError(null);
-    await loadTemplates();
-    window.location.reload();
   };
 
   const handleCloseTemplateEdit = () => {
@@ -139,7 +128,8 @@ export default function TemplatesView({
     try {
       await deleteTemplate(templateId);
       await loadTemplates();
-      window.location.reload();
+
+      if (onDataChange) await onDataChange();
     } catch (err) {
       console.error('Error deleting template:', err);
       setError('Error deleting template');

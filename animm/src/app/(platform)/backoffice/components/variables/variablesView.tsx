@@ -8,7 +8,8 @@ import {
 } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Plus, Edit, Trash2, ArrowLeft } from 'lucide-react';
-import VariableForm, { Variable } from './variablesForm';
+import VariableForm from './variablesForm';
+import type { Variable } from '@/types/collections';
 
 interface VariablesViewProps {
   variables: Variable[];
@@ -32,7 +33,6 @@ export default function VariablesView({
       id: 0,
       name: '',
       value: '',
-      isStatic: false,
     });
     setIsEditingVariable(true);
     setError(null);
@@ -43,7 +43,6 @@ export default function VariablesView({
       id: variable.id,
       name: variable.name,
       value: variable.value,
-      isStatic: variable.isStatic,
     });
     setIsEditingVariable(true);
     setError(null);
@@ -128,7 +127,6 @@ export default function VariablesView({
                     </div>
                   </div>
                   <CardDescription>
-                    {variable.isStatic ? 'Variable estática' : 'Variable dinámica'}
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
