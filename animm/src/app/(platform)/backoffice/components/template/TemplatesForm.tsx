@@ -1,5 +1,6 @@
 'use client';
 
+
 import { useRef } from 'react';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -7,6 +8,7 @@ import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
 import { Save, X } from 'lucide-react';
 import type { TemplateRequest } from '@/types/collections';
+
 
 interface TemplateFormProps {
   template: TemplateRequest;
@@ -16,6 +18,7 @@ interface TemplateFormProps {
   title: string;
   error?: string | null;
 }
+
 
 export default function TemplateForm({
   template,
@@ -28,6 +31,7 @@ export default function TemplateForm({
   const thumbnailInput = useRef<HTMLInputElement>(null);
   const videoInput = useRef<HTMLInputElement>(null);
 
+
   const updateThumbnail = (file: File | null) => {
     onChange({
       ...template,
@@ -36,16 +40,19 @@ export default function TemplateForm({
     });
   };
 
+
   const handleThumbnailChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0] ?? null;
     updateThumbnail(file);
   };
+
 
   const handleThumbnailDrop = (e: React.DragEvent<HTMLDivElement>) => {
     e.preventDefault();
     const file = e.dataTransfer.files?.[0] ?? null;
     updateThumbnail(file);
   };
+
 
   const updateVideo = (file: File | null) => {
     onChange({
@@ -55,10 +62,12 @@ export default function TemplateForm({
     });
   };
 
+
   const handleVideoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0] ?? null;
     updateVideo(file);
   };
+
 
   const handleVideoDrop = (e: React.DragEvent<HTMLDivElement>) => {
     e.preventDefault();
@@ -66,9 +75,11 @@ export default function TemplateForm({
     updateVideo(file);
   };
 
+
   const handleDragOver = (e: React.DragEvent<HTMLDivElement>) => {
     e.preventDefault();
   };
+
 
   const handleStaticChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     onChange({
@@ -76,6 +87,7 @@ export default function TemplateForm({
       isStatic: e.target.checked,
     });
   };
+
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
@@ -85,6 +97,7 @@ export default function TemplateForm({
         </CardHeader>
         <CardContent className="space-y-4">
           {error && <div className="text-red-500 text-sm">{error}</div>}
+
 
           <div>
             <Label htmlFor="name">Name</Label>
@@ -97,6 +110,7 @@ export default function TemplateForm({
               placeholder="Enter template name"
             />
           </div>
+
 
           {/* Thumbnail */}
           <div>
@@ -127,6 +141,7 @@ export default function TemplateForm({
               />
             </div>
           </div>
+
 
           {/* Video */}
           <div>
@@ -160,6 +175,7 @@ export default function TemplateForm({
             </div>
           </div>
 
+
           {/* Checkbox estático */}
           <div className="flex items-center gap-2">
             <input
@@ -171,6 +187,7 @@ export default function TemplateForm({
             />
             <Label htmlFor="isStatic">Is Static?</Label>
           </div>
+
 
           <div className="flex items-center gap-2 pt-4">
             <Button onClick={onSave}>

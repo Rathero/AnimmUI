@@ -6,12 +6,11 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
-import { Save, X } from 'lucide-react';
+import { Save, X, Trash2 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { LoadingSpinner } from '@/components/ui/loading-spinner';
 import { User } from '@/types/users';
 import { CollectionRequest } from '@/types/collections';
-
 
 interface CollectionFormProps {
   collection: CollectionRequest;
@@ -36,28 +35,39 @@ export default function CollectionForm({
 }: CollectionFormProps) {
   const hiddenFileInput = useRef<HTMLInputElement>(null);
 
-const updateThumbnail = (file: File | null) => {
-  onChange({
-    ...collection,
-    thumbnail: file,
-    thumbnailPreview: file ? URL.createObjectURL(file) : '',
-  });
-};
+  const updateThumbnail = (file: File | null) => {
+    onChange({
+      ...collection,
+      thumbnail: file,
+      thumbnailPreview: file ? URL.createObjectURL(file) : '',
+    });
+  };
 
-const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-  const file = e.target.files?.[0] ?? null;
-  updateThumbnail(file);
-};
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0] ?? null;
+    updateThumbnail(file);
+  };
 
-const handleDrop = (e: React.DragEvent<HTMLDivElement>) => {
-  e.preventDefault();
-  const file = e.dataTransfer.files?.[0] ?? null;
-  updateThumbnail(file);
-};
-
+  const handleDrop = (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    const file = e.dataTransfer.files?.[0] ?? null;
+    updateThumbnail(file);
+  };
 
   const handleDragOver = (e: React.DragEvent<HTMLDivElement>) => {
     e.preventDefault();
+  };
+
+  const handleRemoveThumbnail = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    onChange({
+      ...collection,
+      thumbnail: null,
+      thumbnailPreview: '',
+    });
+    if (hiddenFileInput.current) {
+      hiddenFileInput.current.value = '';
+    }
   };
 
   return (
@@ -75,7 +85,6 @@ const handleDrop = (e: React.DragEvent<HTMLDivElement>) => {
         <CardContent className="space-y-4">
           {error && <div className="text-red-500 text-sm">{error}</div>}
 
-         
           <div>
             <Label htmlFor="name">Name</Label>
             <Input
@@ -88,7 +97,6 @@ const handleDrop = (e: React.DragEvent<HTMLDivElement>) => {
             />
           </div>
 
-          
           <div>
             <Label htmlFor="description">Description</Label>
             <Textarea
@@ -101,21 +109,30 @@ const handleDrop = (e: React.DragEvent<HTMLDivElement>) => {
             />
           </div>
 
-          
           <div>
             <Label htmlFor="thumbnail">Thumbnail</Label>
             <div
-              className="w-full h-32 border-2 border-dashed rounded-md flex items-center justify-center cursor-pointer"
+              className="w-full h-32 border-2 border-dashed rounded-md flex items-center justify-center cursor-pointer relative group"
               onClick={() => hiddenFileInput.current?.click()}
               onDrop={handleDrop}
               onDragOver={handleDragOver}
             >
               {collection.thumbnailPreview ? (
-                <img
-                  src={collection.thumbnailPreview}
-                  alt="Thumbnail preview"
-                  className="w-full h-full object-cover rounded-md"
-                />
+                <>
+                  <img
+                    src={collection.thumbnailPreview}
+                    alt="Thumbnail preview"
+                    className="w-full h-full object-cover rounded-md"
+                  />
+                  <Button
+                    variant="destructive"
+                    size="sm"
+                    className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity"
+                    onClick={handleRemoveThumbnail}
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </Button>
+                </>
               ) : (
                 <span className="text-muted-foreground">
                   Drop image or click to select
@@ -131,7 +148,6 @@ const handleDrop = (e: React.DragEvent<HTMLDivElement>) => {
             </div>
           </div>
 
-          
           <div>
             <Label htmlFor="userId">User</Label>
             {isLoadingUsers ? (
@@ -155,7 +171,6 @@ const handleDrop = (e: React.DragEvent<HTMLDivElement>) => {
             )}
           </div>
 
-      
           <div className="flex items-center gap-2 pt-4">
             <Button onClick={onSave}>
               <Save className="w-4 h-4 mr-2" /> Save

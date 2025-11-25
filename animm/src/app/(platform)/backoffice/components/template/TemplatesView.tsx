@@ -1,38 +1,64 @@
-import { useState } from 'react';
+'use client';
+import { useState, useEffect } from 'react';
 import {
   Card,
-  CardDescription,
-  CardHeader,
   CardTitle,
-  CardContent,
+  CardDescription,
 } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
 import { Plus, Edit, Trash2, ArrowLeft } from 'lucide-react';
 import { Collection } from '@/types/collections';
 import useTemplatesService from '@/app/services/TemplatesService';
-import TemplateForm from './templatesForm';
+import useModulesService from '@/app/services/ModuleService';
+import TemplateForm from './TemplatesForm';
 import type { Template, TemplateRequest } from '@/types/collections';
 
 interface TemplatesViewProps {
   collection: Collection;
   onBack: () => void;
-  onDataChange: () => Promise<void>;
   onTemplateClick: (template: Template) => void;
+  onDataChange?: () => Promise<void>; 
 }
 
 export default function TemplatesView({
   collection,
   onBack,
+  onTemplateClick,
   onDataChange,
-  onTemplateClick
 }: TemplatesViewProps) {
+  const [templates, setTemplates] = useState<Template[]>([]);
   const [isEditingTemplate, setIsEditingTemplate] = useState(false);
   const [editingTemplate, setEditingTemplate] = useState<TemplateRequest | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   const { update, delete: deleteTemplate, create } = useTemplatesService();
   const { addTemplate } = create();
+
+  const modulesService = useModulesService(); 
+
+  const loadTemplates = async () => {
+    try {
+      if (!collection.templates) {
+        setTemplates([]);
+        return;
+      }
+
+      const templatesWithModules = await Promise.all(
+        collection.templates.map(async (template) => {
+          const modules = await modulesService.getByTemplate(template.id);
+          return { ...template, modules };
+        })
+      );
+
+      setTemplates(templatesWithModules);
+    } catch (err) {
+      console.error('Error loading templates/modules:', err);
+    }
+  };
+
+  useEffect(() => {
+    loadTemplates();
+  }, [collection]);
 
   const handleCreateTemplate = () => {
     setEditingTemplate({
@@ -56,7 +82,7 @@ export default function TemplatesView({
       thumbnailPreview: template.thumbnail || '',
       video: null,
       videoPreview: template.video || '',
-      isStatic: !!template.static
+      isStatic: !!template.static,
     });
     setIsEditingTemplate(true);
     setError(null);
@@ -65,22 +91,30 @@ export default function TemplatesView({
   const handleSaveTemplate = async () => {
     if (!editingTemplate) return;
 
-    if (editingTemplate.id && editingTemplate.id !== 0) {
-      await update(editingTemplate.id, editingTemplate);
-    } else {
-      await addTemplate({
-        name: editingTemplate.name,
-        collectionId: collection.id,
-        isStatic: editingTemplate.isStatic,
-        thumbnail: editingTemplate.thumbnail,
-        video: editingTemplate.video,
-      });
-    }
+    try {
+      if (editingTemplate.id && editingTemplate.id !== 0) {
+        await update(editingTemplate.id, editingTemplate);
+      } else {
+        await addTemplate({
+          name: editingTemplate.name,
+          collectionId: collection.id,
+          isStatic: editingTemplate.isStatic,
+          thumbnail: editingTemplate.thumbnail,
+          video: editingTemplate.video,
+        });
+      }
 
-    setIsEditingTemplate(false);
-    setEditingTemplate(null);
-    setError(null);
-    await onDataChange();
+      setIsEditingTemplate(false);
+      setEditingTemplate(null);
+      setError(null);
+
+      await loadTemplates();
+
+      if (onDataChange) await onDataChange();
+    } catch (err) {
+      console.error(err);
+      setError('Failed to save template');
+    }
   };
 
   const handleCloseTemplateEdit = () => {
@@ -93,7 +127,9 @@ export default function TemplatesView({
     if (!confirm('Are you sure you want to delete this template?')) return;
     try {
       await deleteTemplate(templateId);
-      await onDataChange();
+      await loadTemplates();
+
+      if (onDataChange) await onDataChange();
     } catch (err) {
       console.error('Error deleting template:', err);
       setError('Error deleting template');
@@ -106,6 +142,7 @@ export default function TemplatesView({
         <div className="flex items-center justify-between">
           <h2 className="text-xl font-semibold">Templates in {collection.name}</h2>
         </div>
+
         <div className="flex justify-between items-center mt-8">
           <Button variant="outline" size="sm" onClick={onBack}>
             <ArrowLeft className="w-4 h-4 mr-2" />
@@ -116,14 +153,26 @@ export default function TemplatesView({
             New Template
           </Button>
         </div>
+
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {collection.templates?.map(template => (
+          {templates.map(template => (
             <Card
               key={template.id}
-              className="hover:shadow-md transition-shadow cursor-pointer"
-              onClick={() => onTemplateClick(template)}
+              className="flex flex-row items-center p-0 hover:shadow-md transition-shadow min-h-[100px]"
             >
-              <CardHeader>
+              <div className="flex-shrink-0 h-full w-40 rounded-l-md overflow-hidden">
+                {template.thumbnail && typeof template.thumbnail === "string" && (
+                  <img
+                    src={template.thumbnail}
+                    alt={`${template.name} thumbnail`}
+                    className="w-full h-full object-cover"
+                    onError={e => {
+                      (e.target as HTMLImageElement).style.display = 'none';
+                    }}
+                  />
+                )}
+              </div>
+              <div className="flex flex-col justify-center pl-6 py-4 flex-grow">
                 <div className="flex items-center justify-between">
                   <CardTitle className="text-lg">{template.name}</CardTitle>
                   <div className="flex items-center gap-2">
@@ -135,52 +184,37 @@ export default function TemplatesView({
                         handleEditTemplate(template);
                       }}
                     >
-                      <Edit className="w-4 h-4" />
+                      <Edit className="w-5 h-4" />
                     </Button>
                     <Button
                       variant="ghost"
                       size="sm"
+                      className="ml-2"
                       onClick={e => {
                         e.stopPropagation();
                         handleDeleteTemplate(template.id);
                       }}
                     >
-                      <Trash2 className="w-4 h-4" />
+                      <Trash2 className="w-5 h-4" />
                     </Button>
                   </div>
                 </div>
-                <CardDescription>Template ID: {template.id}</CardDescription>
-              </CardHeader>
-              {template.thumbnail && typeof template.thumbnail === "string" && (
-                <div className="px-6 py-2">
-                  <img
-                    src={template.thumbnail}
-                    alt={`${template.name} thumbnail`}
-                    className="w-full h-32 object-cover rounded-md"
-                    onError={e => {
-                      const target = e.target as HTMLImageElement;
-                      target.style.display = 'none';
-                    }}
-                  />
+                <CardDescription className="mt-1">Template ID: {template.id}</CardDescription>
+                <div className="mt-2 text-sm text-muted-foreground">
+                  Modules: <span>{template.modules?.length || 0}</span>
                 </div>
-              )}
-              <CardContent>
-                <div className="space-y-2">
-                  <div className="flex items-center justify-between text-sm">
-                    <span className="text-muted-foreground">Modules:</span>
-                    <Badge variant="secondary">
-                      {template.modules?.length || 0}
-                    </Badge>
-                  </div>
-                  <Button variant="outline" size="sm" className="w-full mt-2" 
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      onTemplateClick(template);
-                    }}>
-                    Modules
-                  </Button>
-                </div>
-              </CardContent>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="mt-4 w-32"
+                  onClick={e => {
+                    e.stopPropagation();
+                    onTemplateClick(template);
+                  }}
+                >
+                  Modules
+                </Button>
+              </div>
             </Card>
           ))}
         </div>

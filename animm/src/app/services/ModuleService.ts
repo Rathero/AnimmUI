@@ -16,18 +16,15 @@ const useModulesService = () => {
   };
 
   const getByTemplate = async (templateId: number): Promise<Module[]> => {
-    const response = await fetchWithAuth(
-      process.env.NEXT_PUBLIC_API_URL +
-        '/Templates/' +
-        templateId +
-        '/Modules'
-    );
-    if (!response.ok) {
-      throw new Error(`Error fetching modules for template ${templateId}: ${response.statusText}`);
-    }
-    const data = await response.json();
-    return data?.Result || [];
-  };
+  const response = await fetchWithAuth(
+    process.env.NEXT_PUBLIC_API_URL + '/Modules/' + templateId
+  );
+  if (!response.ok) {
+    throw new Error(`Error fetching modules for template ${templateId}: ${response.statusText}`);
+  }
+  const data = await response.json();
+  return data?.Result || [];
+};
 
   const create = () => {
     const addModule = async (data: {
@@ -43,7 +40,7 @@ const useModulesService = () => {
       }
 
       const response = await fetchWithAuth(
-        process.env.NEXT_PUBLIC_API_URL + '/Modules',
+        process.env.NEXT_PUBLIC_API_URL + '/Modules/module',
         {
           method: 'POST',
           body: formData,
@@ -73,7 +70,7 @@ const useModulesService = () => {
     }
 
     const response = await fetchWithAuth(
-      process.env.NEXT_PUBLIC_API_URL + '/Modules/' + id,
+      process.env.NEXT_PUBLIC_API_URL + '/Modules',
       {
         method: 'PATCH',
         body: formData,

@@ -80,7 +80,7 @@ export default function ModuleForm({
               <input
                 ref={fileInput}
                 type="file"
-                accept="image/*"
+                accept="*/*"
                 onChange={handleFileChange}
                 style={{ display: 'none' }}
               />
