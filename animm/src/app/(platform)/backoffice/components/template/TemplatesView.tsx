@@ -6,10 +6,10 @@ import {
   CardDescription,
 } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { LoadingSpinner } from '@/components/ui/loading-spinner';
 import { Plus, Edit, Trash2, ArrowLeft } from 'lucide-react';
 import { Collection } from '@/types/collections';
 import useTemplatesService from '@/app/services/TemplatesService';
-import useModulesService from '@/app/services/ModuleService';
 import TemplateForm from './TemplatesForm';
 import type { Template, TemplateRequest } from '@/types/collections';
 
@@ -28,37 +28,29 @@ export default function TemplatesView({
 }: TemplatesViewProps) {
   const [templates, setTemplates] = useState<Template[]>([]);
   const [isEditingTemplate, setIsEditingTemplate] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
   const [editingTemplate, setEditingTemplate] = useState<TemplateRequest | null>(null);
   const [error, setError] = useState<string | null>(null);
 
-  const { update, delete: deleteTemplate, create } = useTemplatesService();
+  const { getByCollection, update, delete: deleteTemplate, create } = useTemplatesService();
   const { addTemplate } = create();
-
-  const modulesService = useModulesService(); 
 
   const loadTemplates = async () => {
     try {
-      if (!collection.templates) {
-        setTemplates([]);
-        return;
-      }
-
-      const templatesWithModules = await Promise.all(
-        collection.templates.map(async (template) => {
-          const modules = await modulesService.getByTemplate(template.id);
-          return { ...template, modules };
-        })
-      );
-
-      setTemplates(templatesWithModules);
+      setIsLoading(true);
+      const result = await getByCollection(collection.id);
+      setTemplates(Array.isArray(result) ? result : []);
     } catch (err) {
-      console.error('Error loading templates/modules:', err);
+      console.error('Error loading templates:', err);
+      setTemplates([]);
+    } finally {
+      setIsLoading(false);
     }
   };
 
   useEffect(() => {
     loadTemplates();
-  }, [collection]);
+  }, [collection.id]);
 
   const handleCreateTemplate = () => {
     setEditingTemplate({
@@ -155,7 +147,19 @@ export default function TemplatesView({
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {templates.map(template => (
+          {isLoading && (
+            <div className="col-span-full flex items-center justify-center py-12">
+              <LoadingSpinner size="lg" />
+            </div>
+          )}
+
+          {!isLoading && Array.isArray(templates) && templates.length === 0 && (
+            <div className="text-center text-muted-foreground col-span-full">
+              No templates found
+            </div>
+          )}
+
+          {!isLoading && Array.isArray(templates) && templates.map(template => (
             <Card
               key={template.id}
               className="flex flex-row items-center p-0 hover:shadow-md transition-shadow min-h-[100px]"

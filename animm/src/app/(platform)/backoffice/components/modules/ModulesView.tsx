@@ -16,6 +16,7 @@ import useModulesService from '@/app/services/ModuleService';
 import ModuleForm from './ModuleForm';
 import RiveComp from '@/components/editor/rive-component';
 import type { Module, ModuleRequest } from '@/types/collections';
+import useTemplatesService from '@/app/services/TemplatesService';
 
 interface ModulesViewProps {
   template: Template;

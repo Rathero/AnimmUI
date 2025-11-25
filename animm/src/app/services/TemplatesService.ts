@@ -16,18 +16,25 @@ const useTemplatesService = () => {
   };
 
   const getByCollection = async (collectionId: number): Promise<Template[]> => {
-    const response = await fetchWithAuth(
-      process.env.NEXT_PUBLIC_API_URL +
-        '/Collections/' +
-        collectionId +
-        '/Templates'
+  const response = await fetchWithAuth(
+    process.env.NEXT_PUBLIC_API_URL + '/Templates/' + collectionId
+  );
+
+  if (!response.ok) {
+    throw new Error(
+      `Error fetching templates: ${response.statusText}`
     );
-    if (!response.ok) {
-      throw new Error(`Error fetching templates for collection ${collectionId}: ${response.statusText}`);
-    }
-    const data = await response.json();
-    return data?.Result || [];
-  };
+  }
+
+  const data = await response.json();
+  const allTemplates = data?.Result || [];
+
+  // Filtrar por CollectionId (aceptando ambas variantes)
+  return allTemplates.filter((template: any) => {
+    const templateCollectionId = template.CollectionId ?? template.collectionId;
+    return templateCollectionId === collectionId;
+  });
+}
 
   const create = () => {
     const addTemplate = async (data: {
