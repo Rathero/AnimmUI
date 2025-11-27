@@ -108,9 +108,11 @@ export default function TemplatesView({
       setEditingTemplate(null);
       setError(null);
 
-      await loadTemplates();
-
-      if (onDataChange) await onDataChange();
+      if (onDataChange) {
+        await onDataChange();
+      } else {
+        await loadTemplates();
+      }
     } catch (err) {
       console.error(err);
       setError('Failed to save template');
@@ -127,9 +129,14 @@ export default function TemplatesView({
     if (!confirm('Are you sure you want to delete this template?')) return;
     try {
       await deleteTemplate(templateId);
-      await loadTemplates();
-
-      if (onDataChange) await onDataChange();
+      
+      // Recargar datos desde el padre para obtener la colección actualizada
+      if (onDataChange) {
+        await onDataChange();
+      } else {
+        // Fallback: solo recargar templates localmente si no hay callback
+        await loadTemplates();
+      }
     } catch (err) {
       console.error('Error deleting template:', err);
       setError('Error deleting template');

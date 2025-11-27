@@ -63,6 +63,24 @@ export default function NewBackofficePage() {
       }));
       
       setCollections(normalized);
+      
+      if (selectedCollection) {
+        const updatedCollection = normalized.find(c => c.id === selectedCollection.id);
+        if (updatedCollection) {
+          setSelectedCollection(updatedCollection);
+        }
+      }
+      
+      if (selectedTemplate && selectedCollection) {
+        const updatedCollection = normalized.find(c => c.id === selectedCollection.id);
+        if (updatedCollection) {
+          const updatedTemplate = updatedCollection.templates?.find(t => t.id === selectedTemplate.id);
+          if (updatedTemplate) {
+            setSelectedTemplate(updatedTemplate);
+          }
+        }
+      }
+      
       console.log('Collections loaded:', normalized); 
     } catch (err) {
       console.error('Error fetching collections:', err);
