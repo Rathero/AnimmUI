@@ -18,9 +18,7 @@ const useTemplatesService = () => {
   const getByCollection = async (collectionId: number): Promise<Template[]> => {
     const response = await fetchWithAuth(
       process.env.NEXT_PUBLIC_API_URL +
-        '/Collections/' +
-        collectionId +
-        '/Templates'
+        '/Collections/' + collectionId 
     );
     if (!response.ok) {
       throw new Error(`Error fetching templates for collection ${collectionId}: ${response.statusText}`);

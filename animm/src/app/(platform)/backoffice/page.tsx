@@ -148,6 +148,7 @@ export default function NewBackofficePage() {
         <TemplatesView
           collection={selectedCollection}
           onBack={goToCollections}
+          onDataChange={fetchCollections}
           onTemplateClick={goToModules}
         />
       )}
