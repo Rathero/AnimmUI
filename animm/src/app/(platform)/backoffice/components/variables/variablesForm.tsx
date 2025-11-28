@@ -44,7 +44,7 @@ export default function VariableForm({
           {error && <div className="text-red-500 text-sm">{error}</div>}
 
           <div>
-            <Label htmlFor="name">Nombre de la variable</Label>
+            <Label htmlFor="name">Name</Label>
             <Input
               id="name"
               value={variable.name}
@@ -69,15 +69,15 @@ export default function VariableForm({
               type="checkbox"
               className="mr-2"
             />
-            <Label htmlFor="isStatic">¿Es estática?</Label>
+            <Label htmlFor="isStatic">¿Is static?</Label>
           </div>
 
           <div className="flex items-center gap-2 pt-4">
             <Button onClick={onSave}>
-              <Save className="w-4 h-4 mr-2" /> Guardar
+              <Save className="w-4 h-4 mr-2" /> Save
             </Button>
             <Button variant="outline" onClick={onCancel}>
-              <X className="w-4 h-4 mr-2" /> Cancelar
+              <X className="w-4 h-4 mr-2" /> Cancel
             </Button>
           </div>
         </CardContent>

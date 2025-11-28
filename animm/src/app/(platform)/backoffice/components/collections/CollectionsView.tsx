@@ -93,7 +93,6 @@ const handleSaveCollection = async () => {
     try {
       await deleteCollection(collectionId);
       await onDataChange();
-      window.location.reload();
     } catch (err) {
       console.error('Error deleting collection:', err);
     }

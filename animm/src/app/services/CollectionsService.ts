@@ -103,7 +103,7 @@ const useCollectionsService = () => {
     formData.append('Templates', JSON.stringify(collection.templates || []));
 
   const response = await fetchWithAuth(
-    process.env.NEXT_PUBLIC_API_URL + '/collections',
+    process.env.NEXT_PUBLIC_API_URL + '/collections/' + id,
     {
       method: 'PATCH',
       body: formData,

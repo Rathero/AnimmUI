@@ -40,7 +40,7 @@ const useModulesService = () => {
       }
 
       const response = await fetchWithAuth(
-        process.env.NEXT_PUBLIC_API_URL + '/Modules/module',
+        process.env.NEXT_PUBLIC_API_URL + '/Modules',
         {
           method: 'POST',
           body: formData,
@@ -70,7 +70,7 @@ const useModulesService = () => {
     }
 
     const response = await fetchWithAuth(
-      process.env.NEXT_PUBLIC_API_URL + '/Modules',
+      process.env.NEXT_PUBLIC_API_URL + '/Modules' + id,
       {
         method: 'PATCH',
         body: formData,

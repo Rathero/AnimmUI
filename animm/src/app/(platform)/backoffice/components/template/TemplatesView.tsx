@@ -130,11 +130,11 @@ export default function TemplatesView({
     try {
       await deleteTemplate(templateId);
       
-      // Recargar datos desde el padre para obtener la colección actualizada
+
       if (onDataChange) {
         await onDataChange();
       } else {
-        // Fallback: solo recargar templates localmente si no hay callback
+
         await loadTemplates();
       }
     } catch (err) {

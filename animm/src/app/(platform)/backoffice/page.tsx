@@ -96,12 +96,8 @@ export default function NewBackofficePage() {
 
   useEffect(() => {
     fetchUsers();
-  }, []);
-
-  useEffect(() => {
     fetchCollections();
   }, []);
-
 
   const goToTemplates = (collection: Collection) => {
     setSelectedCollection(collection);
