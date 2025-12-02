@@ -178,10 +178,9 @@ export default function NewBackofficePage() {
 
       {viewMode === 'variables' && selectedModule && (
         <VariablesView
-          variables={selectedModule.variables || []}
+          module={selectedModule}
           onBack={goBackToModules}
           onDataChange={fetchCollections}
-          title={`Variables del Módulo #${selectedModule.id}`}
         />
       )}
     </ContentWrapper>

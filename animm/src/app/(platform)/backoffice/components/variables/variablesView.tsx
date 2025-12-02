@@ -1,155 +1,228 @@
-import { useState } from 'react';
-import {
-  Card,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-  CardContent,
-} from '@/components/ui/card';
+'use client';
+import React, { useState, useEffect } from 'react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
-import { Plus, Edit, Trash2, ArrowLeft } from 'lucide-react';
-import VariableForm from './variablesForm';
-import type { Variable } from '@/types/collections';
+import { ArrowLeft } from 'lucide-react';
+import useVariablesService from '@/app/services/VariableService';
+import { Variable, VariableRequest } from '@/types/collections';
 
 interface VariablesViewProps {
-  variables: Variable[];
-  onBack: () => void;
-  onDataChange: () => Promise<void>;
-  title?: string;
+  moduleId: number;
+  goBackToModules: () => void;
 }
 
-export default function VariablesView({
-  variables,
-  onBack,
-  onDataChange,
-  title = 'Variables',
-}: VariablesViewProps) {
-  const [isEditingVariable, setIsEditingVariable] = useState(false);
-  const [editingVariable, setEditingVariable] = useState<Variable | null>(null);
-  const [error, setError] = useState<string | null>(null);
+const VariableType = {
+  TEXT: 0,
+  BOOLEAN: 1,
+  SELECTOR: 2
+};
 
-  const handleCreateVariable = () => {
-    setEditingVariable({
-      id: 0,
-      name: '',
-      value: '',
-    });
-    setIsEditingVariable(true);
-    setError(null);
-  };
+const VariablesView: React.FC<VariablesViewProps> = ({ moduleId, goBackToModules }) => {
+  const [variables, setVariables] = useState<Variable[]>([]);
+  const [loading, setLoading] = useState(true);
+  const variablesService = useVariablesService();
 
-  const handleEditVariable = (variable: Variable) => {
-    setEditingVariable({
-      id: variable.id,
-      name: variable.name,
-      value: variable.value,
-    });
-    setIsEditingVariable(true);
-    setError(null);
-  };
+  useEffect(() => {
+    const loadVariables = async () => {
+      try {
+        setLoading(true);
+        const data = await variablesService.getByModule(moduleId);
+        setVariables(data);
+      } catch (error) {
+        console.error('Error loading variables:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
 
-  const handleSaveVariable = async () => {
-    if (!editingVariable) return;
+    loadVariables();
+  }, [moduleId]);
 
-    setIsEditingVariable(false);
-    setEditingVariable(null);
-    setError(null);
-    await onDataChange();
-  };
+  const textVariables = variables.filter(v => v.type === VariableType.TEXT);
+  const booleanVariables = variables.filter(v => v.type === VariableType.BOOLEAN);
+  const selectorVariables = variables.filter(v => v.type === VariableType.SELECTOR);
 
-  const handleCloseVariableEdit = () => {
-    setIsEditingVariable(false);
-    setEditingVariable(null);
-    setError(null);
-  };
-
-  const handleDeleteVariable = async (variableId: number) => {
-    if (!confirm('¿Estás seguro de que quieres eliminar esta variable?')) return;
+  const parseOptions = (defaultValue: string): string[] => {
     try {
-      await onDataChange();
-    } catch (err) {
-      console.error('Error deleting variable:', err);
-      setError('Error al eliminar la variable');
+      if (defaultValue.startsWith('[')) {
+        return JSON.parse(defaultValue);
+      }
+      return defaultValue.split(',').map(opt => opt.trim());
+    } catch {
+      return [defaultValue];
     }
   };
 
+  const handleBooleanChange = async (variable: Variable, newValue: string) => {
+    try {
+      const updateData: VariableRequest = {
+        type: variable.type,
+        section: variable.section,
+        name: variable.name,
+        moduleId: variable.moduleId,
+        DefaultValue: variable.DefaultValue,
+        value: newValue
+      };
+
+      await variablesService.update(variable.id, updateData);
+
+      setVariables(prev =>
+        prev.map(v => (v.id === variable.id ? { ...v, value: newValue } : v))
+      );
+    } catch (error) {
+      console.error('Error updating boolean variable:', error);
+    }
+  };
+
+  const handleSelectorChange = async (variable: Variable, newValue: string) => {
+    try {
+      const updateData: VariableRequest = {
+        type: variable.type,
+        section: variable.section,
+        name: variable.name,
+        moduleId: variable.moduleId,
+        DefaultValue: variable.DefaultValue,
+        value: newValue
+      };
+
+      await variablesService.update(variable.id, updateData);
+
+      setVariables(prev =>
+        prev.map(v => (v.id === variable.id ? { ...v, value: newValue } : v))
+      );
+    } catch (error) {
+      console.error('Error updating selector variable:', error);
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="w-full max-w-6xl mx-auto p-6">
+        <p className="text-center text-gray-500">Cargando variables...</p>
+      </div>
+    );
+  }
+
   return (
-    <>
-      <div className="space-y-4">
-        <div className="flex items-center justify-between">
-          <h2 className="text-xl font-semibold">{title}</h2>
-        </div>
-        <div className="flex justify-between items-center mt-8">
-          <Button variant="outline" size="sm" onClick={onBack}>
-            <ArrowLeft className="w-4 h-4 mr-2" />
-            Volver
-          </Button>
-          <Button onClick={handleCreateVariable}>
-            <Plus className="w-4 h-4 mr-2" />
-            Nueva Variable
-          </Button>
-        </div>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {variables?.length === 0 ? (
-            <div className="text-center text-muted-foreground col-span-full">
-              No se encontraron variables
-            </div>
-          ) : (
-            variables?.map(variable => (
-              <Card
-                key={variable.id}
-                className="hover:shadow-md transition-shadow cursor-pointer"
-              >
-                <CardHeader>
-                  <div className="flex items-center justify-between">
-                    <CardTitle className="text-lg">{variable.name}</CardTitle>
-                    <div className="flex items-center gap-2">
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={e => {
-                          e.stopPropagation();
-                          handleEditVariable(variable);
-                        }}
-                      >
-                        <Edit className="w-4 h-4" />
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={e => {
-                          e.stopPropagation();
-                          handleDeleteVariable(variable.id);
-                        }}
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </Button>
-                    </div>
-                  </div>
-                  <CardDescription>
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="text-sm text-muted-foreground">
-                    <span className="font-medium">Valor:</span> {variable.value}
-                  </div>
-                </CardContent>
-              </Card>
-            ))
-          )}
-        </div>
+    <div className="w-full max-w-6xl mx-auto p-6 space-y-8">
+      {/* Header con botón de volver */}
+      <div className="flex items-center justify-between">
+        <h1 className="text-3xl font-bold text-gray-800">Variables del Módulo</h1>
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={goBackToModules}
+          className="flex items-center"
+        >
+          <ArrowLeft className="w-4 h-4 mr-2" />
+          Volver a Módulos
+        </Button>
       </div>
 
-      {isEditingVariable && editingVariable && (
-        <VariableForm
-          variable={editingVariable}
-          onChange={setEditingVariable}
-          onSave={handleSaveVariable}
-          onCancel={handleCloseVariableEdit}
-          title={editingVariable.id === 0 ? 'Crear Variable' : 'Editar Variable'}
-          error={error}
-        />
+      {/* Sección de Variables de Texto */}
+      {textVariables.length > 0 && (
+        <div className="space-y-4">
+          <h2 className="text-2xl font-bold text-gray-800">Variables de Texto</h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {textVariables.map(variable => (
+              <Card key={variable.id} className="hover:shadow-lg transition-shadow">
+                <CardHeader className="pb-3">
+                  <CardTitle className="text-lg">{variable.name}</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <p className="text-gray-600 break-all">{variable.value}</p>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        </div>
       )}
-    </>
+
+      {/* Separador */}
+      {textVariables.length > 0 && booleanVariables.length > 0 && (
+        <div className="border-t-2 border-gray-300"></div>
+      )}
+
+      {/* Sección de Variables Booleanas */}
+      {booleanVariables.length > 0 && (
+        <div className="space-y-4">
+          <h2 className="text-2xl font-bold text-gray-800">Variables Booleanas</h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {booleanVariables.map(variable => (
+              <Card key={variable.id} className="hover:shadow-lg transition-shadow">
+                <CardHeader className="pb-3">
+                  <CardTitle className="text-lg">{variable.name}</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <Select
+                    value={variable.value}
+                    onValueChange={(value) => handleBooleanChange(variable, value)}
+                  >
+                    <SelectTrigger className="w-full">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="true">True</SelectItem>
+                      <SelectItem value="false">False</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Separador */}
+      {(textVariables.length > 0 || booleanVariables.length > 0) && selectorVariables.length > 0 && (
+        <div className="border-t-2 border-gray-300"></div>
+      )}
+
+      {/* Sección de Variables con Selector */}
+      {selectorVariables.length > 0 && (
+        <div className="space-y-4">
+          <h2 className="text-2xl font-bold text-gray-800">Variables de Selección</h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {selectorVariables.map(variable => {
+              const options = parseOptions(variable.DefaultValue);
+              return (
+                <Card key={variable.id} className="hover:shadow-lg transition-shadow">
+                  <CardHeader className="pb-3">
+                    <CardTitle className="text-lg">{variable.name}</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <Select
+                      value={variable.value}
+                      onValueChange={(value) => handleSelectorChange(variable, value)}
+                    >
+                      <SelectTrigger className="w-full">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {options.map(option => (
+                          <SelectItem key={option} value={option}>
+                            {option}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </CardContent>
+                </Card>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
+      {/* Mensaje si no hay variables */}
+      {variables.length === 0 && (
+        <div className="text-center text-gray-500 py-8">
+          This Module don't have variables
+        </div>
+      )}
+    </div>
   );
-}
+};
+
+export default VariablesView;
