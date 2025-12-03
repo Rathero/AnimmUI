@@ -178,7 +178,7 @@ export default function NewBackofficePage() {
 
       {viewMode === 'variables' && selectedModule && (
         <VariablesView
-          module={selectedModule}
+          moduleId={selectedModule.id}
           onBack={goBackToModules}
           onDataChange={fetchCollections}
         />

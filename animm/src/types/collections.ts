@@ -137,23 +137,35 @@ export interface ModuleRequest {
 }
 
 export interface Variable {
-id: number;
- type: number;
- section: string;
- name: string;
- moduleId: number;
- DefaultValue: string;
- value: string
+  id: number;
+  type: number;
+  section: string;
+  name: string;
+  moduleId: number;
+  DefaultValue: string;
+  value: string;
 }
 
 export interface VariableRequest {
- 
- type: number;
- section: string;
- name: string;
- moduleId: number;
- DefaultValue: string;
- value: string
+  type: number;
+  section: string;
+  name: string;
+  moduleId: number;
+  DefaultValue: string;
+  value: string;
+}
+
+export interface TemplateVariableValue {
+  id?: number;
+  label: string;
+  value: string;
+  templateVariableId: number;
+}
+
+export interface TemplateVariableValueRequest {
+  label: string;
+  value: string;
+  templateVariableId: number;
 }
 
 

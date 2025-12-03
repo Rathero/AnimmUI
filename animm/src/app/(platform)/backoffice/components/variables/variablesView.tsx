@@ -3,13 +3,15 @@ import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft } from 'lucide-react';
+import { ArrowLeft, Plus, Edit, Trash2 } from 'lucide-react';
 import useVariablesService from '@/app/services/VariableService';
 import { Variable, VariableRequest } from '@/types/collections';
+import VariableForm from './variablesForm';
 
 interface VariablesViewProps {
   moduleId: number;
-  goBackToModules: () => void;
+  onBack: () => void;
+  onDataChange?: () => Promise<void>;
 }
 
 const VariableType = {
@@ -18,24 +20,51 @@ const VariableType = {
   SELECTOR: 2
 };
 
-const VariablesView: React.FC<VariablesViewProps> = ({ moduleId, goBackToModules }) => {
+const VariablesView: React.FC<VariablesViewProps> = ({ 
+  moduleId,
+  onBack,
+  onDataChange, 
+}) => {
   const [variables, setVariables] = useState<Variable[]>([]);
   const [loading, setLoading] = useState(true);
+  const [isEditingVariable, setIsEditingVariable] = useState(false);
+  const [editingVariable, setEditingVariable] = useState<VariableRequest | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [selectorOptions, setSelectorOptions] = useState<{[key: number]: string[]}>({});
+  
   const variablesService = useVariablesService();
 
-  useEffect(() => {
-    const loadVariables = async () => {
-      try {
-        setLoading(true);
-        const data = await variablesService.getByModule(moduleId);
-        setVariables(data);
-      } catch (error) {
-        console.error('Error loading variables:', error);
-      } finally {
-        setLoading(false);
+  const loadVariables = async () => {
+    try {
+      setLoading(true);
+      const data = await variablesService.getByModule(moduleId);
+      setVariables(data);
+      
+      // Cargar opciones para variables de selector
+      const selectorVars = data.filter(v => v.type === VariableType.SELECTOR);
+      const optionsMap: {[key: number]: string[]} = {};
+      
+      for (const variable of selectorVars) {
+        try {
+          // Aquí usarías tu service para obtener los valores de la variable
+          // Por ahora usamos parseOptions del DefaultValue
+          const options = parseOptions(variable.DefaultValue);
+          optionsMap[variable.id] = options;
+        } catch (error) {
+          console.error(`Error loading options for variable ${variable.id}:`, error);
+          optionsMap[variable.id] = [];
+        }
       }
-    };
+      
+      setSelectorOptions(optionsMap);
+    } catch (error) {
+      console.error('Error loading variables:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
+  useEffect(() => {
     loadVariables();
   }, [moduleId]);
 
@@ -51,6 +80,80 @@ const VariablesView: React.FC<VariablesViewProps> = ({ moduleId, goBackToModules
       return defaultValue.split(',').map(opt => opt.trim());
     } catch {
       return [defaultValue];
+    }
+  };
+
+  const handleCreateVariable = () => {
+    setEditingVariable({
+      type: VariableType.TEXT,
+      section: '',
+      name: '',
+      moduleId: moduleId,
+      DefaultValue: '',
+      value: ''
+    });
+    setIsEditingVariable(true);
+    setError(null);
+  };
+
+  const handleEditVariable = (variable: Variable) => {
+    setEditingVariable({
+      type: variable.type,
+      section: variable.section,
+      name: variable.name,
+      moduleId: variable.moduleId,
+      DefaultValue: variable.DefaultValue,
+      value: variable.value
+    });
+    setIsEditingVariable(true);
+    setError(null);
+  };
+
+  const handleSaveVariable = async () => {
+    if (!editingVariable) return;
+
+    try {
+      if (editingVariable.id) {
+        await variablesService.update(editingVariable.id, editingVariable);
+      } else {
+        const createService = variablesService.create();
+        await createService.addVariable(editingVariable);
+      }
+
+      setIsEditingVariable(false);
+      setEditingVariable(null);
+      setError(null);
+
+      if (onDataChange) {
+        await onDataChange();
+      } else {
+        await loadVariables();
+      }
+    } catch (err) {
+      console.error('Error saving variable:', err);
+      setError('Failed to save variable');
+    }
+  };
+
+  const handleCloseVariableEdit = () => {
+    setIsEditingVariable(false);
+    setEditingVariable(null);
+    setError(null);
+  };
+
+  const handleDeleteVariable = async (variableId: number) => {
+    if (!confirm('Are you sure you want to delete this variable?')) return;
+    try {
+      await variablesService.delete(variableId);
+      
+      if (onDataChange) {
+        await onDataChange();
+      } else {
+        await loadVariables();
+      }
+    } catch (err) {
+      console.error('Error deleting variable:', err);
+      setError('Error deleting variable');
     }
   };
 
@@ -96,132 +199,192 @@ const VariablesView: React.FC<VariablesViewProps> = ({ moduleId, goBackToModules
     }
   };
 
-  if (loading) {
-    return (
-      <div className="w-full max-w-6xl mx-auto p-6">
-        <p className="text-center text-gray-500">Cargando variables...</p>
-      </div>
-    );
-  }
-
   return (
-    <div className="w-full max-w-6xl mx-auto p-6 space-y-8">
-      {/* Header con botón de volver */}
-      <div className="flex items-center justify-between">
-        <h1 className="text-3xl font-bold text-gray-800">Variables del Módulo</h1>
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={goBackToModules}
-          className="flex items-center"
-        >
-          <ArrowLeft className="w-4 h-4 mr-2" />
-          Volver a Módulos
-        </Button>
-      </div>
-
-      {/* Sección de Variables de Texto */}
-      {textVariables.length > 0 && (
-        <div className="space-y-4">
-          <h2 className="text-2xl font-bold text-gray-800">Variables de Texto</h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {textVariables.map(variable => (
-              <Card key={variable.id} className="hover:shadow-lg transition-shadow">
-                <CardHeader className="pb-3">
-                  <CardTitle className="text-lg">{variable.name}</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <p className="text-gray-600 break-all">{variable.value}</p>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
+    <>
+      <div className="w-full max-w-6xl mx-auto p-6 space-y-8">
+        <div className="flex items-center justify-between">
+          <h1 className="text-3xl font-bold text-gray-800">Variables</h1>
         </div>
-      )}
 
-      {/* Separador */}
-      {textVariables.length > 0 && booleanVariables.length > 0 && (
-        <div className="border-t-2 border-gray-300"></div>
-      )}
-
-      {/* Sección de Variables Booleanas */}
-      {booleanVariables.length > 0 && (
-        <div className="space-y-4">
-          <h2 className="text-2xl font-bold text-gray-800">Variables Booleanas</h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {booleanVariables.map(variable => (
-              <Card key={variable.id} className="hover:shadow-lg transition-shadow">
-                <CardHeader className="pb-3">
-                  <CardTitle className="text-lg">{variable.name}</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <Select
-                    value={variable.value}
-                    onValueChange={(value) => handleBooleanChange(variable, value)}
-                  >
-                    <SelectTrigger className="w-full">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="true">True</SelectItem>
-                      <SelectItem value="false">False</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
+        <div className="flex justify-between items-center mt-8">
+          <Button variant="outline" size="sm" onClick={onBack}>
+            <ArrowLeft className="w-4 h-4 mr-2" />
+            Back to Modules
+          </Button>
+          <Button onClick={handleCreateVariable}>
+            <Plus className="w-4 h-4 mr-2" />
+            Add Variable
+          </Button>
         </div>
-      )}
 
-      {/* Separador */}
-      {(textVariables.length > 0 || booleanVariables.length > 0) && selectorVariables.length > 0 && (
-        <div className="border-t-2 border-gray-300"></div>
-      )}
+        {error && (
+          <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded">
+            {error}
+          </div>
+        )}
 
-      {/* Sección de Variables con Selector */}
-      {selectorVariables.length > 0 && (
-        <div className="space-y-4">
-          <h2 className="text-2xl font-bold text-gray-800">Variables de Selección</h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {selectorVariables.map(variable => {
-              const options = parseOptions(variable.DefaultValue);
-              return (
+        {textVariables.length > 0 && (
+          <div className="space-y-4">
+            <h2 className="text-2xl font-bold text-gray-800">Variables de Texto</h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {textVariables.map(variable => (
                 <Card key={variable.id} className="hover:shadow-lg transition-shadow">
                   <CardHeader className="pb-3">
-                    <CardTitle className="text-lg">{variable.name}</CardTitle>
+                    <div className="flex items-center justify-between">
+                      <CardTitle className="text-lg">{variable.name}</CardTitle>
+                      <div className="flex items-center gap-2">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => handleEditVariable(variable)}
+                        >
+                          <Edit className="w-4 h-4" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => handleDeleteVariable(variable.id)}
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </Button>
+                      </div>
+                    </div>
+                  </CardHeader>
+                  <CardContent>
+                    <p className="text-gray-600 break-all">{variable.value}</p>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {textVariables.length > 0 && booleanVariables.length > 0 && (
+          <div className="border-t-2 border-gray-300"></div>
+        )}
+
+        {booleanVariables.length > 0 && (
+          <div className="space-y-4">
+            <h2 className="text-2xl font-bold text-gray-800">Variables Booleanas</h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {booleanVariables.map(variable => (
+                <Card key={variable.id} className="hover:shadow-lg transition-shadow">
+                  <CardHeader className="pb-3">
+                    <div className="flex items-center justify-between">
+                      <CardTitle className="text-lg">{variable.name}</CardTitle>
+                      <div className="flex items-center gap-2">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => handleEditVariable(variable)}
+                        >
+                          <Edit className="w-4 h-4" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => handleDeleteVariable(variable.id)}
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </Button>
+                      </div>
+                    </div>
                   </CardHeader>
                   <CardContent>
                     <Select
                       value={variable.value}
-                      onValueChange={(value) => handleSelectorChange(variable, value)}
+                      onValueChange={(value) => handleBooleanChange(variable, value)}
                     >
                       <SelectTrigger className="w-full">
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
-                        {options.map(option => (
-                          <SelectItem key={option} value={option}>
-                            {option}
-                          </SelectItem>
-                        ))}
+                        <SelectItem value="true">True</SelectItem>
+                        <SelectItem value="false">False</SelectItem>
                       </SelectContent>
                     </Select>
                   </CardContent>
                 </Card>
-              );
-            })}
+              ))}
+            </div>
           </div>
-        </div>
-      )}
+        )}
 
-      {/* Mensaje si no hay variables */}
-      {variables.length === 0 && (
-        <div className="text-center text-gray-500 py-8">
-          This Module don't have variables
-        </div>
+        {(textVariables.length > 0 || booleanVariables.length > 0) && selectorVariables.length > 0 && (
+          <div className="border-t-2 border-gray-300"></div>
+        )}
+
+        {selectorVariables.length > 0 && (
+          <div className="space-y-4">
+            <h2 className="text-2xl font-bold text-gray-800">Variables de Selección</h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {selectorVariables.map(variable => {
+                const options = selectorOptions[variable.id] || parseOptions(variable.DefaultValue);
+                return (
+                  <Card key={variable.id} className="hover:shadow-lg transition-shadow">
+                    <CardHeader className="pb-3">
+                      <div className="flex items-center justify-between">
+                        <CardTitle className="text-lg">{variable.name}</CardTitle>
+                        <div className="flex items-center gap-2">
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => handleEditVariable(variable)}
+                          >
+                            <Edit className="w-4 h-4" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => handleDeleteVariable(variable.id)}
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </Button>
+                        </div>
+                      </div>
+                    </CardHeader>
+                    <CardContent>
+                      <Select
+                        value={variable.value}
+                        onValueChange={(value) => handleSelectorChange(variable, value)}
+                      >
+                        <SelectTrigger className="w-full">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {options.map((option, index) => (
+                            <SelectItem key={index} value={option}>
+                              {option}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </CardContent>
+                  </Card>
+                );
+              })}
+            </div>
+          </div>
+        )}
+
+        {variables.length === 0 && !loading && (
+          <div className="text-center text-gray-500 py-8">
+            This Module doesn't have variables
+          </div>
+        )}
+      </div>
+
+      {isEditingVariable && editingVariable && (
+        <VariableForm
+          variable={editingVariable}
+          onChange={setEditingVariable}
+          onSave={handleSaveVariable}
+          onCancel={handleCloseVariableEdit}
+          title={editingVariable.id ? 'Edit Variable' : 'Create Variable'}
+          error={error}
+        />
       )}
-    </div>
+    </>
   );
 };
 

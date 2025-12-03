@@ -5,7 +5,7 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="5ef046dc-04f1-4dcd-be0e-54305b13d6db" name="Changes" comment="">
-      <change beforePath="$PROJECT_DIR$/animm/.env.development" beforeDir="false" afterPath="$PROJECT_DIR$/animm/.env.development" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -29,13 +29,16 @@
     "ModuleVcsDetector.initialDetectionPerformed": "true",
     "RunOnceActivity.ShowReadmeOnStart": "true",
     "RunOnceActivity.git.unshallow": "true",
+    "com.intellij.ml.llm.matterhorn.ej.ui.settings.DefaultModelSelectionForGA.v1": "true",
     "git-widget-placeholder": "ADEV-129v3",
+    "junie.onboarding.icon.badge.shown": "true",
     "node.js.detected.package.eslint": "true",
     "node.js.detected.package.tslint": "true",
     "node.js.selected.package.eslint": "(autodetect)",
     "node.js.selected.package.tslint": "(autodetect)",
     "nodejs_package_manager_path": "npm",
     "settings.editor.selected.configurable": "preferences.lookFeel",
+    "to.speed.mode.migration.done": "true",
     "ts.external.directory.path": "C:\\Users\\aleja\\Documents\\Github Desktop\\AnimmUI\\animm\\node_modules\\typescript\\lib",
     "vue.rearranger.settings.migration": "true"
   }
@@ -56,6 +59,8 @@
       <updated>1764582290482</updated>
       <workItem from="1764582292037" duration="83000" />
       <workItem from="1764582385040" duration="4908000" />
+      <workItem from="1764679236199" duration="42000" />
+      <workItem from="1764680554406" duration="3000" />
     </task>
     <servers />
   </component>
