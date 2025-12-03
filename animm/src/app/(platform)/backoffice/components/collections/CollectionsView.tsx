@@ -117,7 +117,7 @@ const handleSaveCollection = async () => {
             </Button>
           </div>
         </div>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-4">
           {collections.length === 0 ? (
             <div className="text-center text-muted-foreground col-span-full">
               No collections found
@@ -126,10 +126,10 @@ const handleSaveCollection = async () => {
             collections.map(collection => (
               <Card
                 key={collection.id}
-                className="flex flex-row items-center p-0 hover:shadow-md transition-shadow min-h-[100px]"
+                className="flex flex-col lg:flex-row items-stretch lg:items-center p-0 hover:shadow-md transition-shadow overflow-hidden"
               >
-                <div className="flex-shrink-0 h-full w-40 rounded-l-md overflow-hidden">
-                  {collection.thumbnail && (
+                <div className="lg:flex-shrink-0 w-full lg:w-40 h-48 lg:h-full lg:min-h-[100px] overflow-hidden bg-gray-100">
+                  {collection.thumbnail ? (
                     <img
                       src={collection.thumbnail}
                       alt={`${collection.name} thumbnail`}
@@ -139,49 +139,62 @@ const handleSaveCollection = async () => {
                         target.style.display = 'none';
                       }}
                     />
+                  ) : (
+                    <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-gray-200 to-gray-300">
+                      <span className="text-gray-500 text-sm">No image</span>
+                    </div>
                   )}
                 </div>
-                <div className="flex flex-col justify-center pl-6 py-4 flex-grow">
-                  <div className="flex items-center justify-between">
-                    <CardTitle className="text-lg">{collection.name}</CardTitle>
-                    <div className="flex items-center space-x-1 -mt-4 mr-3">
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={e => {
-                          e.stopPropagation();
-                          handleEditCollection(collection);
-                        }}
-                      >
-                        <Edit className="w-5 h-4" />
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={e => {
-                          e.stopPropagation();
-                          handleDeleteCollection(collection.id);
-                        }}
-                      >
-                        <Trash2 className="w-5 h-4" />
-                      </Button>
+                
+                {/* Contenido */}
+                <div className="flex flex-col justify-between p-4 lg:p-6 flex-grow">
+                  <div>
+                    <div className="flex items-start justify-between mb-2">
+                      <CardTitle className="text-lg line-clamp-1 pr-2">{collection.name}</CardTitle>
+                      <div className="flex items-center space-x-1 flex-shrink-0 -mt-1 lg:-mt-4">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="h-8 w-8 p-0"
+                          onClick={e => {
+                            e.stopPropagation();
+                            handleEditCollection(collection);
+                          }}
+                        >
+                          <Edit className="w-4 h-4" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="h-8 w-8 p-0"
+                          onClick={e => {
+                            e.stopPropagation();
+                            handleDeleteCollection(collection.id);
+                          }}
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </Button>
+                      </div>
                     </div>
+                    <CardDescription className="line-clamp-2 mb-3 lg:mb-4">
+                      {collection.description || 'No description'}
+                    </CardDescription>
                   </div>
-                  <CardDescription className="mt-1">{collection.description}</CardDescription>
-                  <div className="mt-2 text-sm text-muted-foreground">
-                    Templates: <span>{collection.templates?.length || 0}</span>
+                  
+                  {/* Botón de Templates */}
+                  <div className="mt-2 lg:mt-4">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="w-full lg:w-auto lg:min-w-[120px]"
+                      onClick={e => {
+                        e.stopPropagation();
+                        onCollectionClick(collection);
+                      }}
+                    >
+                      Templates
+                    </Button>
                   </div>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="mt-4 w-32"
-                    onClick={e => {
-                      e.stopPropagation();
-                      onCollectionClick(collection);
-                    }}
-                  >
-                    Templates
-                  </Button>
                 </div>
               </Card>
             ))

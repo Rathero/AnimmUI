@@ -25,7 +25,7 @@ const useVariablesService = () => {
   const getByModule = async (moduleId: number): Promise<Variable[]> => {
     const response = await fetchWithAuth(
       process.env.NEXT_PUBLIC_API_URL +
-        '/Modules/' + moduleId + '/Variables'
+        '/Modules/' + moduleId + '/TemplatesVariables'
     );
 
     if (!response.ok) {
@@ -41,7 +41,7 @@ const useVariablesService = () => {
   const create = () => {
     const addVariable = async (data: VariableRequest) => {
       const response = await fetchWithAuth(
-        process.env.NEXT_PUBLIC_API_URL + '/TemplatesVariables/variable',
+        process.env.NEXT_PUBLIC_API_URL + '/TemplatesVariables',
         {
           method: 'POST',
           headers: {

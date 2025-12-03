@@ -60,7 +60,6 @@ export default function VariableForm({
       type: typeNum
     };
 
-    // Reset values based on type
     if (typeNum === VariableType.BOOLEAN) {
       updatedVariable.DefaultValue = 'false';
       updatedVariable.value = 'false';
@@ -83,7 +82,6 @@ export default function VariableForm({
       setSelectorOptions(updatedOptions);
       setNewOption('');
       
-      // Update DefaultValue with comma-separated options
       onChange({ 
         ...variable, 
         DefaultValue: updatedOptions.join(','),
@@ -95,8 +93,6 @@ export default function VariableForm({
   const removeOption = (index: number) => {
     const updatedOptions = selectorOptions.filter((_, i) => i !== index);
     setSelectorOptions(updatedOptions);
-    
-    // Update DefaultValue with comma-separated options
     onChange({ 
       ...variable, 
       DefaultValue: updatedOptions.join(','),

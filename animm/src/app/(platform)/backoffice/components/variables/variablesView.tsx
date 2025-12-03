@@ -29,6 +29,7 @@ const VariablesView: React.FC<VariablesViewProps> = ({
   const [loading, setLoading] = useState(true);
   const [isEditingVariable, setIsEditingVariable] = useState(false);
   const [editingVariable, setEditingVariable] = useState<VariableRequest | null>(null);
+  const [editingVariableId, setEditingVariableId] = useState<number | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [selectorOptions, setSelectorOptions] = useState<{[key: number]: string[]}>({});
   
@@ -40,14 +41,11 @@ const VariablesView: React.FC<VariablesViewProps> = ({
       const data = await variablesService.getByModule(moduleId);
       setVariables(data);
       
-      // Cargar opciones para variables de selector
       const selectorVars = data.filter(v => v.type === VariableType.SELECTOR);
       const optionsMap: {[key: number]: string[]} = {};
       
       for (const variable of selectorVars) {
         try {
-          // Aquí usarías tu service para obtener los valores de la variable
-          // Por ahora usamos parseOptions del DefaultValue
           const options = parseOptions(variable.DefaultValue);
           optionsMap[variable.id] = options;
         } catch (error) {
@@ -92,6 +90,7 @@ const VariablesView: React.FC<VariablesViewProps> = ({
       DefaultValue: '',
       value: ''
     });
+    setEditingVariableId(null);
     setIsEditingVariable(true);
     setError(null);
   };
@@ -105,6 +104,7 @@ const VariablesView: React.FC<VariablesViewProps> = ({
       DefaultValue: variable.DefaultValue,
       value: variable.value
     });
+    setEditingVariableId(variable.id);
     setIsEditingVariable(true);
     setError(null);
   };
@@ -113,8 +113,8 @@ const VariablesView: React.FC<VariablesViewProps> = ({
     if (!editingVariable) return;
 
     try {
-      if (editingVariable.id) {
-        await variablesService.update(editingVariable.id, editingVariable);
+      if (editingVariableId) {
+        await variablesService.update(editingVariableId, editingVariable);
       } else {
         const createService = variablesService.create();
         await createService.addVariable(editingVariable);
@@ -122,6 +122,7 @@ const VariablesView: React.FC<VariablesViewProps> = ({
 
       setIsEditingVariable(false);
       setEditingVariable(null);
+      setEditingVariableId(null);
       setError(null);
 
       if (onDataChange) {
@@ -138,6 +139,7 @@ const VariablesView: React.FC<VariablesViewProps> = ({
   const handleCloseVariableEdit = () => {
     setIsEditingVariable(false);
     setEditingVariable(null);
+    setEditingVariableId(null);
     setError(null);
   };
 
@@ -380,7 +382,7 @@ const VariablesView: React.FC<VariablesViewProps> = ({
           onChange={setEditingVariable}
           onSave={handleSaveVariable}
           onCancel={handleCloseVariableEdit}
-          title={editingVariable.id ? 'Edit Variable' : 'Create Variable'}
+          title={editingVariableId ? 'Edit Variable' : 'Create Variable'}
           error={error}
         />
       )}
