@@ -8,7 +8,7 @@ const useVariablesService = () => {
   const get = async (id: string): Promise<ApiVariables | undefined> => {
     const response = await fetchWithAuth(
       process.env.NEXT_PUBLIC_API_URL +
-        '/TemplatesVariables/' +
+        '/TemplateVariables/' +
         id +
         '/TemplateVariablesValues'
     );
@@ -25,7 +25,7 @@ const useVariablesService = () => {
   const getByModule = async (moduleId: number): Promise<Variable[]> => {
     const response = await fetchWithAuth(
       process.env.NEXT_PUBLIC_API_URL +
-        '/Modules/' + moduleId + '/TemplatesVariables'
+        '/Modules/' + moduleId + '/TemplateVariables'
     );
 
     if (!response.ok) {
@@ -41,7 +41,7 @@ const useVariablesService = () => {
   const create = () => {
     const addVariable = async (data: VariableRequest) => {
       const response = await fetchWithAuth(
-        process.env.NEXT_PUBLIC_API_URL + '/TemplatesVariables',
+        process.env.NEXT_PUBLIC_API_URL + '/TemplateVariables',
         {
           method: 'POST',
           headers: {
@@ -68,7 +68,7 @@ const useVariablesService = () => {
     variable: VariableRequest
   ): Promise<ApiVariables | undefined> => {
     const response = await fetchWithAuth(
-      process.env.NEXT_PUBLIC_API_URL + '/TemplatesVariables/' + id,
+      process.env.NEXT_PUBLIC_API_URL + '/TemplateVariables/' + id,
       {
         method: 'PUT',
         headers: {
@@ -89,7 +89,7 @@ const useVariablesService = () => {
 
   const deleteVariable = async (id: number): Promise<boolean> => {
     const response = await fetchWithAuth(
-      process.env.NEXT_PUBLIC_API_URL + '/TemplatesVariables/' + id,
+      process.env.NEXT_PUBLIC_API_URL + '/TemplateVariables/' + id,
       {
         method: 'DELETE',
       }

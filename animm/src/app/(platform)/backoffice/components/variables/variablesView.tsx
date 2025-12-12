@@ -203,7 +203,7 @@ const VariablesView: React.FC<VariablesViewProps> = ({
 
   return (
     <>
-      <div className="w-full max-w-6xl mx-auto p-6 space-y-8">
+      <div className="w-full py-6 space-y-8">
         <div className="flex items-center justify-between">
           <h1 className="text-3xl font-bold text-gray-800">Variables</h1>
         </div>
@@ -227,7 +227,7 @@ const VariablesView: React.FC<VariablesViewProps> = ({
 
         {textVariables.length > 0 && (
           <div className="space-y-4">
-            <h2 className="text-2xl font-bold text-gray-800">Variables de Texto</h2>
+            <h2 className="text-2xl font-bold text-gray-800">Text Variables</h2>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               {textVariables.map(variable => (
                 <Card key={variable.id} className="hover:shadow-lg transition-shadow">
@@ -267,7 +267,7 @@ const VariablesView: React.FC<VariablesViewProps> = ({
 
         {booleanVariables.length > 0 && (
           <div className="space-y-4">
-            <h2 className="text-2xl font-bold text-gray-800">Variables Booleanas</h2>
+            <h2 className="text-2xl font-bold text-gray-800">Boolean Variables</h2>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               {booleanVariables.map(variable => (
                 <Card key={variable.id} className="hover:shadow-lg transition-shadow">
@@ -318,7 +318,7 @@ const VariablesView: React.FC<VariablesViewProps> = ({
 
         {selectorVariables.length > 0 && (
           <div className="space-y-4">
-            <h2 className="text-2xl font-bold text-gray-800">Variables de Selección</h2>
+            <h2 className="text-2xl font-bold text-gray-800">Selector Variables</h2>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               {selectorVariables.map(variable => {
                 const options = selectorOptions[variable.id] || parseOptions(variable.DefaultValue);

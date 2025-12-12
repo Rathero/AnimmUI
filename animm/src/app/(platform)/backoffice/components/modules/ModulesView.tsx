@@ -4,11 +4,9 @@ import {
   Card,
   CardContent,
   CardTitle,
-
 } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { LoadingSpinner } from '@/components/ui/loading-spinner';
-import { Badge } from '@/components/ui/badge';
 import { Plus, Edit, Trash2, ArrowLeft } from 'lucide-react';
 
 import { Template } from '@/types/collections';
@@ -76,30 +74,29 @@ export default function ModulesView({
     setError(null);
   };
 
-const handleSaveModule = async () => {
-  if (!editingModule) return;
+  const handleSaveModule = async () => {
+    if (!editingModule) return;
 
-  try {
-    if (editingModule.id && editingModule.id !== 0) {
-      await update(editingModule.id, editingModule);
-    } else {
-      await addModule({
-        file: editingModule.file,
-        templateId: template.id,
-      });
+    try {
+      if (editingModule.id && editingModule.id !== 0) {
+        await update(editingModule.id, editingModule);
+      } else {
+        await addModule({
+          file: editingModule.file,
+          templateId: template.id,
+        });
+      }
+
+      setIsEditingModule(false);
+      setEditingModule(null);
+      setError(null);
+
+      await onDataChange();
+    } catch (err) {
+      console.error(err);
+      setError('Failed to save module');
     }
-
-    setIsEditingModule(false);
-    setEditingModule(null);
-    setError(null);
-
-    await onDataChange();
-  } catch (err) {
-    console.error(err);
-    setError('Failed to save module');
-  }
-};
-
+  };
 
   const handleCloseModuleEdit = () => {
     setIsEditingModule(false);
@@ -199,11 +196,6 @@ const handleSaveModule = async () => {
                     </div>
                   </div>
 
-                  <div className="flex items-center justify-between text-sm">
-                    <span className="text-muted-foreground">Variables:</span>
-                    <Badge variant="secondary">{module.variables?.length || 0}</Badge>
-                  </div>
-
                   <Button
                     variant="outline"
                     size="sm"
@@ -212,7 +204,7 @@ const handleSaveModule = async () => {
                       onModuleClick(module);
                     }}
                   >
-                    Variables
+                    View Variables
                   </Button>
                 </CardContent>
               </Card>

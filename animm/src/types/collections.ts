@@ -159,7 +159,7 @@ export interface TemplateVariableValue {
   id?: number;
   label: string;
   value: string;
-  templateVariableId: number;
+  templateVariableId?: number;
 }
 
 export interface TemplateVariableValueRequest {
