@@ -5,7 +5,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Button } from '@/components/ui/button';
 import { ArrowLeft, Plus, Edit, Trash2 } from 'lucide-react';
 import useVariablesService from '@/app/services/VariableService';
-import { Variable, VariableRequest } from '@/types/collections';
+import { Variable, VariableRequest, TemplateVariableValueRequest } from '@/types/collections';
 import VariableForm from './variablesForm';
 
 interface VariablesViewProps {
@@ -35,6 +35,20 @@ const VariablesView: React.FC<VariablesViewProps> = ({
   
   const variablesService = useVariablesService();
 
+  const parseOptions = (defaultValue: string): string[] => {
+    try {
+      if (defaultValue?.startsWith('[')) {
+        return JSON.parse(defaultValue);
+      }
+      return defaultValue?.split(',').map(o => o.trim()) ?? [];
+    } catch {
+      return [];
+    }
+  };
+
+  const getEffectiveValue = (variable: Variable) =>
+    variable.value ?? variable.DefaultValue ?? '';
+
   const loadVariables = async () => {
     try {
       setLoading(true);
@@ -45,13 +59,7 @@ const VariablesView: React.FC<VariablesViewProps> = ({
       const optionsMap: {[key: number]: string[]} = {};
       
       for (const variable of selectorVars) {
-        try {
-          const options = parseOptions(variable.DefaultValue);
-          optionsMap[variable.id] = options;
-        } catch (error) {
-          console.error(`Error loading options for variable ${variable.id}:`, error);
-          optionsMap[variable.id] = [];
-        }
+        optionsMap[variable.id] = parseOptions(variable.DefaultValue);
       }
       
       setSelectorOptions(optionsMap);
@@ -69,17 +77,6 @@ const VariablesView: React.FC<VariablesViewProps> = ({
   const textVariables = variables.filter(v => v.type === VariableType.TEXT);
   const booleanVariables = variables.filter(v => v.type === VariableType.BOOLEAN);
   const selectorVariables = variables.filter(v => v.type === VariableType.SELECTOR);
-
-  const parseOptions = (defaultValue: string): string[] => {
-    try {
-      if (defaultValue.startsWith('[')) {
-        return JSON.parse(defaultValue);
-      }
-      return defaultValue.split(',').map(opt => opt.trim());
-    } catch {
-      return [defaultValue];
-    }
-  };
 
   const handleCreateVariable = () => {
     setEditingVariable({
@@ -102,7 +99,7 @@ const VariablesView: React.FC<VariablesViewProps> = ({
       name: variable.name,
       moduleId: variable.moduleId,
       DefaultValue: variable.DefaultValue,
-      value: variable.value
+      value: variable.value ?? ''
     });
     setEditingVariableId(variable.id);
     setIsEditingVariable(true);
@@ -116,8 +113,7 @@ const VariablesView: React.FC<VariablesViewProps> = ({
       if (editingVariableId) {
         await variablesService.update(editingVariableId, editingVariable);
       } else {
-        const createService = variablesService.create();
-        await createService.addVariable(editingVariable);
+        await variablesService.create().addVariable(editingVariable);
       }
 
       setIsEditingVariable(false);
@@ -159,46 +155,27 @@ const VariablesView: React.FC<VariablesViewProps> = ({
     }
   };
 
-  const handleBooleanChange = async (variable: Variable, newValue: string) => {
+  const upsertValue = async (variable: Variable, newValue: string) => {
     try {
-      const updateData: VariableRequest = {
-        type: variable.type,
-        section: variable.section,
-        name: variable.name,
-        moduleId: variable.moduleId,
-        DefaultValue: variable.DefaultValue,
-        value: newValue
+      const payload: TemplateVariableValueRequest = {
+        templateVariableId: variable.id,
+        value: newValue,
+        label: newValue
       };
-
-      await variablesService.update(variable.id, updateData);
-
-      setVariables(prev =>
-        prev.map(v => (v.id === variable.id ? { ...v, value: newValue } : v))
-      );
+      await variablesService.createValue(payload);
+      // recarga para reflejar el valor actualizado
+      await loadVariables();
     } catch (error) {
-      console.error('Error updating boolean variable:', error);
+      console.error('Error updating variable value:', error);
     }
   };
 
-  const handleSelectorChange = async (variable: Variable, newValue: string) => {
-    try {
-      const updateData: VariableRequest = {
-        type: variable.type,
-        section: variable.section,
-        name: variable.name,
-        moduleId: variable.moduleId,
-        DefaultValue: variable.DefaultValue,
-        value: newValue
-      };
+  const handleBooleanChange = (variable: Variable, checked: boolean) => {
+    upsertValue(variable, checked ? 'true' : 'false');
+  };
 
-      await variablesService.update(variable.id, updateData);
-
-      setVariables(prev =>
-        prev.map(v => (v.id === variable.id ? { ...v, value: newValue } : v))
-      );
-    } catch (error) {
-      console.error('Error updating selector variable:', error);
-    }
+  const handleSelectorChange = (variable: Variable, newValue: string) => {
+    upsertValue(variable, newValue);
   };
 
   return (
@@ -253,7 +230,7 @@ const VariablesView: React.FC<VariablesViewProps> = ({
                     </div>
                   </CardHeader>
                   <CardContent>
-                    <p className="text-gray-600 break-all">{variable.value}</p>
+                    <p className="text-gray-600 break-all">{getEffectiveValue(variable)}</p>
                   </CardContent>
                 </Card>
               ))}
@@ -293,18 +270,21 @@ const VariablesView: React.FC<VariablesViewProps> = ({
                     </div>
                   </CardHeader>
                   <CardContent>
-                    <Select
-                      value={variable.value}
-                      onValueChange={(value) => handleBooleanChange(variable, value)}
-                    >
-                      <SelectTrigger className="w-full">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="true">True</SelectItem>
-                        <SelectItem value="false">False</SelectItem>
-                      </SelectContent>
-                    </Select>
+                    <div className="flex items-center gap-2">
+                      <input
+                        type="checkbox"
+                        id={`boolean-${variable.id}`}
+                        checked={getEffectiveValue(variable) !== 'false'}
+                        onChange={(e) => handleBooleanChange(variable, e.target.checked)}
+                        className="mr-2"
+                      />
+                      <label
+                        htmlFor={`boolean-${variable.id}`}
+                        className="text-sm text-gray-700 cursor-pointer"
+                      >
+                        {getEffectiveValue(variable) !== 'false' ? 'true' : 'false'}
+                      </label>
+                    </div>
                   </CardContent>
                 </Card>
               ))}
@@ -322,6 +302,7 @@ const VariablesView: React.FC<VariablesViewProps> = ({
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               {selectorVariables.map(variable => {
                 const options = selectorOptions[variable.id] || parseOptions(variable.DefaultValue);
+                const value = options.includes(getEffectiveValue(variable)) ? getEffectiveValue(variable) : options[0] ?? '';
                 return (
                   <Card key={variable.id} className="hover:shadow-lg transition-shadow">
                     <CardHeader className="pb-3">
@@ -347,8 +328,8 @@ const VariablesView: React.FC<VariablesViewProps> = ({
                     </CardHeader>
                     <CardContent>
                       <Select
-                        value={variable.value}
-                        onValueChange={(value) => handleSelectorChange(variable, value)}
+                        value={value}
+                        onValueChange={(val) => handleSelectorChange(variable, val)}
                       >
                         <SelectTrigger className="w-full">
                           <SelectValue />

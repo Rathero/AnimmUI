@@ -41,7 +41,7 @@ const useVariablesService = () => {
   const create = () => {
     const addVariable = async (data: VariableRequest) => {
       const response = await fetchWithAuth(
-        process.env.NEXT_PUBLIC_API_URL + '/TemplateVariables',
+        process.env.NEXT_PUBLIC_API_URL + '/TemplatesVariables/' + '/variable',
         {
           method: 'POST',
           headers: {
@@ -68,7 +68,7 @@ const useVariablesService = () => {
     variable: VariableRequest
   ): Promise<ApiVariables | undefined> => {
     const response = await fetchWithAuth(
-      process.env.NEXT_PUBLIC_API_URL + '/TemplateVariables/' + id,
+      process.env.NEXT_PUBLIC_API_URL + '/TemplatesVariables/' + id,
       {
         method: 'PUT',
         headers: {
@@ -87,9 +87,49 @@ const useVariablesService = () => {
     return await response.json();
   };
 
+  const createValue = async (data: {
+  templateVariableId: number;
+  value: string;
+}) => {
+  const response = await fetchWithAuth(
+    process.env.NEXT_PUBLIC_API_URL + '/TemplatesVariablesValues',
+    {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data),
+    }
+  );
+
+  if (!response.ok) {
+    throw new Error(`Error creating variable value`);
+  }
+
+  return await response.json();
+};
+
+const updateValue = async (
+  id: number,
+  value: string
+) => {
+  const response = await fetchWithAuth(
+    process.env.NEXT_PUBLIC_API_URL + '/TemplatesVariablesValues/' + id,
+    {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ value }),
+    }
+  );
+
+  if (!response.ok) {
+    throw new Error(`Error updating variable value`);
+  }
+
+  return await response.json();
+};
+
   const deleteVariable = async (id: number): Promise<boolean> => {
     const response = await fetchWithAuth(
-      process.env.NEXT_PUBLIC_API_URL + '/TemplateVariables/' + id,
+      process.env.NEXT_PUBLIC_API_URL + '/TemplatesVariables/' + id,
       {
         method: 'DELETE',
       }
@@ -106,10 +146,12 @@ const useVariablesService = () => {
 
   return {
     get,
-    getByModule,
-    create,
-    update,
-    delete: deleteVariable,
+  getByModule,
+  create,
+  update,
+  delete: deleteVariable,
+  createValue,
+  updateValue,
   };
 };
 
