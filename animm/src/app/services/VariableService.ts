@@ -8,7 +8,7 @@ const useVariablesService = () => {
   const get = async (id: string): Promise<ApiVariables | undefined> => {
     const response = await fetchWithAuth(
       process.env.NEXT_PUBLIC_API_URL +
-        '/TemplateVariables/' +
+        '/TemplatesVariables/' +
         id +
         '/TemplateVariablesValues'
     );
@@ -92,7 +92,7 @@ const useVariablesService = () => {
   value: string;
 }) => {
   const response = await fetchWithAuth(
-    process.env.NEXT_PUBLIC_API_URL + '/TemplatesVariablesValues',
+    process.env.NEXT_PUBLIC_API_URL + '/TemplatesVariablesValues/' + '/variablevalue',
     {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
