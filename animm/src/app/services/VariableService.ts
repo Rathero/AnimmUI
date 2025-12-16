@@ -1,6 +1,7 @@
 'use client';
-import { ApiVariables, Variable, VariableRequest } from '@/types/collections';
+import { ApiVariables, Variable, VariableRequest, TemplateVariableValueRequest } from '@/types/collections';
 import useFetchWithAuth from './fetchWithAuth';
+
 
 const useVariablesService = () => {
   const fetchWithAuth = useFetchWithAuth();
@@ -87,12 +88,9 @@ const useVariablesService = () => {
     return await response.json();
   };
 
-  const createValue = async (data: {
-  templateVariableId: number;
-  value: string;
-}) => {
+ const createValue = async (data: TemplateVariableValueRequest) => {
   const response = await fetchWithAuth(
-    process.env.NEXT_PUBLIC_API_URL + '/TemplatesVariablesValues/' + '/variablevalue',
+    process.env.NEXT_PUBLIC_API_URL + '/TemplateVariablesValues/variablevalue',
     {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -112,7 +110,7 @@ const updateValue = async (
   value: string
 ) => {
   const response = await fetchWithAuth(
-    process.env.NEXT_PUBLIC_API_URL + '/TemplatesVariablesValues/' + id,
+    process.env.NEXT_PUBLIC_API_URL + '/TemplateVariablesValues/' + id,
     {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },

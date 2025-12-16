@@ -1,10 +1,4 @@
 import { BaseApiResponse } from './baseApi';
-
-export interface TemplateVariableValue {
-  value: string;
-  label: string;
-}
-
 export interface TemplateVariable {
   type: TemplateVariableTypeEnum;
   section: string;
@@ -142,7 +136,7 @@ export interface Variable {
   section: string;
   name: string;
   moduleId: number;
-  DefaultValue: string;
+  defaultValue: string;
   value: string;
 }
 
@@ -151,7 +145,7 @@ export interface VariableRequest {
   section: string;
   name: string;
   moduleId: number;
-  DefaultValue: string;
+  defaultValue: string;
   value: string;
 }
 

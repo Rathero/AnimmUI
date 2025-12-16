@@ -27,7 +27,7 @@ export interface VariableFormProps {
 const VariableType = {
   TEXT: 0,
   BOOLEAN: 1,
-  SELECTOR: 2
+  SELECTOR: 2,
 };
 
 export default function VariableForm({
@@ -39,8 +39,11 @@ export default function VariableForm({
   error,
 }: VariableFormProps) {
   const [selectorOptions, setSelectorOptions] = useState<string[]>(
-    variable.type === VariableType.SELECTOR && variable.DefaultValue 
-      ? variable.DefaultValue.split(',').map(opt => opt.trim()).filter(opt => opt)
+    variable.type === VariableType.SELECTOR && variable.defaultValue
+      ? variable.defaultValue
+          .split(',')
+          .map(opt => opt.trim())
+          .filter(opt => opt)
       : []
   );
   const [newOption, setNewOption] = useState('');
@@ -50,26 +53,26 @@ export default function VariableForm({
   };
 
   const handleDefaultValueChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    onChange({ ...variable, DefaultValue: e.target.value });
+    onChange({ ...variable, defaultValue: e.target.value });
   };
 
   const handleTypeChange = (value: string) => {
     const typeNum = parseInt(value);
-    const updatedVariable = { 
-      ...variable, 
-      type: typeNum
+    const updatedVariable: VariableRequest = {
+      ...variable,
+      type: typeNum,
     };
 
     if (typeNum === VariableType.BOOLEAN) {
-      updatedVariable.DefaultValue = 'false';
+      updatedVariable.defaultValue = 'false';
       updatedVariable.value = 'false';
       setSelectorOptions([]);
     } else if (typeNum === VariableType.TEXT) {
-      updatedVariable.DefaultValue = '';
+      updatedVariable.defaultValue = '';
       updatedVariable.value = '';
       setSelectorOptions([]);
     } else if (typeNum === VariableType.SELECTOR) {
-      updatedVariable.DefaultValue = selectorOptions.join(',');
+      updatedVariable.defaultValue = selectorOptions.join(',');
       updatedVariable.value = selectorOptions[0] || '';
     }
 
@@ -81,11 +84,13 @@ export default function VariableForm({
       const updatedOptions = [...selectorOptions, newOption.trim()];
       setSelectorOptions(updatedOptions);
       setNewOption('');
-      
-      onChange({ 
-        ...variable, 
-        DefaultValue: updatedOptions.join(','),
-        value: updatedOptions.includes(variable.value) ? variable.value : updatedOptions[0] || ''
+
+      onChange({
+        ...variable,
+        defaultValue: updatedOptions.join(','),
+        value: updatedOptions.includes(variable.value)
+          ? variable.value
+          : updatedOptions[0] || '',
       });
     }
   };
@@ -93,15 +98,16 @@ export default function VariableForm({
   const removeOption = (index: number) => {
     const updatedOptions = selectorOptions.filter((_, i) => i !== index);
     setSelectorOptions(updatedOptions);
-    onChange({ 
-      ...variable, 
-      DefaultValue: updatedOptions.join(','),
-      value: updatedOptions.includes(variable.value) ? variable.value : updatedOptions[0] || ''
+    onChange({
+      ...variable,
+      defaultValue: updatedOptions.join(','),
+      value: updatedOptions.includes(variable.value)
+        ? variable.value
+        : updatedOptions[0] || '',
     });
   };
 
   const handleSubmit = () => {
-    // Validation
     if (!variable.name.trim()) {
       alert('Name is required');
       return;
@@ -140,10 +146,7 @@ export default function VariableForm({
 
           <div>
             <Label htmlFor="type">Type *</Label>
-            <Select
-              value={variable.type.toString()}
-              onValueChange={handleTypeChange}
-            >
+            <Select value={variable.type.toString()} onValueChange={handleTypeChange}>
               <SelectTrigger>
                 <SelectValue placeholder="Select a type" />
               </SelectTrigger>
@@ -160,7 +163,7 @@ export default function VariableForm({
               <Label htmlFor="defaultValue">Default Value</Label>
               <Input
                 id="defaultValue"
-                value={variable.DefaultValue}
+                value={variable.defaultValue}
                 onChange={handleDefaultValueChange}
                 placeholder="Default text value"
               />
@@ -171,8 +174,14 @@ export default function VariableForm({
             <div>
               <Label htmlFor="defaultValue">Default Value *</Label>
               <Select
-                value={variable.DefaultValue}
-                onValueChange={(value) => onChange({ ...variable, DefaultValue: value })}
+                value={variable.defaultValue}
+                onValueChange={value =>
+                  onChange({
+                    ...variable,
+                    defaultValue: value,
+                    value: value, // mantiene value en sync con defaultValue para boolean
+                  })
+                }
               >
                 <SelectTrigger>
                   <SelectValue />
@@ -193,13 +202,16 @@ export default function VariableForm({
                   <div key={index} className="flex items-center gap-2">
                     <Input
                       value={option}
-                      onChange={(e) => {
+                      onChange={e => {
                         const updatedOptions = [...selectorOptions];
                         updatedOptions[index] = e.target.value;
                         setSelectorOptions(updatedOptions);
-                        onChange({ 
-                          ...variable, 
-                          DefaultValue: updatedOptions.join(',')
+                        onChange({
+                          ...variable,
+                          defaultValue: updatedOptions.join(','),
+                          value: updatedOptions.includes(variable.value)
+                            ? variable.value
+                            : updatedOptions[0] || '',
                         });
                       }}
                       placeholder="Option value"
@@ -214,13 +226,13 @@ export default function VariableForm({
                     </Button>
                   </div>
                 ))}
-                
+
                 <div className="flex gap-2">
                   <Input
                     value={newOption}
-                    onChange={(e) => setNewOption(e.target.value)}
+                    onChange={e => setNewOption(e.target.value)}
                     placeholder="Add new option"
-                    onKeyPress={(e) => e.key === 'Enter' && addOption()}
+                    onKeyPress={e => e.key === 'Enter' && addOption()}
                   />
                   <Button
                     type="button"
@@ -231,7 +243,7 @@ export default function VariableForm({
                     <Plus className="w-4 h-4" />
                   </Button>
                 </div>
-                
+
                 <p className="text-sm text-gray-500">
                   {selectorOptions.length} option(s) added
                 </p>

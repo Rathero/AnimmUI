@@ -1,11 +1,17 @@
 'use client';
+
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft, Plus, Edit, Trash2 } from 'lucide-react';
 import useVariablesService from '@/app/services/VariableService';
-import { Variable, VariableRequest, TemplateVariableValueRequest } from '@/types/collections';
+import {
+  Variable,
+  VariableRequest,
+  TemplateVariableValueRequest,
+  TemplateVariableValue,
+} from '@/types/collections';
 import VariableForm from './variablesForm';
 
 interface VariablesViewProps {
@@ -17,54 +23,86 @@ interface VariablesViewProps {
 const VariableType = {
   TEXT: 0,
   BOOLEAN: 1,
-  SELECTOR: 2
+  SELECTOR: 2,
 };
 
-const VariablesView: React.FC<VariablesViewProps> = ({ 
+interface VariableWithOptions extends Variable {
+  possibleValues?: TemplateVariableValue[];
+}
+
+const parseBoolean = (value?: string | null): boolean => {
+  if (value === undefined || value === null) return false;
+  return value.toLowerCase() === 'true';
+};
+
+const VariablesView: React.FC<VariablesViewProps> = ({
   moduleId,
   onBack,
-  onDataChange, 
+  onDataChange,
 }) => {
-  const [variables, setVariables] = useState<Variable[]>([]);
+  const [variables, setVariables] = useState<VariableWithOptions[]>([]);
   const [loading, setLoading] = useState(true);
   const [isEditingVariable, setIsEditingVariable] = useState(false);
   const [editingVariable, setEditingVariable] = useState<VariableRequest | null>(null);
   const [editingVariableId, setEditingVariableId] = useState<number | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [selectorOptions, setSelectorOptions] = useState<{[key: number]: string[]}>({});
-  
+
   const variablesService = useVariablesService();
 
-  const parseOptions = (defaultValue: string): string[] => {
+  const parseOptions = (defaultValue?: string): string[] => {
     try {
-      if (defaultValue?.startsWith('[')) {
+      if (!defaultValue) return [];
+      if (defaultValue.startsWith('[')) {
         return JSON.parse(defaultValue);
       }
-      return defaultValue?.split(',').map(o => o.trim()) ?? [];
+      return defaultValue.split(',').map(o => o.trim());
     } catch {
       return [];
     }
   };
 
-  const getEffectiveValue = (variable: Variable) =>
-    variable.value ?? variable.DefaultValue ?? '';
+  const getEffectiveValue = (variable: VariableWithOptions) => {
+    if (variable.type === VariableType.TEXT) {
+      if (variable.value !== undefined && variable.value !== null && variable.value !== '') {
+        return variable.value;
+      }
+      return variable.defaultValue ?? '';
+    }
+
+    if (variable.value !== undefined && variable.value !== null) {
+      return variable.value;
+    }
+
+    return variable.defaultValue ?? '';
+  };
 
   const loadVariables = async () => {
     try {
       setLoading(true);
       const data = await variablesService.getByModule(moduleId);
-      setVariables(data);
-      
-      const selectorVars = data.filter(v => v.type === VariableType.SELECTOR);
-      const optionsMap: {[key: number]: string[]} = {};
-      
-      for (const variable of selectorVars) {
-        optionsMap[variable.id] = parseOptions(variable.DefaultValue);
-      }
-      
-      setSelectorOptions(optionsMap);
+
+      const variablesWithOptions: VariableWithOptions[] = data.map(
+        (variable: Variable): VariableWithOptions => {
+          if (variable.type === VariableType.SELECTOR) {
+            const options = parseOptions(variable.defaultValue);
+            const possibleValues: TemplateVariableValue[] = options.map(opt => ({
+              value: opt,
+              label: opt,
+            }));
+
+            return {
+              ...variable,
+              possibleValues,
+            };
+          }
+
+          return variable;
+        }
+      );
+
+      setVariables(variablesWithOptions);
     } catch (error) {
-      console.error('Error loading variables:', error);
+      setError('Error loading variables');
     } finally {
       setLoading(false);
     }
@@ -83,23 +121,23 @@ const VariablesView: React.FC<VariablesViewProps> = ({
       type: VariableType.TEXT,
       section: '',
       name: '',
-      moduleId: moduleId,
-      DefaultValue: '',
-      value: ''
+      moduleId,
+      defaultValue: '',
+      value: '',
     });
     setEditingVariableId(null);
     setIsEditingVariable(true);
     setError(null);
   };
 
-  const handleEditVariable = (variable: Variable) => {
+  const handleEditVariable = (variable: VariableWithOptions) => {
     setEditingVariable({
       type: variable.type,
       section: variable.section,
       name: variable.name,
       moduleId: variable.moduleId,
-      DefaultValue: variable.DefaultValue,
-      value: variable.value ?? ''
+      defaultValue: variable.defaultValue,
+      value: variable.value ?? '',
     });
     setEditingVariableId(variable.id);
     setIsEditingVariable(true);
@@ -127,7 +165,6 @@ const VariablesView: React.FC<VariablesViewProps> = ({
         await loadVariables();
       }
     } catch (err) {
-      console.error('Error saving variable:', err);
       setError('Failed to save variable');
     }
   };
@@ -141,41 +178,40 @@ const VariablesView: React.FC<VariablesViewProps> = ({
 
   const handleDeleteVariable = async (variableId: number) => {
     if (!confirm('Are you sure you want to delete this variable?')) return;
+
     try {
       await variablesService.delete(variableId);
-      
+
       if (onDataChange) {
         await onDataChange();
       } else {
         await loadVariables();
       }
     } catch (err) {
-      console.error('Error deleting variable:', err);
       setError('Error deleting variable');
     }
   };
 
-  const upsertValue = async (variable: Variable, newValue: string) => {
+
+  const updateVariableValue = async (variable: VariableWithOptions, newValue: string) => {
+    if (variable.type === VariableType.BOOLEAN) return;
+
     try {
       const payload: TemplateVariableValueRequest = {
         templateVariableId: variable.id,
-        value: newValue,
-        label: newValue
+        value: newValue,      
+        label: newValue,
       };
+
       await variablesService.createValue(payload);
-      // recarga para reflejar el valor actualizado
       await loadVariables();
     } catch (error) {
-      console.error('Error updating variable value:', error);
+      setError('Error updating variable value');
     }
   };
 
-  const handleBooleanChange = (variable: Variable, checked: boolean) => {
-    upsertValue(variable, checked ? 'true' : 'false');
-  };
-
-  const handleSelectorChange = (variable: Variable, newValue: string) => {
-    upsertValue(variable, newValue);
+  const handleSelectorChange = (variable: VariableWithOptions, newValue: string) => {
+    updateVariableValue(variable, newValue);
   };
 
   return (
@@ -202,7 +238,11 @@ const VariablesView: React.FC<VariablesViewProps> = ({
           </div>
         )}
 
-        {textVariables.length > 0 && (
+        {loading && (
+          <div className="text-center text-gray-500 py-8">Loading variables...</div>
+        )}
+
+        {!loading && textVariables.length > 0 && (
           <div className="space-y-4">
             <h2 className="text-2xl font-bold text-gray-800">Text Variables</h2>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -230,7 +270,9 @@ const VariablesView: React.FC<VariablesViewProps> = ({
                     </div>
                   </CardHeader>
                   <CardContent>
-                    <p className="text-gray-600 break-all">{getEffectiveValue(variable)}</p>
+                    <p className="text-gray-600 break-all">
+                      {getEffectiveValue(variable)}
+                    </p>
                   </CardContent>
                 </Card>
               ))}
@@ -239,70 +281,82 @@ const VariablesView: React.FC<VariablesViewProps> = ({
         )}
 
         {textVariables.length > 0 && booleanVariables.length > 0 && (
-          <div className="border-t-2 border-gray-300"></div>
+          <div className="border-t-2 border-gray-300" />
         )}
 
-        {booleanVariables.length > 0 && (
+        {!loading && booleanVariables.length > 0 && (
           <div className="space-y-4">
             <h2 className="text-2xl font-bold text-gray-800">Boolean Variables</h2>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {booleanVariables.map(variable => (
-                <Card key={variable.id} className="hover:shadow-lg transition-shadow">
-                  <CardHeader className="pb-3">
-                    <div className="flex items-center justify-between">
-                      <CardTitle className="text-lg">{variable.name}</CardTitle>
-                      <div className="flex items-center gap-2">
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => handleEditVariable(variable)}
-                        >
-                          <Edit className="w-4 h-4" />
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => handleDeleteVariable(variable.id)}
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </Button>
+              {booleanVariables.map(variable => {
+                const boolValue = parseBoolean(getEffectiveValue(variable));
+                return (
+                  <Card key={variable.id} className="hover:shadow-lg transition-shadow">
+                    <CardHeader className="pb-3">
+                      <div className="flex items-center justify-between">
+                        <CardTitle className="text-lg">{variable.name}</CardTitle>
+                        <div className="flex items-center gap-2">
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => handleEditVariable(variable)}
+                          >
+                            <Edit className="w-4 h-4" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => handleDeleteVariable(variable.id)}
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </Button>
+                        </div>
                       </div>
-                    </div>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="flex items-center gap-2">
-                      <input
-                        type="checkbox"
-                        id={`boolean-${variable.id}`}
-                        checked={getEffectiveValue(variable) !== 'false'}
-                        onChange={(e) => handleBooleanChange(variable, e.target.checked)}
-                        className="mr-2"
-                      />
-                      <label
-                        htmlFor={`boolean-${variable.id}`}
-                        className="text-sm text-gray-700 cursor-pointer"
-                      >
-                        {getEffectiveValue(variable) !== 'false' ? 'true' : 'false'}
-                      </label>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
+                    </CardHeader>
+                    <CardContent>
+                      <div className="flex items-center gap-2">
+                        <input
+                          type="checkbox"
+                          id={`boolean-${variable.id}`}
+                          checked={boolValue}
+                          disabled
+                          className="mr-2"
+                        />
+                        <label
+                          htmlFor={`boolean-${variable.id}`}
+                          className="text-sm text-gray-700 cursor-default"
+                        >
+                          {boolValue ? 'true' : 'false'}
+                        </label>
+                      </div>
+                    </CardContent>
+                  </Card>
+                );
+              })}
             </div>
           </div>
         )}
 
-        {(textVariables.length > 0 || booleanVariables.length > 0) && selectorVariables.length > 0 && (
-          <div className="border-t-2 border-gray-300"></div>
-        )}
+        {(textVariables.length > 0 || booleanVariables.length > 0) &&
+          selectorVariables.length > 0 && (
+            <div className="border-t-2 border-gray-300" />
+          )}
 
-        {selectorVariables.length > 0 && (
+        {!loading && selectorVariables.length > 0 && (
           <div className="space-y-4">
             <h2 className="text-2xl font-bold text-gray-800">Selector Variables</h2>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               {selectorVariables.map(variable => {
-                const options = selectorOptions[variable.id] || parseOptions(variable.DefaultValue);
-                const value = options.includes(getEffectiveValue(variable)) ? getEffectiveValue(variable) : options[0] ?? '';
+                const options =
+                  variable.possibleValues && variable.possibleValues.length > 0
+                    ? variable.possibleValues.map(pv => pv.value)
+                    : parseOptions(variable.defaultValue);
+
+                const currentValue = getEffectiveValue(variable);
+                const value = options.includes(currentValue)
+                  ? currentValue
+                  : options[0] ?? '';
+
                 return (
                   <Card key={variable.id} className="hover:shadow-lg transition-shadow">
                     <CardHeader className="pb-3">
@@ -335,11 +389,19 @@ const VariablesView: React.FC<VariablesViewProps> = ({
                           <SelectValue />
                         </SelectTrigger>
                         <SelectContent>
-                          {options.map((option, index) => (
-                            <SelectItem key={index} value={option}>
-                              {option}
-                            </SelectItem>
-                          ))}
+                          {variable.possibleValues && variable.possibleValues.length > 0 ? (
+                            variable.possibleValues.map((option) => (
+                              <SelectItem key={option.value} value={option.value}>
+                                {option.label}
+                              </SelectItem>
+                            ))
+                          ) : (
+                            options.map((option, index) => (
+                              <SelectItem key={index} value={option}>
+                                {option}
+                              </SelectItem>
+                            ))
+                          )}
                         </SelectContent>
                       </Select>
                     </CardContent>
