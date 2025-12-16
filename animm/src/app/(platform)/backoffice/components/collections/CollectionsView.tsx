@@ -1,13 +1,10 @@
 import { useState } from 'react';
 import {
   Card,
-  CardDescription,
-  CardHeader,
   CardTitle,
-  CardContent,
+  CardDescription,
 } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
 import { Plus, Edit, Trash2 } from 'lucide-react';
 import { Collection } from '@/types/collections';
 import { User } from '@/types/users';
@@ -57,11 +54,10 @@ const handleEditCollection = (collection: Collection) => {
     name: collection.name,
     description: collection.description,
     userId: collection.userId,
-    thumbnail: null, 
-    thumbnailPreview: collection.thumbnail || '', 
-    templates: collection.templates,
+    thumbnail: null,
+    thumbnailPreview: collection.thumbnail || '',
+    templates: collection.templates || [], 
   };
-  
   setEditingCollection(requestData);
   setIsEditing(true);
   setError(null);
@@ -70,16 +66,20 @@ const handleEditCollection = (collection: Collection) => {
 const handleSaveCollection = async () => {
   if (!editingCollection) return;
 
-  if (editingCollection.id) {
-    await updateCollection(editingCollection.id, editingCollection);
-  } else {
-    await addCollection(editingCollection);
+  try {
+    if (editingCollection.id && editingCollection.id !== 0) {
+      await updateCollection(editingCollection.id, editingCollection);
+    } else {
+      await addCollection(editingCollection);
+    }
+    setIsEditing(false);
+    setEditingCollection(null);
+    setError(null);
+    await onDataChange();
+  } catch (err) {
+    console.error(err);
+    setError('Failed to save collection');
   }
-
-  setIsEditing(false);
-  setEditingCollection(null);
-  setError(null);
-  await onDataChange();
 };
 
   const handleCloseEdit = () => {
@@ -109,7 +109,6 @@ const handleSaveCollection = async () => {
             </p>
           </div>
         </div>
-
         <div className="space-y-4">
           <div className="flex items-center justify-between">
             <h2 className="text-xl font-semibold">Collections</h2>
@@ -118,8 +117,7 @@ const handleSaveCollection = async () => {
             </Button>
           </div>
         </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-4">
           {collections.length === 0 ? (
             <div className="text-center text-muted-foreground col-span-full">
               No collections found
@@ -128,71 +126,81 @@ const handleSaveCollection = async () => {
             collections.map(collection => (
               <Card
                 key={collection.id}
-                className="hover:shadow-md transition-shadow cursor-pointer"
-                onClick={() => onCollectionClick(collection)}
+                className="flex flex-col lg:flex-row items-stretch lg:items-center p-0 hover:shadow-md transition-shadow overflow-hidden"
               >
-                <CardHeader>
-                  <div className="flex items-center justify-between">
-                    <CardTitle className="text-lg">{collection.name}</CardTitle>
-                    <div className="flex items-center gap-2">
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={e => {
-                          e.stopPropagation();
-                          handleEditCollection(collection);
-                        }}
-                      >
-                        <Edit className="w-4 h-4" />
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={e => {
-                          e.stopPropagation();
-                          handleDeleteCollection(collection.id);
-                        }}
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </Button>
-                    </div>
-                  </div>
-                  <CardDescription>{collection.description}</CardDescription>
-                </CardHeader>
-
-                  {collection.thumbnail && (
-                    <div className="px-6 py-2">
-                      <img
-                        src={collection.thumbnail}
-                        alt={`${collection.name} thumbnail`}
-                        className="w-full h-32 object-cover rounded-md"
-                        onError={e => {
-                          const target = e.target as HTMLImageElement;
-                          target.style.display = 'none';
-                        }}
-                      />
+                <div className="lg:flex-shrink-0 w-full lg:w-40 h-48 lg:h-full lg:min-h-[100px] overflow-hidden bg-gray-100">
+                  {collection.thumbnail ? (
+                    <img
+                      src={collection.thumbnail}
+                      alt={`${collection.name} thumbnail`}
+                      className="w-full h-full object-cover"
+                      onError={e => {
+                        const target = e.target as HTMLImageElement;
+                        target.style.display = 'none';
+                      }}
+                    />
+                  ) : (
+                    <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-gray-200 to-gray-300">
+                      <span className="text-gray-500 text-sm">No image</span>
                     </div>
                   )}
-
-                <CardContent>
-                  <div className="space-y-2">
-                    <div className="flex items-center justify-between text-sm">
-                      <span className="text-muted-foreground">Templates:</span>
-                      <Badge variant="secondary">
-                        {collection.templates?.length || 0}
-                      </Badge>
+                </div>
+                
+                {/* Contenido */}
+                <div className="flex flex-col justify-between p-4 lg:p-6 flex-grow">
+                  <div>
+                    <div className="flex items-start justify-between mb-2">
+                      <CardTitle className="text-lg line-clamp-1 pr-2">{collection.name}</CardTitle>
+                      <div className="flex items-center space-x-1 flex-shrink-0 -mt-1 lg:-mt-4">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="h-8 w-8 p-0"
+                          onClick={e => {
+                            e.stopPropagation();
+                            handleEditCollection(collection);
+                          }}
+                        >
+                          <Edit className="w-4 h-4" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="h-8 w-8 p-0"
+                          onClick={e => {
+                            e.stopPropagation();
+                            handleDeleteCollection(collection.id);
+                          }}
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </Button>
+                      </div>
                     </div>
-                    <Button variant="outline" size="sm" className="w-full mt-2">
+                    <CardDescription className="line-clamp-2 mb-3 lg:mb-4">
+                      {collection.description || 'No description'}
+                    </CardDescription>
+                  </div>
+                  
+                  {/* Botón de Templates */}
+                  <div className="mt-2 lg:mt-4">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="w-full lg:w-auto lg:min-w-[120px]"
+                      onClick={e => {
+                        e.stopPropagation();
+                        onCollectionClick(collection);
+                      }}
+                    >
                       Templates
                     </Button>
                   </div>
-                </CardContent>
+                </div>
               </Card>
             ))
           )}
         </div>
       </div>
-
       {isEditing && editingCollection && (
         <CollectionForm
           collection={editingCollection}

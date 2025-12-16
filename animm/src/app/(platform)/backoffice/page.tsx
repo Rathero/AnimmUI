@@ -1,30 +1,33 @@
 'use client';
-
 import { useEffect, useState } from 'react';
 import { LoadingSpinner } from '@/components/ui/loading-spinner';
 import { ContentWrapper } from '@/components/ui/content-wrapper';
 import { platformStore } from '@/stores/platformStore';
-import { Collection } from '@/types/collections';
+import { Collection, Template, Module } from '@/types/collections';
 import useCollectionsService from '@/app/services/CollectionsService';
 import { User } from '@/types/users';
 import useUsersService from '@/app/services/UsersService';
 import CollectionsView from './components/collections/CollectionsView';
-import TemplatesView from './components/templates/TemplatesView';
+import TemplatesView from './components/template/TemplatesView';
 import ModulesView from './components/modules/ModulesView';
+import VariablesView from './components/variables/variablesView';
+
+type ViewMode = 'collections' | 'templates' | 'modules' | 'variables';
 
 export default function NewBackofficePage() {
   const [collections, setCollections] = useState<Collection[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [users, setUsers] = useState<User[]>([]);
   const [isLoadingUsers, setIsLoadingUsers] = useState(true);
-  const [viewMode, setViewMode] = useState<'collections' | 'templates' | 'modules'>('collections');
+  const [viewMode, setViewMode] = useState<ViewMode>('collections');
   const [selectedCollection, setSelectedCollection] = useState<Collection | null>(null);
-  const [selectedTemplate, setSelectedTemplate] = useState<any | null>(null);
-
+  const [selectedTemplate, setSelectedTemplate] = useState<Template | null>(null);
+  const [selectedModule, setSelectedModule] = useState<Module | null>(null);
 
   const { setPageTitle } = platformStore(state => state);
   const { getAllBackoffice } = useCollectionsService();
   const { getAll: getAllUsers } = useUsersService();
+
 
   const fetchUsers = async () => {
     setIsLoadingUsers(true);
@@ -33,28 +36,55 @@ export default function NewBackofficePage() {
       setUsers(usersData?.Result || []);
     } catch (err) {
       console.error('Error fetching users:', err);
+      setUsers([]);
     } finally {
       setIsLoadingUsers(false);
     }
   };
 
-  const fetchData = async () => {
+
+  const fetchCollections = async () => {
     setIsLoading(true);
     try {
-      const collectionsData = await getAllBackoffice();
-      const newCollections = collectionsData?.Result || [];
-      setCollections(newCollections);
+      const response = await getAllBackoffice();
+
+      const data = response?.Result || [];
+      
+
+      const normalized: Collection[] = data.map((c: any) => ({
+        id: c.id,
+        name: c.name,
+        description: c.description,
+        thumbnail: c.thumbnail,
+        userId: c.userId,
+        templates: c.templates || [], 
+        createdAt: c.createdAt,
+        updatedAt: c.updatedAt,
+      }));
+      
+      setCollections(normalized);
       
       if (selectedCollection) {
-        const updatedCollection = newCollections.find(
-          (c: Collection) => c.id === selectedCollection.id
-        );
+        const updatedCollection = normalized.find(c => c.id === selectedCollection.id);
         if (updatedCollection) {
           setSelectedCollection(updatedCollection);
         }
       }
+      
+      if (selectedTemplate && selectedCollection) {
+        const updatedCollection = normalized.find(c => c.id === selectedCollection.id);
+        if (updatedCollection) {
+          const updatedTemplate = updatedCollection.templates?.find(t => t.id === selectedTemplate.id);
+          if (updatedTemplate) {
+            setSelectedTemplate(updatedTemplate);
+          }
+        }
+      }
+      
+      console.log('Collections loaded:', normalized); 
     } catch (err) {
       console.error('Error fetching collections:', err);
+      setCollections([]);
     } finally {
       setIsLoading(false);
     }
@@ -62,33 +92,49 @@ export default function NewBackofficePage() {
 
   useEffect(() => {
     setPageTitle('Backoffice');
-    fetchUsers();
-    fetchData();
-    return () => setPageTitle(undefined);
   }, [setPageTitle]);
 
-  const goToTemplates = (collection?: Collection) => {
-    if (collection) {
-      setSelectedCollection(collection);
-    }
+  useEffect(() => {
+    fetchUsers();
+    fetchCollections();
+  }, []);
+
+  const goToTemplates = (collection: Collection) => {
+    setSelectedCollection(collection);
+    setSelectedTemplate(null);
+    setSelectedModule(null);
     setViewMode('templates');
   };
 
   const goToCollections = () => {
     setSelectedCollection(null);
     setSelectedTemplate(null);
+    setSelectedModule(null);
     setViewMode('collections');
   };
 
-  const goToModules = (template : any) => {
+  const goToModules = (template: Template) => {
     setSelectedTemplate(template);
+    setSelectedModule(null);
     setViewMode('modules');
   };
 
   const goBackToTemplates = () => {
     setSelectedTemplate(null);
+    setSelectedModule(null);
     setViewMode('templates');
   };
+
+  const goToVariables = (module: Module) => {
+    setSelectedModule(module);
+    setViewMode('variables');
+  };
+
+  const goBackToModules = () => {
+    setSelectedModule(null);
+    setViewMode('modules');
+  };
+
 
   if (isLoading) {
     return (
@@ -108,7 +154,7 @@ export default function NewBackofficePage() {
           users={users}
           isLoadingUsers={isLoadingUsers}
           onCollectionClick={goToTemplates}
-          onDataChange={fetchData}
+          onDataChange={fetchCollections}
         />
       )}
 
@@ -116,16 +162,25 @@ export default function NewBackofficePage() {
         <TemplatesView
           collection={selectedCollection}
           onBack={goToCollections}
-          onDataChange={fetchData}
+          onDataChange={fetchCollections}
           onTemplateClick={goToModules}
         />
       )}
-      
+
       {viewMode === 'modules' && selectedTemplate && (
         <ModulesView
           template={selectedTemplate}
           onBack={goBackToTemplates}
-          onDataChange={fetchData}
+          onDataChange={fetchCollections}
+          onModuleClick={goToVariables}
+        />
+      )}
+
+      {viewMode === 'variables' && selectedModule && (
+        <VariablesView
+          moduleId={selectedModule.id}
+          onBack={goBackToModules}
+          onDataChange={fetchCollections}
         />
       )}
     </ContentWrapper>

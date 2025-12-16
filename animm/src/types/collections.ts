@@ -1,10 +1,4 @@
 import { BaseApiResponse } from './baseApi';
-
-export interface TemplateVariableValue {
-  value: string;
-  label: string;
-}
-
 export interface TemplateVariable {
   type: TemplateVariableTypeEnum;
   section: string;
@@ -136,8 +130,41 @@ export interface ModuleRequest {
   filePreview?: string;
 }
 
+export interface Variable {
+  id: number;
+  type: number;
+  section: string;
+  name: string;
+  moduleId: number;
+  defaultValue: string;
+  value: string;
+}
+
+export interface VariableRequest {
+  type: number;
+  section: string;
+  name: string;
+  moduleId: number;
+  defaultValue: string;
+  value: string;
+}
+
+export interface TemplateVariableValue {
+  id?: number;
+  label: string;
+  value: string;
+  templateVariableId?: number;
+}
+
+export interface TemplateVariableValueRequest {
+  label: string;
+  value: string;
+  templateVariableId: number;
+}
+
 
 export interface ApiCollections extends BaseApiResponse<Collection[]> {}
 export interface ApiCollection extends BaseApiResponse<Collection> {}
 export interface ApiTemplate extends BaseApiResponse<Template> {}
 export interface ApiModules extends BaseApiResponse<Module> {}
+export interface ApiVariables extends BaseApiResponse<Variable>{}
