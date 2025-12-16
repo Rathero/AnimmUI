@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { FileAsset, Rive } from '@rive-app/react-webgl2';
 import { useViewModelInstanceNumber } from '@rive-app/react-webgl2';
@@ -168,8 +168,6 @@ export default function Editor() {
   const handleLanguageChange = (languageName: string) => {
     setSelectedLanguage(languageName);
 
-    if (!languageName) return;
-
     const languageContent = languageService.getLanguageContent(languageName);
     if (!languageContent) {
       console.warn(`No language content found for language ${languageName}`);
@@ -198,9 +196,7 @@ export default function Editor() {
       languageService.applyImageVariables();
 
       // If a language is already selected, reapply the language content
-      if (selectedLanguage) {
-        handleLanguageChange(selectedLanguage);
-      }
+      handleLanguageChange(selectedLanguage);
     }
   };
 
@@ -365,15 +361,21 @@ export default function Editor() {
   }, [tabs, activeTab]);
 
   const [assets, setAssets] = useState<Array<FileAsset>>([]);
+  const assetsRef = useRef<Array<FileAsset>>([]);
   const [rivesStates, setRiveStates] = useState<Rive[]>([]);
+
+  useEffect(() => {
+    assetsRef.current = assets;
+  }, [assets]);
+
   const changeImage = async (url: string, _i: number, name: string) => {
     const baseName = getBaseNameFromPath(name);
     if (!baseName) return;
-    await replaceRiveImageFromUrl(assets, baseName, url);
+    await replaceRiveImageFromUrl(assetsRef.current, baseName, url);
   };
 
   async function handleImageChange(imageName: string, newImageUrl: string) {
-    await replaceRiveImageFromUrl(assets, imageName, newImageUrl);
+    await replaceRiveImageFromUrl(assetsRef.current, imageName, newImageUrl);
   }
 
   async function handleTextChange(textName: string, newText: string) {
@@ -1149,15 +1151,15 @@ export default function Editor() {
                                       'absolute top-0 -z-10 object-cover ' +
                                       (currentWidth / currentHeight > 2.3 &&
                                       currentWidth / currentHeight <= 3
-                                        ? ' '
+                                        ? 'v_thin '
                                         : '') +
                                       (currentWidth / currentHeight >= 3
-                                        ? ' '
+                                        ? 'v_pan '
                                         : '') +
                                       (currentWidth / currentHeight <= 0.5
-                                        ? ' '
+                                        ? 'v_ver '
                                         : '') +
-                                      (currentHeight <= 400 ? ' ' : '')
+                                      (currentHeight <= 400 ? 'v_thin ' : '')
                                     }
                                   >
                                     <source src={videoSrc} type="video/mp4" />

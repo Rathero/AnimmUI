@@ -29,16 +29,42 @@ import { Switch } from '@/components/ui/switch';
 import Module from './module';
 
 const Components = [
-  ['1', '', '', 'Image'],
-  ['2', '', '', 'Video'],
-  ['0', '/Test/WL_Product.riv', 'Template', 'Module01'],
-  ['0', '/Test/WL_Totem.riv', 'Template', 'Module02'],
-  ['0', '/Test/WL_Pb.riv', 'Template', 'Module03'],
-  ['0', '/Test/IND_Modules.riv', 'Module_01', 'Module04'],
-  ['0', '/Test/IND_Modules.riv', 'Module_02', 'Module05'],
-  ['0', '/Test/IND_Modules.riv', 'Module_03', 'Module06'],
-  ['0', '/Test/IND_Modules.riv', 'Module_04', 'Module07'],
-  ['0', '/Test/IND_Modules.riv', 'Module_05', 'Module08'],
+  ['1', '/creator/IMG_01.jpg', '', 'Imagen 1'],
+  ['1', '/creator/IMG_02.jpg', '', 'Imagen 2'],
+  ['1', '/creator/IMG_03.jpg', '', 'Imagen 3'],
+  ['1', '/creator/IMG_04.jpg', '', 'Imagen 4'],
+  ['2', '/creator/Video_01.mp4', '', 'Video 1'],
+  ['2', '/creator/Video_02.mp4', '', 'Video 2'],
+  [
+    '0',
+    'https://animmfilesv2.blob.core.windows.net/riv/modules/ikea_module_01.riv',
+    'Template',
+    'Module01',
+  ],
+  [
+    '0',
+    'https://animmfilesv2.blob.core.windows.net/riv/modules/ikea_module_02.riv',
+    'Template',
+    'Module02',
+  ],
+  [
+    '0',
+    'https://animmfilesv2.blob.core.windows.net/riv/modules/ikea_module_03.riv',
+    'Template',
+    'Module03',
+  ],
+  [
+    '0',
+    'https://animmfilesv2.blob.core.windows.net/riv/modules/ikea_module_04.riv',
+    'Template',
+    'Module04',
+  ],
+  [
+    '0',
+    'https://animmfilesv2.blob.core.windows.net/riv/modules/ikea_module_05.riv',
+    'Template',
+    'Module05',
+  ],
 ];
 
 interface DraggableDivProps {
@@ -108,13 +134,14 @@ const DraggableDiv = ({
                   <Button
                     variant="destructive"
                     size="icon"
-                    className="opacity-0 transition-opacity hover:opacity-100 z-40"
+                    className={`${
+                      isEdit ? 'opacity-20' : 'opacity-0'
+                    } transition-opacity hover:opacity-100 z-40`}
                     onClick={() => removeNestedDiv(index, id)}
                   >
                     <Trash />
                   </Button>
                 </div>
-                {/* Content here */}
                 <Module
                   type={Components[nestedDiv.module][0]}
                   src={Components[nestedDiv.module][1]}
@@ -266,7 +293,7 @@ export default function Editor() {
               disabled={isResizing}
               disablePadding={true}
               centerOnInit={true}
-              initialScale={1}
+              initialScale={0.5}
               wheel={{ step: 0.1 }}
               minScale={0.1}
               maxScale={3}

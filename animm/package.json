@@ -6,7 +6,9 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "test": "jest",
+    "test:watch": "jest --watch"
   },
   "dependencies": {
     "@dnd-kit/core": "^6.3.1",
@@ -45,7 +47,7 @@
     "jszip": "^3.10.1",
     "lucide-react": "^0.475.0",
     "media-recorder-polyfill": "^0.0.1-security",
-    "next": "15.1.7",
+    "next": "15.1.11",
     "next-themes": "^0.4.4",
     "puppeteer": "^24.10.0",
     "puppeteer-core": "^24.10.0",
@@ -63,15 +65,22 @@
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3",
+    "@testing-library/dom": "^10.4.1",
+    "@testing-library/jest-dom": "^6.9.1",
+    "@testing-library/react": "^16.3.0",
     "@types/gif.js": "^0.2.5",
+    "@types/jest": "^30.0.0",
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "@types/recordrtc": "^5.6.14",
     "eslint": "^9",
     "eslint-config-next": "15.1.7",
+    "jest": "^30.2.0",
+    "jest-environment-jsdom": "^30.2.0",
     "postcss": "^8",
     "tailwindcss": "^3.4.1",
+    "ts-node": "^10.9.2",
     "typescript": "^5"
   },
   "main": ".eslintrc.js"

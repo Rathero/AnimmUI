@@ -4,8 +4,9 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from '@/components/ui/popover';
-import { Upload, Play, Pause } from 'lucide-react';
+import { Upload, Play, Pause, SquareLibrary } from 'lucide-react';
 import { useRef, useState } from 'react';
+import BrandAssetsModal from './editor-brandAssets-modal';
 
 export default function EditorVideo({
   videoSrc,
@@ -17,6 +18,17 @@ export default function EditorVideo({
   const [isPlaying, setIsPlaying] = useState(false);
   const hiddenFileInput = useRef<HTMLInputElement>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
+  const [isBrandAssetsOpen, setIsBrandAssetsOpen] = useState<boolean>(false);
+  const [currentVideoIndex, setCurrentVideoIndex] = useState<number>(0);
+
+  const openBrandAssetsModal = (index: number) => {
+    setCurrentVideoIndex(index);
+    setIsBrandAssetsOpen(true);
+  };
+
+  const handleBrandVideoSelect = (url: string) => {
+    onVideoChange(url);
+  }
 
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files.length > 0) {
@@ -108,11 +120,30 @@ export default function EditorVideo({
                     Upload Video
                   </Button>
                 </div>
+                <div
+                  className="relative w-full rounded-lg border overflow-hidden bg-sidebar cursor-pointer hover:bg-accent transition-colors"
+                >
+                  <Button 
+                    size="sm" 
+                    variant="secondary" 
+                    className="w-full h-10 rounded-lg"
+                    onClick={() => openBrandAssetsModal(currentVideoIndex)}
+                  >
+                    <SquareLibrary/>
+                    <p className="ms-1">Brand Videos</p>
+                  </Button>
+                </div>
               </div>
             </div>
           </PopoverContent>
         </Popover>
       </div>
+      <BrandAssetsModal
+        TypeAsset="Video"
+        open={isBrandAssetsOpen}
+        onOpenChange={setIsBrandAssetsOpen}
+        onSelectImage={handleBrandVideoSelect}
+      />
     </div>
   );
 }
